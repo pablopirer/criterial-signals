@@ -111,12 +111,12 @@
           body: JSON.stringify(payload)
         });
 
-        if (res.ok) {
-          statusEl.textContent = "Solicitud enviada correctamente.";
-          form.reset();
-        } else {
-          statusEl.textContent = "La solicitud no se ha podido enviar.";
-        }
+       if (res.ok) {
+  form.reset();
+  window.location.href = "request-received.html";
+} else {
+  statusEl.textContent = "La solicitud no se ha podido enviar.";
+}
       } catch (err) {
         statusEl.textContent = "Error de conexión al enviar la solicitud.";
       }
