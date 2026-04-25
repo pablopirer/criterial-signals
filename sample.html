@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sample | Criterial Signals</title>
-  <meta name="description" content="Solicita una muestra de Criterial Signals." />
+  <meta name="description" content="Solicita una muestra de Criterial Signals y entiende el formato del producto." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -20,15 +20,40 @@
   </header>
 
   <main class="container hero">
-    <p class="eyebrow">Request a Sample</p>
-    <h1>Solicita una muestra breve del tipo de salida que entrega Criterial Signals.</h1>
+    <p class="eyebrow">Sample request</p>
+    <h1>Solicita una muestra breve del tipo de lectura que entrega Criterial Signals.</h1>
     <p class="subheadline">
-      Rellena el formulario y generaremos una muestra inicial en nuestro sistema.
+      La muestra sirve para entender el formato, el nivel de síntesis y el tipo de criterio editorial que utiliza el producto.
     </p>
+    <p class="bodycopy">
+      Si encaja con lo que necesitas, el siguiente paso natural es el plan Pro, pensado para combinar señales semanales con una lectura mensual más estructurada.
+    </p>
+
+    <div class="cta-group">
+      <a class="btn btn-secondary" href="pricing.html">Ver plan Pro</a>
+    </div>
   </main>
 
   <section class="container section">
+    <div class="grid">
+      <div class="card">
+        <h2>Qué te muestra</h2>
+        <p>Cómo sintetizamos señales relevantes de mercado, competencia y actividad con impacto potencial en Iberia.</p>
+      </div>
+      <div class="card">
+        <h2>Qué no es</h2>
+        <p>No es un informe largo ni una consultoría completa. Es una muestra breve del criterio y del formato del producto.</p>
+      </div>
+      <div class="card">
+        <h2>Qué sigue después</h2>
+        <p>Si el formato te convence, puedes pasar al plan Pro y empezar a recibir el producto de forma recurrente.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container section">
     <div class="card">
+      <h2>Solicitar muestra</h2>
       <form id="sample-form">
         <div style="display:grid; gap:16px;">
           <div>
@@ -67,10 +92,10 @@
             <textarea id="notes" name="notes" rows="4" style="width:100%; padding:12px; margin-top:8px;"></textarea>
           </div>
 
-       <div class="cta-group">
-  <button type="submit" class="btn btn-primary">Solicitar muestra</button>
-  <a class="btn btn-secondary" href="https://buy.stripe.com/test_7sY28q9A0g5iaK250y8g000" target="_blank" rel="noopener">Ir a Pro</a>
-</div>
+          <div class="cta-group" style="margin-top:8px;">
+            <button type="submit" class="btn btn-primary">Solicitar muestra</button>
+            <a class="btn btn-secondary" href="https://buy.stripe.com/test_7sY28q9A0g5iaK250y8g000" target="_blank" rel="noopener">Ir a Pro</a>
+          </div>
 
           <p id="form-status" style="margin-top:16px; color:#444;"></p>
         </div>
@@ -111,12 +136,12 @@
           body: JSON.stringify(payload)
         });
 
-       if (res.ok) {
-  form.reset();
-  window.location.href = "request-received.html";
-} else {
-  statusEl.textContent = "La solicitud no se ha podido enviar.";
-}
+        if (res.ok) {
+          form.reset();
+          window.location.href = "request-received.html";
+        } else {
+          statusEl.textContent = "La solicitud no se ha podido enviar.";
+        }
       } catch (err) {
         statusEl.textContent = "Error de conexión al enviar la solicitud.";
       }
