@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sample | Criterial Signals</title>
-  <meta name="description" content="Sample Signal Brief de Criterial Signals." />
+  <meta name="description" content="Solicita una muestra de Criterial Signals." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -20,63 +20,107 @@
   </header>
 
   <main class="container hero">
-    <p class="eyebrow">Sample Signal Brief</p>
-    <h1>Una muestra breve del tipo de salida que entrega Criterial Signals.</h1>
+    <p class="eyebrow">Request a Sample</p>
+    <h1>Solicita una muestra breve del tipo de salida que entrega Criterial Signals.</h1>
     <p class="subheadline">
-      Formato orientado a lectura rápida, utilidad práctica y seguimiento recurrente de mercado.
+      Rellena el formulario y generaremos una muestra inicial en nuestro sistema.
     </p>
   </main>
 
   <section class="container section">
     <div class="card">
-      <h2>Executive Snapshot</h2>
-      <p>
-        Durante las últimas semanas se han observado varias señales que apuntan a una mayor actividad selectiva
-        en segmentos concretos del mercado ibérico. Vistas en conjunto, sugieren un entorno más activo y más
-        exigente para operadores que necesiten anticiparse y ejecutar con más criterio.
-      </p>
-    </div>
-  </section>
+      <form id="sample-form">
+        <div style="display:grid; gap:16px;">
+          <div>
+            <label for="full_name"><strong>Nombre</strong></label><br />
+            <input id="full_name" name="full_name" type="text" required style="width:100%; padding:12px; margin-top:8px;" />
+          </div>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>1. Actividad más visible</h2>
-        <p>
-          Se aprecia una mayor densidad de anuncios, movimientos y reposicionamientos en determinados nichos del mercado.
-        </p>
-      </div>
-      <div class="card">
-        <h2>2. Más selección</h2>
-        <p>
-          Las señales recientes no apuntan tanto a volumen indiscriminado como a mayor sensibilidad a la calidad.
-        </p>
-      </div>
-      <div class="card">
-        <h2>3. Cambio de tono</h2>
-        <p>
-          Empieza a verse un lenguaje menos defensivo y más orientado a ejecución en varias áreas del mercado.
-        </p>
-      </div>
-    </div>
-  </section>
+          <div>
+            <label for="email"><strong>Email</strong></label><br />
+            <input id="email" name="email" type="email" required style="width:100%; padding:12px; margin-top:8px;" />
+          </div>
 
-  <section class="container section">
-    <div class="card">
-      <h2>What to watch</h2>
-      <p>
-        Conviene seguir la concentración de actividad por nicho, los movimientos de pricing y la repetición de patrones
-        por tipo de operador durante las próximas semanas.
-      </p>
-      <div class="cta-group" style="margin-top:24px;">
-        <a class="btn btn-primary" href="pricing.html">Activar plan Pro</a>
-        <a class="btn btn-secondary" href="index.html">Volver a Home</a>
-      </div>
+          <div>
+            <label for="company_name"><strong>Empresa</strong></label><br />
+            <input id="company_name" name="company_name" type="text" required style="width:100%; padding:12px; margin-top:8px;" />
+          </div>
+
+          <div>
+            <label for="website"><strong>Website</strong></label><br />
+            <input id="website" name="website" type="url" required style="width:100%; padding:12px; margin-top:8px;" />
+          </div>
+
+          <div>
+            <label for="interest_type"><strong>Interés principal</strong></label><br />
+            <select id="interest_type" name="interest_type" required style="width:100%; padding:12px; margin-top:8px;">
+              <option value="">Selecciona una opción</option>
+              <option value="m_and_a">M&A</option>
+              <option value="real_estate">Real Estate</option>
+              <option value="capital_markets">Capital Markets</option>
+              <option value="general">General Iberia Market Signals</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="notes"><strong>Notas</strong></label><br />
+            <textarea id="notes" name="notes" rows="4" style="width:100%; padding:12px; margin-top:8px;"></textarea>
+          </div>
+
+          <div class="cta-group" style="margin-top:8px;">
+            <button type="submit" class="btn btn-primary">Solicitar muestra</button>
+            <a class="btn btn-secondary" href="index.html">Volver a Home</a>
+          </div>
+
+          <p id="form-status" style="margin-top:16px; color:#444;"></p>
+        </div>
+      </form>
     </div>
   </section>
 
   <footer class="container footer">
-    <p>Criterial Signals — Sample Signal Brief.</p>
+    <p>Criterial Signals — Sample request form.</p>
   </footer>
+
+  <script>
+    const webhookUrl = "https://hook.eu1.make.com/wdqxnu8n4ky09c4c5lggmvj5v2vdi6el";
+
+    const form = document.getElementById("sample-form");
+    const statusEl = document.getElementById("form-status");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        full_name: document.getElementById("full_name").value,
+        email: document.getElementById("email").value,
+        company_name: document.getElementById("company_name").value,
+        website: document.getElementById("website").value,
+        interest_type: document.getElementById("interest_type").value,
+        notes: document.getElementById("notes").value
+      };
+
+      statusEl.textContent = "Enviando solicitud...";
+
+      try {
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          statusEl.textContent = "Solicitud enviada correctamente.";
+          form.reset();
+        } else {
+          statusEl.textContent = "La solicitud no se ha podido enviar.";
+        }
+      } catch (err) {
+        statusEl.textContent = "Error de conexión al enviar la solicitud.";
+      }
+    });
+  </script>
 </body>
 </html>
