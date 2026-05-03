@@ -1,0 +1,69 @@
+# ============================================
+# .gitignore — Criterial Signals
+# ============================================
+
+# --- Secrets and environment files ---
+# These contain API keys and credentials. Never commit.
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# --- Node.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.pnp
+.pnp.js
+
+# --- TypeScript / build output ---
+dist/
+build/
+*.tsbuildinfo
+.tsbuild/
+
+# --- Deno ---
+.deno/
+
+# --- Supabase CLI ---
+# Local cache and temporary files. Project linkage is machine-specific.
+.supabase/
+supabase/.temp/
+supabase/.branches/
+
+# --- IDE and editor files ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS-generated files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Windows / WSL artifacts ---
+*:Zone.Identifier
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Test coverage ---
+coverage/
+.nyc_output/
+
+# --- Stripe CLI local config ---
+# Stripe CLI sometimes writes local files. Keep them out.
+.stripe/
