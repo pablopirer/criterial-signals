@@ -136,16 +136,26 @@
       await client.auth.signOut();
     });
 
-    client.auth.onAuthStateChange(async (event, session) => {
+    async function handleSession(session) {
       if (session) {
         showSection("loading");
         userEmailEl.textContent = session.user.email;
-        await loadPublications();
+        try {
+          await loadPublications();
+        } catch (err) {
+          publicationsList.innerHTML = '<p style="color:#888;">Error al cargar publicaciones.</p>';
+        }
         showSection("content");
       } else {
         showSection("auth");
       }
-    });
+    }
+
+    // Explicit initial check — fires immediately on page load
+    client.auth.getSession().then(({ data: { session } }) => handleSession(session));
+
+    // Listener for auth state changes (login, logout, token refresh)
+    client.auth.onAuthStateChange((_event, session) => handleSession(session));
   </script>
 </body>
 </html>
