@@ -136,7 +136,12 @@
       await client.auth.signOut();
     });
 
+    let sessionResolved = false;
+
     async function handleSession(session) {
+      if (sessionResolved) return;
+      sessionResolved = true;
+
       if (session) {
         showSection("loading");
         userEmailEl.textContent = session.user.email;
@@ -151,11 +156,15 @@
       }
     }
 
-    // Explicit initial check — fires immediately on page load
-    client.auth.getSession().then(({ data: { session } }) => handleSession(session));
+    // Fallback: if onAuthStateChange doesn't fire in 5s, show auth form
+    const fallbackTimer = setTimeout(() => {
+      if (!sessionResolved) { sessionResolved = true; showSection("auth"); }
+    }, 5000);
 
-    // Listener for auth state changes (login, logout, token refresh)
-    client.auth.onAuthStateChange((_event, session) => handleSession(session));
+    client.auth.onAuthStateChange((_event, session) => {
+      clearTimeout(fallbackTimer);
+      handleSession(session);
+    });
   </script>
 </body>
 </html>
