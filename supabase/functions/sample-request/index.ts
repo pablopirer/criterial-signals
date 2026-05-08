@@ -26,6 +26,7 @@
 
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { generateBrief } from "../_shared/anthropic.ts";
+import { sendBriefEmail } from "../_shared/resend.ts";
 import type {
   SampleRequestErrorResponse,
   SampleRequestPayload,
@@ -250,8 +251,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
         .update({ status: "generated" })
         .eq("id", requestId);
     }
+
+    // 7. Send the brief by email.
+    try {
+      await sendBriefEmail({
+        to: email,
+        recipientName: data.full_name ?? "",
+        interestType: data.interest_type ?? "Iberia",
+        briefText,
+      });
+      console.log(`Brief emailed to ${email}`);
+    } catch (err) {
+      console.error("Resend delivery failed", err);
+    }
   }
 
-  // 7. Public response.
+  // 8. Public response.
   return jsonResponse({ ok: true, request_id: requestId }, 200);
 });
