@@ -22,30 +22,130 @@
   <main class="container hero">
     <p class="eyebrow">Archive</p>
     <h1>Archivo de publicaciones</h1>
-    <p class="subheadline">
-      Aquí aparecerán extractos y publicaciones seleccionadas de Criterial Signals.
-    </p>
+    <p class="subheadline">Acceso exclusivo para suscriptores del plan Pro.</p>
   </main>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Weekly Signals — Demo Entry</h2>
-        <p>Ejemplo de entrada del archivo para reforzar continuidad editorial y credibilidad del producto.</p>
-      </div>
-      <div class="card">
-        <h2>Monthly Brief — Demo Entry</h2>
-        <p>Ejemplo de publicación más estructurada que más adelante se generará de forma recurrente.</p>
-      </div>
-      <div class="card">
-        <h2>Sample Brief — Demo Entry</h2>
-        <p>Ejemplo de pieza breve orientada a mostrar formato, criterio y utilidad.</p>
+  <!-- Loading state -->
+  <section class="container section" id="loading-section">
+    <p style="color:#888;">Cargando...</p>
+  </section>
+
+  <!-- Auth section: shown when not authenticated -->
+  <section class="container section" id="auth-section" style="display:none;">
+    <div class="card" style="max-width:480px;">
+      <h2>Acceder al archivo</h2>
+      <p style="margin-bottom:24px; color:#555;">
+        Introduce tu email de suscripción y te enviamos un enlace de acceso directo.
+      </p>
+      <div style="display:grid; gap:16px;">
+        <div>
+          <label for="auth-email"><strong>Email</strong></label><br />
+          <input id="auth-email" type="email" placeholder="tu@email.com"
+            style="width:100%; padding:12px; margin-top:8px;" />
+        </div>
+        <div class="cta-group">
+          <button id="send-magic-link" class="btn btn-primary">Enviar enlace de acceso</button>
+        </div>
+        <p id="auth-status" style="color:#444;"></p>
       </div>
     </div>
+  </section>
+
+  <!-- Content section: shown when authenticated -->
+  <section class="container section" id="content-section" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+      <p id="user-email" style="color:#555; font-size:0.9rem;"></p>
+      <button id="sign-out" class="btn btn-secondary" style="font-size:0.85rem; padding:8px 16px;">
+        Cerrar sesión
+      </button>
+    </div>
+    <div id="publications-list"></div>
   </section>
 
   <footer class="container footer">
     <p>Criterial Signals — Archive.</p>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const SUPABASE_URL = "https://epmltqhtxkmfboaxdois.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const authSection      = document.getElementById("auth-section");
+    const contentSection   = document.getElementById("content-section");
+    const loadingSection   = document.getElementById("loading-section");
+    const userEmailEl      = document.getElementById("user-email");
+    const publicationsList = document.getElementById("publications-list");
+    const authStatus       = document.getElementById("auth-status");
+
+    function showSection(name) {
+      loadingSection.style.display  = name === "loading" ? "" : "none";
+      authSection.style.display     = name === "auth"    ? "" : "none";
+      contentSection.style.display  = name === "content" ? "" : "none";
+    }
+
+    async function loadPublications() {
+      const { data, error } = await client
+        .from("publications")
+        .select("id, title, type, period_start, period_end, body_markdown, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        publicationsList.innerHTML =
+          '<p style="color:#888;">No hay publicaciones disponibles todavía.</p>';
+        return;
+      }
+
+      publicationsList.innerHTML = data.map((pub) => {
+        const date = pub.period_start
+          ? new Date(pub.period_start).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
+          : new Date(pub.created_at).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+
+        const body = pub.body_markdown
+          ? marked.parse(pub.body_markdown)
+          : "<p><em>Contenido no disponible.</em></p>";
+
+        return `
+          <div class="card" style="margin-bottom:32px;">
+            <p style="font-size:0.8rem; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+              ${pub.type} &mdash; ${date}
+            </p>
+            <h2 style="margin-bottom:16px;">${pub.title}</h2>
+            <div style="line-height:1.7; color:#333;">${body}</div>
+          </div>`;
+      }).join("");
+    }
+
+    document.getElementById("send-magic-link").addEventListener("click", async () => {
+      const email = document.getElementById("auth-email").value.trim();
+      if (!email) { authStatus.textContent = "Introduce tu email."; return; }
+      authStatus.textContent = "Enviando enlace...";
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href.split("#")[0] }
+      });
+      authStatus.textContent = error
+        ? "Error al enviar el enlace. Inténtalo de nuevo."
+        : "Enlace enviado. Revisa tu bandeja de entrada.";
+    });
+
+    document.getElementById("sign-out").addEventListener("click", async () => {
+      await client.auth.signOut();
+    });
+
+    client.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        showSection("loading");
+        userEmailEl.textContent = session.user.email;
+        await loadPublications();
+        showSection("content");
+      } else {
+        showSection("auth");
+      }
+    });
+  </script>
 </body>
 </html>
