@@ -42,6 +42,17 @@ It is currently an MVP in early validation. The repository contains the full sys
   and subscribers with breakdowns by status and type.
 - Historical `queued` and `generation_failed` sample requests cleaned up.
 
+### Day 6 — Complete (2026-05-08)
+- `scripts/generate-content.sh weekly|monthly`: generates 3 variations via
+  Anthropic, lets Pablo select one, saves as draft, optionally publishes.
+- `scripts/publish-draft.sh <id>`: publishes a draft by ID.
+- `prompts/weekly-digest.es.md` and `prompts/monthly-brief.es.md` added.
+- Edge Function `get-publications`: verifies user JWT, checks subscribers
+  table (plan=pro, status=active), returns allowed publications. Replaces
+  PostgREST/RLS approach which broke after JWT key reset.
+- Note: PostgREST RLS (auth.uid/auth.email) does not work reliably after
+  a JWT key reset. Use Edge Functions for authenticated data access.
+
 ### Validated and working in production
 - Public website hosted on GitHub Pages.
 - Lead capture form → Edge Function → Supabase → Anthropic → Resend.
@@ -95,7 +106,8 @@ It is currently an MVP in early validation. The repository contains the full sys
 - **Day 3:** Complete.
 - **Day 4:** Complete.
 - **Day 5:** Complete.
-- **Day 6:** Recurring content engine — weekly digest and monthly brief generation.
+- **Day 6:** Complete.
+- **Day 7:** TBD.
 
 ## Rules and restrictions
 
