@@ -87,13 +87,15 @@
       contentSection.style.display  = name === "content" ? "" : "none";
     }
 
-    async function loadPublications() {
-      const { data, error } = await client
-        .from("publications")
-        .select("id, title, type, period_start, period_end, body_markdown, created_at")
-        .order("created_at", { ascending: false });
+    async function loadPublications(accessToken) {
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/get-publications`,
+        { headers: { "Authorization": `Bearer ${accessToken}` } }
+      );
+      const json = await res.json();
+      const data = json.publications;
 
-      if (error || !data || data.length === 0) {
+      if (!res.ok || !data || data.length === 0) {
         publicationsList.innerHTML =
           '<p style="color:#888;">No hay publicaciones disponibles todavía.</p>';
         return;
@@ -146,7 +148,7 @@
         showSection("loading");
         userEmailEl.textContent = session.user.email;
         try {
-          await loadPublications();
+          await loadPublications(session.access_token);
         } catch (err) {
           publicationsList.innerHTML = '<p style="color:#888;">Error al cargar publicaciones.</p>';
         }
