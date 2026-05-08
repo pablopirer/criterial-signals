@@ -19,34 +19,51 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Anthropic API (Claude Haiku) replaces OpenAI for brief generation.
 - Idempotency via unique index on `lower(email)` in `leads`.
 - Shared-secret webhook protection via `x-criterial-signal` header.
-- Soft cutover: Make still running. Web form still points to Make webhook.
-- Resend email delivery deferred to a second pass.
+
+### Day 3 — Complete (2026-05-08)
+- Web form (`sample.html`) cutover from Make to Edge Function.
+- Make scenario deactivated.
+- Resend integrated for email delivery of generated briefs.
+- Full funnel validated end-to-end from form to inbox.
+- Note: Supabase deprecated legacy API keys on 2026-05-03. Use publishable
+  key (`sb_publishable_...`) for JS SDK; legacy JWT anon key still works
+  for Edge Function Bearer auth.
+
+### Day 4 — Complete (2026-05-08)
+- Supabase Auth enabled with magic link (SMTP via Resend).
+- RLS policy on `publications`: pro/active subscribers can read `weekly`
+  and `monthly` publications with `status = published`.
+- `archive.html` updated: magic link login, fetches publications via
+  Supabase JS SDK, renders markdown with marked.js.
+
+### Day 5 — Complete (2026-05-08)
+- `scripts/test-e2e.sh`: verifies full funnel with PASS/FAIL per step.
+- `scripts/funnel-metrics.sh`: reports leads, sample requests, publications
+  and subscribers with breakdowns by status and type.
+- Historical `queued` and `generation_failed` sample requests cleaned up.
 
 ### Validated and working in production
 - Public website hosted on GitHub Pages.
-- Lead capture form with webhook integration (still via Make).
-- Automated lead and sample request registration in Supabase.
-- Sample brief generation via Anthropic API (Claude Haiku).
+- Lead capture form → Edge Function → Supabase → Anthropic → Resend.
+- Authenticated archive for Pro subscribers (magic link via Supabase Auth).
 - Stripe Payment Link for the Pro plan (€249/month).
 - Automated subscriber registration on Stripe webhook.
+- 14 real leads, 4 active Pro subscribers, 7 generated briefs.
 
 ### Not yet built
-- Automated email delivery of generated samples (Resend — Day 2 second pass).
-- Authenticated access to premium content for subscribers.
 - Recurring content engine (weekly digests, monthly briefs).
-- End-to-end testing of the funnel.
-- Observability and conversion dashboards.
+- Content publishing workflow (moving publications from `draft` to `published`).
 
 ## Stack and architecture
 
 ### Current production stack
 - **Frontend:** static HTML/CSS hosted on GitHub Pages, located in `/web`.
 - **Database:** Supabase (PostgreSQL).
-- **Automation:** Make (Integromat) — still live, pending cutover validation.
+- **Automation:** Make (Integromat) — deactivated. Edge Function is now live.
 - **Backend logic:** Supabase Edge Functions (TypeScript on Deno) — `sample-request` deployed.
 - **Content generation:** Anthropic API (Claude Haiku `claude-haiku-4-5-20251001`).
 - **Payments:** Stripe (Payment Links + webhooks).
-- **Email (planned):** Resend.
+- **Email:** Resend (`noreply@criterialsignals.com`, domain verified).
 
 ### Schema notes (audited 2026-05-08)
 - `leads.interest_type` — nullable (was NOT NULL, fixed in Day 2 migration).
@@ -74,16 +91,16 @@ It is currently an MVP in early validation. The repository contains the full sys
 ## Current roadmap
 
 - **Day 1:** Complete.
-- **Day 2:** Complete. Edge Function deployed and validated. Resend deferred.
-- **Day 3:** Cutover web form to Edge Function. Add Resend email delivery.
-- **Day 4:** Authenticated access via Supabase Auth + RLS. Update `/web/archive.html`.
-- **Day 5:** End-to-end test harness. Observability script for funnel metrics.
+- **Day 2:** Complete.
+- **Day 3:** Complete.
+- **Day 4:** Complete.
+- **Day 5:** Complete.
+- **Day 6:** Recurring content engine — weekly digest and monthly brief generation.
 
 ## Rules and restrictions
 
 1. **Do not modify production database schema directly.** All schema changes go through SQL migrations under `/supabase/migrations`.
-2. **Do not deactivate Make scenarios until Day 3 cutover is validated.**
-3. **Do not commit secrets.**
+2. **Do not commit secrets.**
 4. **Do not invent business logic.**
 5. **Do not change Stripe configuration via code.**
 6. **Always show a plan before executing destructive operations.**
