@@ -3,67 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Archive | Criterial Signals</title>
+  <title>Archivo | Criterial Signals</title>
   <meta name="description" content="Archivo de publicaciones de Criterial Signals." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="container">
-    <div class="topbar">
-      <div class="brand"><a href="index.html" style="text-decoration:none;color:inherit;">Criterial Signals</a></div>
-      <nav class="nav">
-        <a href="sample.html">Sample</a>
-        <a href="pricing.html">Pricing</a>
-        <a href="about.html">About</a>
-      </nav>
+
+  <header class="site-header">
+    <div class="container">
+      <div class="topbar">
+        <a href="index.html" class="brand">Criterial Signals</a>
+        <nav class="nav">
+          <a href="sample.html">Muestra</a>
+          <a href="pricing.html">Planes</a>
+          <a href="about.html">Nosotros</a>
+        </nav>
+      </div>
     </div>
   </header>
 
   <main class="container hero">
-    <p class="eyebrow">Archive</p>
+    <p class="eyebrow">Archivo</p>
     <h1>Archivo de publicaciones</h1>
     <p class="subheadline">Acceso exclusivo para suscriptores del plan Pro.</p>
   </main>
 
   <!-- Loading state -->
   <section class="container section" id="loading-section">
-    <p style="color:#888;">Cargando...</p>
+    <p style="color: #AAAAAA; font-size: 14px;">Cargando...</p>
   </section>
 
   <!-- Auth section: shown when not authenticated -->
-  <section class="container section" id="auth-section" style="display:none;">
-    <div class="card" style="max-width:480px;">
+  <section class="container section" id="auth-section" style="display: none;">
+    <div class="card" style="max-width: 480px;">
       <h2>Acceder al archivo</h2>
-      <p style="margin-bottom:24px; color:#555;">
+      <p style="margin: 10px 0 20px;">
         Introduce tu email de suscripción y te enviamos un enlace de acceso directo.
       </p>
-      <div style="display:grid; gap:16px;">
-        <div>
-          <label for="auth-email"><strong>Email</strong></label><br />
-          <input id="auth-email" type="email" placeholder="tu@email.com"
-            style="width:100%; padding:12px; margin-top:8px;" />
-        </div>
-        <div class="cta-group">
-          <button id="send-magic-link" class="btn btn-primary">Enviar enlace de acceso</button>
-        </div>
-        <p id="auth-status" style="color:#444;"></p>
+      <label for="auth-email">Email</label>
+      <input id="auth-email" type="email" placeholder="tu@email.com" class="text-input" />
+      <div class="cta-group" style="margin-top: 4px;">
+        <button id="send-magic-link" class="btn btn-primary">Enviar enlace de acceso</button>
       </div>
+      <p id="auth-status" style="margin-top: 16px; font-size: 14px; color: #555;"></p>
     </div>
   </section>
 
   <!-- Content section: shown when authenticated -->
-  <section class="container section" id="content-section" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-      <p id="user-email" style="color:#555; font-size:0.9rem;"></p>
-      <button id="sign-out" class="btn btn-secondary" style="font-size:0.85rem; padding:8px 16px;">
-        Cerrar sesión
-      </button>
+  <section class="container section" id="content-section" style="display: none;">
+    <div class="archive-bar">
+      <p id="user-email"></p>
+      <button id="sign-out" class="btn btn-secondary">Cerrar sesión</button>
     </div>
     <div id="publications-list"></div>
   </section>
 
-  <footer class="container footer">
-    <p>Criterial Signals — Archive.</p>
+  <footer class="site-footer container">
+    <p>Criterial Signals &mdash; Inteligencia de mercado para Iberia.</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -97,7 +96,7 @@
 
       if (!res.ok || !data || data.length === 0) {
         publicationsList.innerHTML =
-          '<p style="color:#888;">No hay publicaciones disponibles todavía.</p>';
+          '<p style="color: #AAAAAA; font-size: 14px;">No hay publicaciones disponibles todavía.</p>';
         return;
       }
 
@@ -111,12 +110,10 @@
           : "<p><em>Contenido no disponible.</em></p>";
 
         return `
-          <div class="card" style="margin-bottom:32px;">
-            <p style="font-size:0.8rem; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
-              ${pub.type} &mdash; ${date}
-            </p>
-            <h2 style="margin-bottom:16px;">${pub.title}</h2>
-            <div style="line-height:1.7; color:#333;">${body}</div>
+          <div class="pub-card">
+            <p class="pub-meta">${pub.type} &mdash; ${date}</p>
+            <h2>${pub.title}</h2>
+            <div class="pub-body">${body}</div>
           </div>`;
       }).join("");
     }
@@ -150,7 +147,7 @@
         try {
           await loadPublications(session.access_token);
         } catch (err) {
-          publicationsList.innerHTML = '<p style="color:#888;">Error al cargar publicaciones.</p>';
+          publicationsList.innerHTML = '<p style="color: #AAAAAA; font-size: 14px;">Error al cargar publicaciones.</p>';
         }
         showSection("content");
       } else {
