@@ -53,6 +53,21 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Note: PostgREST RLS (auth.uid/auth.email) does not work reliably after
   a JWT key reset. Use Edge Functions for authenticated data access.
 
+### Day 7 — Complete (2026-05-08)
+- Full visual redesign of all pages in `/web`.
+- Design system: Playfair Display (serif headlines) + Inter (body), card-based
+  layout, `#F7F7F5` background, white cards with `#E5E5DF` borders, consistent
+  header (`site-header` with border-bottom) and footer (`site-footer`) across
+  all pages. Inspired by Miura Partners (miura.partners).
+- All 8 pages updated: `index.html`, `pricing.html`, `about.html`,
+  `sample.html`, `archive.html`, `request-received.html`, `success.html`,
+  `cancel.html`.
+- `styles.css` extended with shared components: `.card`, `.card-featured`,
+  `.pub-card`, `.pub-body`, `.archive-bar`, `.text-input`, form styles,
+  pricing grid, status page styles.
+- Nav labels updated to Spanish (Muestra / Planes / Nosotros).
+- All JavaScript in `sample.html` and `archive.html` preserved unchanged.
+
 ### Validated and working in production
 - Public website hosted on GitHub Pages.
 - Lead capture form → Edge Function → Supabase → Anthropic → Resend.
@@ -107,7 +122,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 - **Day 4:** Complete.
 - **Day 5:** Complete.
 - **Day 6:** Complete.
-- **Day 7:** TBD.
+- **Day 7:** Complete.
 
 ## Rules and restrictions
 
