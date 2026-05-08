@@ -108,7 +108,7 @@
   </footer>
 
   <script>
-    const webhookUrl = "https://hook.eu1.make.com/wdqxnu8n4ky09c4c5lggmvj5v2vdi6el";
+    const webhookUrl = "https://epmltqhtxkmfboaxdois.supabase.co/functions/v1/sample-request";
 
     const form = document.getElementById("sample-form");
     const statusEl = document.getElementById("form-status");
@@ -131,7 +131,9 @@
         const res = await fetch(webhookUrl, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI",
+            "x-criterial-signal": "596394206a475b401e93639148407dd7b4c8ce7fffd36ccaa204aca73b527dcb"
           },
           body: JSON.stringify(payload)
         });
