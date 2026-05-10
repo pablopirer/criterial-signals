@@ -283,7 +283,8 @@ h1 {
   margin-bottom: 40px;
 }
 
-form label {
+form label,
+.card label {
   display: block;
   font-size: 13px;
   font-weight: 500;
@@ -310,11 +311,24 @@ form textarea,
   display: block;
 }
 
+form input,
+form textarea,
+.text-input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 form input:focus,
 form select:focus,
 form textarea:focus,
 .text-input:focus {
   border-color: #111111;
+}
+
+button.btn {
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
 }
 
 /* PRICING */
