@@ -281,9 +281,12 @@ h1 {
 @media (max-width: 480px) {
   .cta-group {
     flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
   }
 
   .cta-group .btn {
+    display: block;
     width: 100%;
     text-align: center;
   }
