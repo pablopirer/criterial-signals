@@ -68,9 +68,17 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Nav labels updated to Spanish (Muestra / Planes / Nosotros).
 - All JavaScript in `sample.html` and `archive.html` preserved unchanged.
 
+### Day 8 — Complete (2026-05-10)
+- Email delivery of generated sample briefs validated end-to-end.
+- `_shared/resend.ts` and the step 7 call in `sample-request/index.ts` were
+  already implemented; the function was redeployed to include `resend.ts`.
+- Full funnel confirmed: form → Edge Function → Anthropic → Supabase → Resend
+  → user inbox.
+- Note: web/mobile design remains a work in progress (not final).
+
 ### Validated and working in production
-- Public website hosted on GitHub Pages.
-- Lead capture form → Edge Function → Supabase → Anthropic → Resend.
+- Public website hosted on GitHub Pages (files at repo root).
+- Lead capture form → Edge Function → Supabase → Anthropic → Resend → inbox.
 - Authenticated archive for Pro subscribers (magic link via Supabase Auth).
 - Stripe Payment Link for the Pro plan (€249/month).
 - Automated subscriber registration on Stripe webhook.
@@ -123,6 +131,8 @@ It is currently an MVP in early validation. The repository contains the full sys
 - **Day 5:** Complete.
 - **Day 6:** Complete.
 - **Day 7:** Complete.
+- **Day 8:** Complete.
+- **Day 9:** TBD.
 
 ## Rules and restrictions
 
