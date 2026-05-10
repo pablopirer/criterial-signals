@@ -76,6 +76,29 @@ It is currently an MVP in early validation. The repository contains the full sys
   → user inbox.
 - Note: web/mobile design remains a work in progress (not final).
 
+### Day 11 — Complete (2026-05-10)
+- Mobile-specific audit and fixes (second pass, all 8 pages).
+- Root bug fixed: `.hero`, `.section`, `.site-footer` used 3-value padding
+  shorthand (`padding: X 0 X`) which silently set horizontal padding to 0,
+  overriding `.container`'s lateral padding on every page at every viewport
+  < 1080px. Fixed by switching to explicit `padding-top`/`padding-bottom`
+  on all 7 affected declarations (base + ≤900px + ≤600px breakpoints).
+- iOS Safari zoom fix: form inputs, selects, and textareas set to
+  `font-size: 16px` at ≤600px (< 16px triggers automatic zoom on iOS).
+- Tap targets: `.btn` padding increased to `14px 22px` at ≤600px (~45px
+  height, meets 44px Apple HIG / WCAG minimum).
+- `.pricing-card` padding reduced to 20px at ≤600px (was 28px, now matches
+  `.card`).
+- Section spacing on mobile reduced to `8px 0 20px` to eliminate "floating
+  cards" effect caused by 56px inter-section gap (36px bottom + 20px top).
+- Form labels increased to `font-size: 14px` at ≤600px.
+- `h1` `line-height` set to `1.2` at ≤600px for Playfair Display wrapped
+  headings.
+- Form inputs set to `max-width: 100%` at ≤600px.
+- Note: never use 3-value `padding: X 0 X` shorthand on elements that also
+  carry `.container` — it zeroes out the horizontal padding by cascade.
+  Always use `padding-top` / `padding-bottom` for layout classes.
+
 ### Day 10 — Complete (2026-05-10)
 - Web/mobile design polish (Phase 2, Priority 3).
 - `styles.css`: removed duplicate Google Fonts @import; `.grid` now 2-col
@@ -179,7 +202,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 
 ## Current roadmap
 
-### Phase 1 — Foundation (Days 1–10) ✅ Complete
+### Phase 1 — Foundation (Days 1–11) ✅ Complete
 
 All infrastructure, automation, and core flows are live and validated.
 
@@ -198,7 +221,7 @@ Goal: move from manual content generation to a reliable recurring operation.
 - Ensure `archive.html` displays new publications correctly after publish.
 - Run `scripts/test-e2e.sh` after each publish cycle.
 
-**Priority 3 — Web and design finalization** ✅ Complete (Day 10)
+**Priority 3 — Web and design finalization** ✅ Complete (Days 10–11)
 - All 8 pages audited and updated. Design system consistently applied.
 - Pricing updated to Free + Pro (2-plan structure).
 - Mobile responsiveness improved. Design is functional and coherent.
