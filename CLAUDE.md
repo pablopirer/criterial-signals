@@ -76,6 +76,27 @@ It is currently an MVP in early validation. The repository contains the full sys
   → user inbox.
 - Note: web/mobile design remains a work in progress (not final).
 
+### Day 10 — Complete (2026-05-10)
+- Web/mobile design polish (Phase 2, Priority 3).
+- `styles.css`: removed duplicate Google Fonts @import; `.grid` now 2-col
+  at tablet (≤900px) and 1-col at mobile (≤600px); hero padding reduced on
+  mobile; nav active state via `aria-current="page"`; `.card>.cta-group`
+  margin moved from inline to CSS; added `.card--narrow`, `.pricing-card--featured`,
+  `.status-page` refactored as centering modifier.
+- Background: `#F7F7F5` → `#F4F0EA` (warmer cream/raw tone).
+- Brand logo: 17px → 24px, color `#111111` → `#0D1F3C` (dark navy).
+- Mobile container padding: increased to 32px at ≤600px (was 24px).
+- `pricing.html`: rewritten with 2-plan structure (Free + Pro) per product
+  decisions; uses `.pricing-grid`/`.pricing-card` classes; Basic and Team
+  tiers removed.
+- `cancel.html`: added 3-card info section (was the only page without one).
+- `request-received.html`, `success.html`, `cancel.html`: `.status-page`
+  modifier applied for centered hero layout.
+- Inline `style="margin-top: 20px;"` removed from `.cta-group` across pages.
+- `aria-current="page"` added to active nav links on `sample.html`,
+  `pricing.html`, `about.html`.
+- `archive.html`: inline `max-width` replaced with `.card--narrow` class.
+
 ### Day 9 — Complete (2026-05-10)
 - Subscriber welcome email automated on new Pro subscriber registration.
 - Edge Function `welcome-subscriber` deployed, triggered by Supabase Database
@@ -158,7 +179,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 
 ## Current roadmap
 
-### Phase 1 — Foundation (Days 1–9) ✅ Complete
+### Phase 1 — Foundation (Days 1–10) ✅ Complete
 
 All infrastructure, automation, and core flows are live and validated.
 
@@ -177,10 +198,11 @@ Goal: move from manual content generation to a reliable recurring operation.
 - Ensure `archive.html` displays new publications correctly after publish.
 - Run `scripts/test-e2e.sh` after each publish cycle.
 
-**Priority 3 — Web and design finalization**
-- Web/mobile design is still marked as work in progress (Day 8 note).
-- Audit all 8 pages for visual consistency and mobile responsiveness.
-- No new pages needed until Company Snapshot is built.
+**Priority 3 — Web and design finalization** ✅ Complete (Day 10)
+- All 8 pages audited and updated. Design system consistently applied.
+- Pricing updated to Free + Pro (2-plan structure).
+- Mobile responsiveness improved. Design is functional and coherent.
+- Further polish remains possible but not blocking.
 
 ### Phase 3 — Growth and conversion
 
