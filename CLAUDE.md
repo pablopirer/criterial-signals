@@ -102,18 +102,29 @@ It is currently an MVP in early validation. The repository contains the full sys
 - 14 real leads, 4 active Pro subscribers, 7 generated briefs.
 
 ### Not yet built
-- Recurring content engine (weekly digests, monthly briefs).
-- Content publishing workflow (moving publications from `draft` to `published`).
+- Recurring content engine (weekly digests, monthly briefs) — scripts exist
+  but execution is manual; not yet scheduled or automated.
+- Content publishing workflow automation (draft → published without manual step).
+- Company Snapshot product (on-demand, see Product decisions below).
+- LinkedIn distribution flow for snapshots.
+- Web/mobile design finalization.
+
+---
 
 ## Stack and architecture
 
 ### Current production stack
 - **Frontend:** static HTML/CSS hosted on GitHub Pages, located in `/web`.
 - **Database:** Supabase (PostgreSQL).
-- **Automation:** Make (Integromat) — deactivated. Edge Function is now live.
-- **Backend logic:** Supabase Edge Functions (TypeScript on Deno) — `sample-request` deployed.
+- **Automation:** Make (Integromat) — deactivated for sample-request; still
+  active for Stripe webhook → subscribers registration.
+- **Backend logic:** Supabase Edge Functions (TypeScript on Deno).
+  - `sample-request` — lead capture, brief generation, email delivery.
+  - `get-publications` — authenticated access to Pro publications.
+  - `welcome-subscriber` — triggered on new Pro subscriber INSERT.
+  - `_shared/` — `anthropic.ts`, `supabase.ts`, `resend.ts`.
 - **Content generation:** Anthropic API (Claude Haiku `claude-haiku-4-5-20251001`).
-- **Payments:** Stripe (Payment Links + webhooks).
+- **Payments:** Stripe (Payment Links + webhooks → Make → Supabase).
 - **Email:** Resend (`noreply@criterialsignals.com`, domain verified).
 
 ### Schema notes (audited 2026-05-08)
@@ -124,6 +135,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Always audit live schema before writing functions that insert/upsert data.
 
 ### Repository layout
+```
 /
 ├── CLAUDE.md
 ├── OPERATING_BLUEPRINT.md
@@ -132,34 +144,87 @@ It is currently an MVP in early validation. The repository contains the full sys
 ├── /web
 ├── /supabase
 │   ├── /functions
-│   │   ├── /_shared         ← anthropic.ts, supabase.ts
-│   │   └── /sample-request  ← index.ts, types.ts, README.md
+│   │   ├── /_shared            ← anthropic.ts, supabase.ts, resend.ts
+│   │   ├── /sample-request     ← index.ts, types.ts, README.md
+│   │   ├── /get-publications   ← index.ts
+│   │   └── /welcome-subscriber ← index.ts
 │   └── /migrations
 ├── /prompts
 ├── /scripts
 └── /archive
+```
+
+---
 
 ## Current roadmap
 
-- **Day 1:** Complete.
-- **Day 2:** Complete.
-- **Day 3:** Complete.
-- **Day 4:** Complete.
-- **Day 5:** Complete.
-- **Day 6:** Complete.
-- **Day 7:** Complete.
-- **Day 8:** Complete.
-- **Day 9:** Complete.
+### Phase 1 — Foundation (Days 1–9) ✅ Complete
+
+All infrastructure, automation, and core flows are live and validated.
+
+### Phase 2 — Content engine (next)
+
+Goal: move from manual content generation to a reliable recurring operation.
+
+**Priority 1 — Recurring content cadence**
+- Establish a weekly rhythm using `scripts/generate-content.sh weekly`.
+- Establish a monthly rhythm using `scripts/generate-content.sh monthly`.
+- Decide: keep manual selection indefinitely, or add light scheduling later.
+- No automation required yet — manual execution with the existing scripts is sufficient.
+
+**Priority 2 — Publishing workflow**
+- Clarify and document the draft → published step for each content type.
+- Ensure `archive.html` displays new publications correctly after publish.
+- Run `scripts/test-e2e.sh` after each publish cycle.
+
+**Priority 3 — Web and design finalization**
+- Web/mobile design is still marked as work in progress (Day 8 note).
+- Audit all 8 pages for visual consistency and mobile responsiveness.
+- No new pages needed until Company Snapshot is built.
+
+### Phase 3 — Growth and conversion
+
+Goal: activate distribution and begin converting leads to Pro.
+
+**Priority 1 — Company Snapshot (on-demand product)**
+- Manual first: generate snapshots by hand using Anthropic, deliver by email.
+- Validate demand and format before automating.
+- Once validated: build Edge Function `company-snapshot` (similar to `sample-request`).
+- Inputs: company name, context, requester email.
+- Output: snapshot delivered by email + stored in `publications`.
+
+**Priority 2 — LinkedIn distribution**
+- Publish reduced snapshot formats on LinkedIn with CTA to get full version.
+- Full version gated behind email capture (existing `sample-request` flow).
+- Immediate upsell to Pro on `request-received.html`.
+- No new infrastructure needed for initial manual validation.
+
+**Priority 3 — Conversion optimization**
+- Review copy and UX on `pricing.html` and `sample.html`.
+- Clarify the Free vs Pro value gap more explicitly.
+- Consider adding a social proof element (subscriber count, sample excerpt).
+
+### Phase 4 — Robustness (ongoing, lower priority)
+
+- Idempotency on Stripe webhook → subscribers (protect against duplicate events).
+- Error handling and retry logic in Edge Functions.
+- Alert on `generation_failed` sample requests.
+- Migrate Stripe webhook from Make to a dedicated Edge Function
+  (`stripe-webhook`) to remove the last Make dependency.
+
+---
 
 ## Rules and restrictions
 
 1. **Do not modify production database schema directly.** All schema changes go through SQL migrations under `/supabase/migrations`.
 2. **Do not commit secrets.**
-4. **Do not invent business logic.**
-5. **Do not change Stripe configuration via code.**
-6. **Always show a plan before executing destructive operations.**
-7. **Use `git mv` to move files.**
-8. **When in doubt about scope, ask.**
+3. **Do not invent business logic.**
+4. **Do not change Stripe configuration via code.**
+5. **Always show a plan before executing destructive operations.**
+6. **Use `git mv` to move files.**
+7. **When in doubt about scope, ask.**
+
+---
 
 ## Useful commands reference
 
@@ -170,7 +235,18 @@ supabase functions deploy <name>
 supabase secrets list
 supabase secrets set KEY=value
 git add . && git commit -m "message" && git push
+
+# Content generation
+scripts/generate-content.sh weekly
+scripts/generate-content.sh monthly
+scripts/publish-draft.sh <id>
+
+# Monitoring
+scripts/test-e2e.sh
+scripts/funnel-metrics.sh
 ```
+
+---
 
 ## Product decisions (May 2026)
 
@@ -203,6 +279,8 @@ git add . && git commit -m "message" && git push
 - The snapshot serves simultaneously as a product, a marketing asset, and a
   lead generation mechanism.
 - Initial validation will be done manually before automating the flow.
+
+---
 
 ## Contact and ownership
 
