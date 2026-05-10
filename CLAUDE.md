@@ -172,6 +172,38 @@ supabase secrets set KEY=value
 git add . && git commit -m "message" && git push
 ```
 
+## Product decisions (May 2026)
+
+### Plans
+- Two plans: Free and Pro. No additional tiers for now.
+- The gap between Free and Pro must be meaningful and clear to the user.
+- Plans are individual-facing. Company affiliation is optional — captured
+  via form field or inferred from corporate email domain.
+
+### Recurring deliverables (Pro plan)
+- Weekly digest and monthly brief, plus full access to the publications archive.
+- Target audience: individual professionals — analysts, investors, M&A advisors.
+
+### On-demand deliverables
+- First on-demand product: **Company Snapshot** — an executive summary of a
+  company with Iberian market context (competitive position, recent signals,
+  relevant deal activity).
+- Additional snapshot-type products may be added over time within the same
+  area of expertise.
+- Available as a standalone product and included in plans (with different
+  conditions per plan tier).
+- Dual audience: individual professionals and institutional teams (M&A
+  boutiques, search funds, advisory firms).
+
+### Distribution and lead acquisition strategy
+- Snapshots published on LinkedIn in a reduced format with a CTA to get the
+  full version.
+- Full version delivered in exchange for an email address (lead capture),
+  with immediate upsell to Pro.
+- The snapshot serves simultaneously as a product, a marketing asset, and a
+  lead generation mechanism.
+- Initial validation will be done manually before automating the flow.
+
 ## Contact and ownership
 
 This project is owned and operated by Pablo Pirer.
