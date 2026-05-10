@@ -41,14 +41,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
   }
 
-  // Validate that the request comes from Supabase (service role key).
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!serviceRoleKey) {
-    console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+  // Validate that the request comes from the configured Database Webhook.
+  // The webhook must send: x-webhook-secret: <WELCOME_SUBSCRIBER_SECRET>
+  const webhookSecret = Deno.env.get("WELCOME_SUBSCRIBER_SECRET");
+  if (!webhookSecret) {
+    console.error("WELCOME_SUBSCRIBER_SECRET is not configured");
     return jsonResponse({ ok: false, error: "Server misconfigured" }, 500);
   }
-  const authHeader = req.headers.get("authorization") ?? "";
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
+  const secretHeader = req.headers.get("x-webhook-secret") ?? "";
+  if (secretHeader !== webhookSecret) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
 

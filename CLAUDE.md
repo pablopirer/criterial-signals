@@ -76,12 +76,29 @@ It is currently an MVP in early validation. The repository contains the full sys
   → user inbox.
 - Note: web/mobile design remains a work in progress (not final).
 
+### Day 9 — Complete (2026-05-10)
+- Subscriber welcome email automated on new Pro subscriber registration.
+- Edge Function `welcome-subscriber` deployed, triggered by Supabase Database
+  Webhook on INSERT to `subscribers` where `plan = 'pro'`.
+- Email includes: what they receive as Pro, archive access instructions
+  (magic link steps), and URL to `archive.html`.
+- Auth: custom `x-webhook-secret` header (not Authorization Bearer) to bypass
+  Supabase gateway JWT validation. Secret stored as `WELCOME_SUBSCRIBER_SECRET`
+  in function secrets. Function deployed with `--no-verify-jwt`.
+- Full flow validated: Stripe → Make → subscribers INSERT → webhook →
+  Edge Function → Resend → inbox + archive access confirmed.
+- Note: Supabase Database Webhooks do NOT automatically send the service role
+  key. Must configure custom headers manually in the Dashboard webhook editor.
+  The `Authorization: Bearer` approach fails because Supabase gateway validates
+  JWT format before reaching the function; use a custom header instead.
+
 ### Validated and working in production
 - Public website hosted on GitHub Pages (files at repo root).
 - Lead capture form → Edge Function → Supabase → Anthropic → Resend → inbox.
 - Authenticated archive for Pro subscribers (magic link via Supabase Auth).
 - Stripe Payment Link for the Pro plan (€249/month).
 - Automated subscriber registration on Stripe webhook.
+- Welcome email on new Pro subscriber registration (archive access instructions).
 - 14 real leads, 4 active Pro subscribers, 7 generated briefs.
 
 ### Not yet built
@@ -132,7 +149,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 - **Day 6:** Complete.
 - **Day 7:** Complete.
 - **Day 8:** Complete.
-- **Day 9:** TBD.
+- **Day 9:** Complete.
 
 ## Rules and restrictions
 
