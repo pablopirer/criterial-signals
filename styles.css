@@ -11,6 +11,7 @@ body {
   background: #F7F7F5;
   color: #111111;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 .container {
@@ -213,7 +214,7 @@ h1 {
 
 @media (max-width: 900px) {
   .container {
-    padding: 0 20px;
+    padding: 0 24px;
   }
 
   h1 {
@@ -229,11 +230,11 @@ h1 {
   }
 
   .hero {
-    padding: 48px 0 40px;
+    padding: 56px 0 48px;
   }
 
   .section {
-    padding: 12px 0 40px;
+    padding: 24px 0 48px;
   }
 }
 
