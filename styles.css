@@ -271,8 +271,10 @@ h1 {
     margin-left: 0;
   }
 
+  /* F: line-height más abierto para Playfair en móvil */
   h1 {
     font-size: 28px;
+    line-height: 1.2;
   }
 
   .subheadline {
@@ -280,6 +282,11 @@ h1 {
   }
 
   .card {
+    padding: 20px;
+  }
+
+  /* C: pricing-card reduce padding igual que .card */
+  .pricing-card {
     padding: 20px;
   }
 
@@ -299,6 +306,31 @@ h1 {
 
   .hero {
     padding: 40px 0 32px;
+  }
+
+  /* D: reducir separación vertical entre secciones */
+  .section {
+    padding: 20px 0 36px;
+  }
+
+  /* B: tap target mínimo 44px */
+  .btn {
+    padding: 14px 22px;
+  }
+
+  /* E: labels legibles en móvil */
+  form label,
+  .card label {
+    font-size: 14px;
+  }
+
+  /* A + G: evitar zoom en iOS y usar ancho completo */
+  form input,
+  form select,
+  form textarea,
+  .text-input {
+    font-size: 16px;
+    max-width: 100%;
   }
 }
 
