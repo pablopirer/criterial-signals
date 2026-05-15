@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encargos | Criterial</title>
+  <meta name="description" content="Encargos analíticos bajo demanda: valoraciones, análisis sectoriales y pitch decks para el mercado español." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <div class="topbar">
+        <a href="index.html" class="brand">Criterial Signals</a>
+        <nav class="nav">
+          <a href="sample.html">Signals</a>
+          <a href="encargos.html" aria-current="page">Encargos</a>
+          <a href="about.html">Nosotros</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container hero">
+    <p class="eyebrow">Trabajo analítico bajo demanda</p>
+    <h1>Análisis financiero para decisiones concretas.</h1>
+    <p class="subheadline">
+      Encargos puntuales para equipos que necesitan documentación rigurosa en un plazo definido. Sin estructura interna, sin retainer.
+    </p>
+  </main>
+
+  <section class="container section">
+    <div class="grid">
+      <div class="card">
+        <h2>Valoración de empresa</h2>
+        <p>Informe de valoración con metodología explícita, documentación de soporte y conclusiones orientadas al uso previsto: compraventa, negociación, due diligence o reporting interno.</p>
+      </div>
+      <div class="card">
+        <h2>Análisis sectorial</h2>
+        <p>Lectura estructurada de un sector o mercado concreto: dinámica competitiva, tendencias relevantes, actores principales y señales de cambio con impacto económico.</p>
+      </div>
+      <div class="card">
+        <h2>Pitch deck</h2>
+        <p>Presentación elaborada para un objetivo específico: levantar capital, cerrar una operación o presentar una tesis de inversión. Narrativa, estructura financiera y diseño alineados con el interlocutor.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container section">
+    <div class="card">
+      <h2>¿Cómo funciona?</h2>
+      <p>Cuéntanos el encargo, el uso previsto y el plazo. Respondemos con una propuesta de alcance y coste en menos de 24 horas.</p>
+      <form style="margin-top: 20px;">
+        <label for="full_name">Nombre</label>
+        <input id="full_name" name="full_name" type="text" />
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" />
+
+        <label for="tipo_encargo">Tipo de encargo</label>
+        <select id="tipo_encargo" name="tipo_encargo">
+          <option value="">Selecciona una opción</option>
+          <option value="valoracion">Valoración de empresa</option>
+          <option value="sectorial">Análisis sectorial</option>
+          <option value="pitch_deck">Pitch deck</option>
+          <option value="otro">Otro</option>
+        </select>
+
+        <label for="descripcion">Descripción del encargo</label>
+        <textarea id="descripcion" name="descripcion" rows="5"></textarea>
+
+        <div class="cta-group">
+          <button type="submit" class="btn btn-primary">Enviar consulta</button>
+        </div>
+      </form>
+      <p style="margin-top: 16px; font-size: 14px; color: #555;">También puedes escribirnos a <a href="mailto:hola@criterialsignals.com">hola@criterialsignals.com</a></p>
+    </div>
+  </section>
+
+  <footer class="site-footer container">
+    <p>Criterial Signals &mdash; Inteligencia de mercado para España.</p>
+  </footer>
+
+</body>
+</html>
