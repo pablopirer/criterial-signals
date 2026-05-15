@@ -316,6 +316,7 @@ Goal: activate distribution and begin converting leads to Pro.
 5. **Always show a plan before executing destructive operations.**
 6. **Use `git mv` to move files.**
 7. **When in doubt about scope, ask.**
+8. **Always include explicit GRANTs in new migrations.** From May 30 2026, new Supabase projects do not expose public schema tables to the Data API by default. Any migration that creates a new table must include explicit GRANT statements for `anon`, `authenticated`, and `service_role` as needed, plus RLS enabled. Example in `/supabase/migrations/`.
 
 ---
 
