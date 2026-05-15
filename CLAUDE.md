@@ -136,6 +136,30 @@ It is currently an MVP in early validation. The repository contains the full sys
   The `Authorization: Bearer` approach fails because Supabase gateway validates
   JWT format before reaching the function; use a custom header instead.
 
+### Day 12 — Complete (2026-05-15)
+- Model upgraded from `claude-haiku-4-5-20251001` to `claude-sonnet-4-6` in
+  `_shared/anthropic.ts`. `max_tokens` raised from 1024 to 2048.
+- `SAMPLE_BRIEF_PROMPT` rewritten in `sample-request/index.ts`:
+  - System prompt now instructs the model to return ONLY valid JSON with a
+    fixed schema: `titulo`, `subtitulo`, `tags`, `snapshot`, `signals[]`,
+    `watch[]`. Focus narrowed to Spain only (Portugal/Iberia removed).
+  - User prompt simplified to one line plus a temporal anchor (Mayo 2026).
+- Step 6 in `sample-request/index.ts` now parses the JSON response from
+  Anthropic before persisting. If parse fails, logs raw text and sets
+  `status = generation_failed`. If successful, builds `body_markdown` and
+  `title` from the parsed fields.
+- `_shared/resend.ts` updated:
+  - New `BriefData` interface exported (mirrors the JSON schema above).
+  - `SendBriefEmailInput.briefText` replaced by `briefData: BriefData`.
+  - New `buildBriefHtml()` function generates a full HTML email template
+    (table-based, inline styles, mobile-compatible) with header, snapshot,
+    signals, watch, and CTA to pricing page.
+  - `sendBriefEmail` now sends both `text` (plain) and `html` versions.
+- Full funnel validated end-to-end: form → Edge Function → Anthropic (JSON)
+  → parse → Supabase → Resend (HTML email) → inbox. Confirmed working.
+- Note: `_shared/anthropic.ts` model can be overridden at runtime via the
+  `ANTHROPIC_MODEL` env var without redeploying.
+
 ### Validated and working in production
 - Public website hosted on GitHub Pages (files at repo root).
 - Lead capture form → Edge Function → Supabase → Anthropic → Resend → inbox.
