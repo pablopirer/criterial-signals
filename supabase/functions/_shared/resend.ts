@@ -175,7 +175,7 @@ export async function sendWelcomeEmail(
     "Tu suscripción al plan Pro de Criterial Signals ya está activa.",
     "",
     "A partir de ahora recibirás:",
-    "  · Señales semanales de mercado sobre Iberia",
+    "  · Señales semanales de mercado sobre España",
     "  · Un brief mensual premium",
     "  · Acceso al archivo completo de publicaciones",
     "",

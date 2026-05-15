@@ -234,7 +234,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   let briefText: string | null = null;
   try {
     const result = await generateBrief({
-      interestType: data.interest_type ?? "Iberian market overview",
+      interestType: data.interest_type ?? "mercado español",
       prompt: SAMPLE_BRIEF_PROMPT,
     });
     briefText = result.text;
