@@ -20,7 +20,7 @@ const ANTHROPIC_VERSION = "2023-06-01";
  * drift if Anthropic moves the `claude-haiku-4-5` alias forward. Override
  * via the ANTHROPIC_MODEL env var when you want to test a newer model.
  */
-const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 
 export interface GenerateBriefInput {
   /** The lead's stated interest_type, used to fill {{interest_type}} in the prompt. */
@@ -70,7 +70,7 @@ export async function generateBrief(
 
   const body = {
     model,
-    max_tokens: 1024,
+    max_tokens: 2048,
     system: input.prompt.system,
     messages: [
       {

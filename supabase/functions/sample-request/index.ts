@@ -39,21 +39,37 @@ import type {
  */
 const SAMPLE_BRIEF_PROMPT = {
   system:
-    "Eres un analista senior de Criterial Signals, un servicio de inteligencia " +
-    "de mercado centrado en Iberia (España y Portugal). Escribes para " +
-    "profesionales de M&A, search funds, asesoramiento financiero y gestión de " +
-    "activos. Tu tono es sobrio, claro y analítico. No usas marketing ni " +
-    "hipérbole. No usas markdown complejo ni títulos excesivamente largos.",
+    "Eres el redactor analítico de Criterial Signals, un servicio de inteligencia " +
+    "de mercado especializado en el mercado español. Tu misión es producir briefs " +
+    "de alta calidad para profesionales: inversores, analistas, asesores M&A y directivos.\n\n" +
+    "Estilo editorial obligatorio:\n" +
+    "- Tono sobrio, analítico y directo. Sin entusiasmo comercial ni lenguaje de marketing.\n" +
+    "- Frases completas con densidad informativa real. Nada de bullets vacíos.\n" +
+    "- Cada señal debe tener una tesis clara y un argumento que la sostenga.\n" +
+    "- Usa cifras, referencias temporales y actores concretos cuando los conozcas.\n" +
+    "- Foco exclusivo en el mercado español. No incluir Portugal ni referencias a mercado ibérico.\n\n" +
+    "Devuelve SOLO JSON válido, sin markdown, sin texto adicional:\n" +
+    "{\n" +
+    "  \"titulo\": \"título directo del brief\",\n" +
+    "  \"subtitulo\": \"una frase que resume la tesis principal\",\n" +
+    "  \"tags\": [\"tag1\", \"tag2\", \"tag3\"],\n" +
+    "  \"snapshot\": \"párrafo de 3-4 frases analíticas con dato cuantitativo si es posible\",\n" +
+    "  \"signals\": [\n" +
+    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases. Tesis + argumento + implicación.\" },\n" +
+    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases.\" },\n" +
+    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases.\" }\n" +
+    "  ],\n" +
+    "  \"watch\": [\n" +
+    "    { \"titulo\": \"actor o evento a vigilar\", \"cuerpo\": \"1-2 frases sobre por qué importa.\" },\n" +
+    "    { \"titulo\": \"actor o evento a vigilar\", \"cuerpo\": \"1-2 frases sobre por qué importa.\" }\n" +
+    "  ]\n" +
+    "}",
   user:
-    "Redacta un sample brief breve en español profesional para Criterial " +
-    "Signals.\n\n" +
-    "El tema principal es: {{interest_type}}.\n\n" +
-    "Estructura obligatoria:\n\n" +
-    "1) Executive Snapshot — 2 a 3 frases que resuman el estado actual del tema.\n" +
-    "2) Three Relevant Signals — 3 puntos breves, cada uno una observación accionable.\n" +
-    "3) What to Watch — 2 puntos breves sobre qué seguir en las próximas semanas.\n\n" +
-    "No inventes cifras ni nombres concretos de operaciones. Si no tienes " +
-    "evidencia para una afirmación cuantitativa, redacta de forma cualitativa.",
+    "Genera un sample brief sobre: {{interest_type}}.\n\n" +
+    "Fecha de referencia: Mayo 2026. Razona desde ese punto temporal. " +
+    "Si usas cifras o referencias a períodos concretos, asegúrate de que " +
+    "son coherentes con mayo de 2026 como presente. Cuando una estimación " +
+    "sea orientativa, indícalo con 'aproximadamente' o 'en torno a'.",
 };
 
 /**
@@ -233,36 +249,73 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .eq("id", requestId);
   }
 
-  // 6. Persist the publication if we got a brief.
+  // 6. Parse the JSON brief and persist the publication.
   if (briefText) {
-    const { error: pubError } = await supabase
-      .from("publications")
-      .insert({
-        type: "sample",
-        title: `Auto-generated sample brief — ${data.interest_type ?? "Iberia"}`,
-        body_markdown: briefText,
-        status: "draft",
-      });
-    if (pubError) {
-      console.error("Failed to insert publication", pubError);
-    } else {
+    let briefData: {
+      titulo: string;
+      subtitulo: string;
+      tags: string[];
+      snapshot: string;
+      signals: Array<{ titulo: string; cuerpo: string }>;
+      watch: Array<{ titulo: string; cuerpo: string }>;
+    } | null = null;
+
+    try {
+      const clean = briefText.replace(/```json|```/g, "").trim();
+      briefData = JSON.parse(clean);
+    } catch (err) {
+      console.error("Failed to parse brief JSON", err);
+      console.error("Raw briefText was:", briefText);
       await supabase
         .from("sample_requests")
-        .update({ status: "generated" })
+        .update({ status: "generation_failed" })
         .eq("id", requestId);
     }
 
-    // 7. Send the brief by email.
-    try {
-      await sendBriefEmail({
-        to: email,
-        recipientName: data.full_name ?? "",
-        interestType: data.interest_type ?? "Iberia",
-        briefText,
-      });
-      console.log(`Brief emailed to ${email}`);
-    } catch (err) {
-      console.error("Resend delivery failed", err);
+    if (briefData) {
+      const body_markdown =
+        `## Executive Snapshot\n\n${briefData.snapshot}\n\n` +
+        `## Three Relevant Signals\n\n` +
+        briefData.signals
+          .map((s, i) => `**${String(i + 1).padStart(2, "0")}. ${s.titulo}**\n\n${s.cuerpo}`)
+          .join("\n\n") +
+        `\n\n## What to Watch\n\n` +
+        briefData.watch
+          .map((w) => `**${w.titulo}**\n\n${w.cuerpo}`)
+          .join("\n\n");
+
+      const title = briefData.titulo;
+
+      const { error: pubError } = await supabase
+        .from("publications")
+        .insert({
+          type: "sample",
+          title,
+          body_markdown,
+          status: "draft",
+        });
+
+      if (pubError) {
+        console.error("Failed to insert publication", pubError);
+      } else {
+        await supabase
+          .from("sample_requests")
+          .update({ status: "generated" })
+          .eq("id", requestId);
+      }
+
+      // 7. Send the brief by email.
+      try {
+        await sendBriefEmail({
+          to: email,
+          recipientName: data.full_name ?? "",
+          interestType: data.interest_type ?? "España",
+          briefText: body_markdown,
+        });
+        console.log(`Brief emailed to ${email}`);
+      } catch (err) {
+        console.error("Resend delivery failed", err);
+      }
     }
   }
 
