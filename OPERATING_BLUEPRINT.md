@@ -2,7 +2,7 @@
 
 ## 1. Objetivo del MVP
 
-Criterial Signals es un MVP orientado a validar una ruta simple de captación, generación de muestra y monetización para un producto de inteligencia de mercado centrado en Iberia.
+Criterial Signals es un MVP orientado a validar una ruta simple de captación, generación de muestra y monetización para un producto de inteligencia de mercado centrado en el mercado español.
 
 ### Lo que el MVP ya hace
 - Captar leads desde una página web pública.
@@ -35,7 +35,7 @@ Criterial Signals es un MVP orientado a validar una ruta simple de captación, g
 - **Make**
 
 ### Generación de contenido
-- **OpenAI API**
+- **Anthropic API** (claude-sonnet-4-6)
 
 ### Cobro
 - **Stripe**
@@ -48,7 +48,7 @@ Criterial Signals es un MVP orientado a validar una ruta simple de captación, g
 
 ## 3.1 Flujo de sample request
 
-**Usuario web → `sample.html` → webhook de Make → `leads` → `sample_requests` → OpenAI → `publications` → `request-received.html`**
+**Usuario web → `sample.html` → webhook de Make → `leads` → `sample_requests` → Anthropic → `publications` → `request-received.html`**
 
 Resultado:
 - se crea un lead,
@@ -314,14 +314,16 @@ Página de confirmación tras enviar correctamente el formulario de sample reque
 
 ---
 
-## 8. OpenAI
+## 8. Anthropic
 
 ## 8.1 Uso actual
-OpenAI se usa para generar muestras breves basadas en `interest_type`.
+Anthropic se usa para generar muestras breves basadas en `interest_type`.
+El modelo activo es `claude-sonnet-4-6`. El output es JSON estructurado que
+se parsea antes de persistir en `publications`.
 
 ## 8.2 Estado
 - API con billing operativo
-- integrada en Make
+- integrada en Edge Function `sample-request`
 - generando contenido real correctamente
 
 ---
