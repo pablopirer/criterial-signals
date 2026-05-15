@@ -310,7 +310,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
           to: email,
           recipientName: data.full_name ?? "",
           interestType: data.interest_type ?? "España",
-          briefText: body_markdown,
+          briefData: briefData,
         });
         console.log(`Brief emailed to ${email}`);
       } catch (err) {
