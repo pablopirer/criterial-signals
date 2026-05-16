@@ -264,13 +264,16 @@ It is currently an MVP in early validation. The repository contains the full sys
 ├── OPERATING_BLUEPRINT.md
 ├── README.md
 ├── .gitignore
-├── /web
+├── CNAME
+├── *.html                      ← index, about, pricing, sample, archive, encargos, advisory-received, request-received, success, cancel
+├── styles.css
 ├── /supabase
 │   ├── /functions
 │   │   ├── /_shared            ← anthropic.ts, supabase.ts, resend.ts
 │   │   ├── /sample-request     ← index.ts, types.ts, README.md
 │   │   ├── /get-publications   ← index.ts
-│   │   └── /welcome-subscriber ← index.ts
+│   │   ├── /welcome-subscriber ← index.ts
+│   │   └── /advisory-request   ← index.ts
 │   └── /migrations
 ├── /prompts
 ├── /scripts
@@ -330,7 +333,7 @@ Goal: activate distribution and begin converting leads to Pro.
 
 ### Phase 4 — Robustness (ongoing, lower priority)
 
-- Idempotency on Stripe webhook → subscribers (protect against duplicate events).
+- ~~Idempotency on Stripe webhook → subscribers~~ ✅ Resolved Day 14 via upsert in Make (on_conflict=email).
 - Error handling and retry logic in Edge Functions.
 - Alert on `generation_failed` sample requests.
 - Migrate Stripe webhook from Make to a dedicated Edge Function
