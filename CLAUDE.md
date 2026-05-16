@@ -190,6 +190,10 @@ It is currently an MVP in early validation. The repository contains the full sys
   por email duplicado.
 - `_shared/resend.ts` actualizado con `buildWelcomeHtml`, `buildAdvisoryConfirmationHtml`,
   `buildAdvisoryInternalHtml` y `sendAdvisoryEmails`.
+- Edge Function `stripe-webhook` desplegada: recibe eventos de Stripe, verifica firma con
+  `STRIPE_WEBHOOK_SECRET`, hace upsert en `subscribers` en `checkout.session.completed`.
+  Reemplaza el escenario `stripe-subscription-mvp` de Make, que ha sido desactivado.
+- Make ya no interviene en ningún flujo activo del sistema.
 
 ### Day 13 — Complete (2026-05-15)
 - Model upgraded from `claude-sonnet-4-6` (previously `claude-haiku-4-5-20251001`) in
@@ -238,16 +242,16 @@ It is currently an MVP in early validation. The repository contains the full sys
 ### Current production stack
 - **Frontend:** static HTML/CSS hosted on GitHub Pages, located in `/web`.
 - **Database:** Supabase (PostgreSQL).
-- **Automation:** Make (Integromat) — deactivated for sample-request; still
-  active for Stripe webhook → subscribers registration.
+- **Automation:** Make (Integromat) — deactivated. All flows now handled by Supabase Edge Functions.
 - **Backend logic:** Supabase Edge Functions (TypeScript on Deno).
   - `sample-request` — lead capture, brief generation, email delivery.
   - `get-publications` — authenticated access to Pro publications.
   - `welcome-subscriber` — triggered on new Pro subscriber INSERT.
   - `advisory-request` — formulario de contacto Advisory, notificación interna y confirmación al usuario.
+  - `stripe-webhook` — receives Stripe webhook events, verifies signature, upserts subscribers on checkout.session.completed.
   - `_shared/` — `anthropic.ts`, `supabase.ts`, `resend.ts`.
 - **Content generation:** Anthropic API (Claude Haiku `claude-haiku-4-5-20251001`).
-- **Payments:** Stripe (Payment Links + webhooks → Make → Supabase). Plan Pro: 9,90 €/mes (test mode).
+- **Payments:** Stripe (Payment Links + webhooks → Edge Function → Supabase). Plan Pro: 9,90 €/mes (test mode).
 - **Email:** Resend (`noreply@criterialsignals.com`, domain verified).
 
 ### Schema notes (audited 2026-05-08)
@@ -273,7 +277,8 @@ It is currently an MVP in early validation. The repository contains the full sys
 │   │   ├── /sample-request     ← index.ts, types.ts, README.md
 │   │   ├── /get-publications   ← index.ts
 │   │   ├── /welcome-subscriber ← index.ts
-│   │   └── /advisory-request   ← index.ts
+│   │   ├── /advisory-request   ← index.ts
+│   │   └── /stripe-webhook     ← index.ts
 │   └── /migrations
 ├── /prompts
 ├── /scripts
@@ -336,8 +341,7 @@ Goal: activate distribution and begin converting leads to Pro.
 - ~~Idempotency on Stripe webhook → subscribers~~ ✅ Resolved Day 14 via upsert in Make (on_conflict=email).
 - Error handling and retry logic in Edge Functions.
 - Alert on `generation_failed` sample requests.
-- Migrate Stripe webhook from Make to a dedicated Edge Function
-  (`stripe-webhook`) to remove the last Make dependency.
+- ~~Migrate Stripe webhook from Make to a dedicated Edge Function~~ ✅ Resolved Day 14. Edge Function `stripe-webhook` deployed and validated.
 
 ---
 
