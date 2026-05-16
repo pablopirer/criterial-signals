@@ -151,6 +151,44 @@ export async function sendBriefEmail(
   }
 }
 
+export interface SendEmailInput {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+}
+
+export async function sendEmail(input: SendEmailInput): Promise<void> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not set in the function environment");
+  }
+
+  const body: Record<string, unknown> = {
+    from: FROM_ADDRESS,
+    to: [input.to],
+    subject: input.subject,
+    text: input.text,
+  };
+  if (input.html) body.html = input.html;
+
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `Resend API returned ${response.status}: ${errorBody.slice(0, 500)}`,
+    );
+  }
+}
+
 export interface SendWelcomeEmailInput {
   to: string;
   recipientName: string;
