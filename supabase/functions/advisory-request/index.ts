@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
   // 4. Send both emails (confirmation to user + internal notification)
   await sendAdvisoryEmails({
     toUser: email,
-    toInternal: "pablopirer@gmail.com",
+    toInternal: "criterialam@gmail.com",
     recipientName: full_name,
     tipoEncargo: tipoDisplay,
     descripcion: descripcion?.trim() || "(sin descripción)",
