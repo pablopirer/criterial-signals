@@ -160,6 +160,37 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Note: `_shared/anthropic.ts` model can be overridden at runtime via the
   `ANTHROPIC_MODEL` env var without redeploying.
 
+### Day 14 — Complete (2026-05-16)
+- Web restructurada como site de firma analítica (Criterial) en lugar de producto editorial.
+- Nueva arquitectura de navegación: Signals / Advisory / Nosotros.
+- `index.html` reescrito como home de firma: posicionamiento analítico, servicios de
+  Advisory y Criterial Signals como producto editorial.
+- `about.html` reescrito como presentación de firma independiente especializada en
+  mercado español de inversión privada.
+- `pricing.html` reescrito como página de Signals con planes Free y Pro (9,90 €/mes).
+- `encargos.html` creado y renombrado conceptualmente a Advisory: hero, tres servicios
+  (Valoración de empresa, Análisis sectorial, Pitch deck) y formulario de contacto.
+- `advisory-received.html` creado como página de confirmación post-formulario.
+- `sample.html`, `request-received.html`, `success.html`, `cancel.html` actualizados
+  con copy alineado a la nueva arquitectura.
+- Brand actualizado a Criterial en header de todas las páginas.
+- Footer actualizado a Criterial en todas las páginas.
+- CNAME añadido: criterialsignals.com operativo en GitHub Pages.
+- HTTPS activo tras propagación del certificado SSL de GitHub Pages.
+- Edge Function `advisory-request` desplegada: valida payload, envía email de
+  notificación interna a pablopirer@gmail.com y confirmación al usuario vía Resend.
+- Templates HTML añadidos a todos los emails: advisory confirmación, advisory interno
+  y welcome suscriptor Pro. Sistema visual consistente con el email del sample brief.
+- Payment Link de Stripe actualizado a 9,90 €/mes (modo test). URL actualizada en
+  `pricing.html` y `sample.html`.
+- Supabase Auth URL Configuration actualizada: Site URL y Redirect URL apuntan a
+  `https://criterialsignals.com/archive.html`.
+- Make `stripe-subscription-mvp`: URL actualizada con `?on_conflict=email` y header
+  `Prefer` con `resolution=merge-duplicates,return=representation` para evitar fallos
+  por email duplicado.
+- `_shared/resend.ts` actualizado con `buildWelcomeHtml`, `buildAdvisoryConfirmationHtml`,
+  `buildAdvisoryInternalHtml` y `sendAdvisoryEmails`.
+
 ### Day 13 — Complete (2026-05-15)
 - Model upgraded from `claude-sonnet-4-6` (previously `claude-haiku-4-5-20251001`) in
   `_shared/anthropic.ts`. `max_tokens` raised from 1024 to 2048.
@@ -199,7 +230,6 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Content publishing workflow automation (draft → published without manual step).
 - Company Snapshot product (on-demand, see Product decisions below).
 - LinkedIn distribution flow for snapshots.
-- Web/mobile design finalization.
 
 ---
 
@@ -214,9 +244,10 @@ It is currently an MVP in early validation. The repository contains the full sys
   - `sample-request` — lead capture, brief generation, email delivery.
   - `get-publications` — authenticated access to Pro publications.
   - `welcome-subscriber` — triggered on new Pro subscriber INSERT.
+  - `advisory-request` — formulario de contacto Advisory, notificación interna y confirmación al usuario.
   - `_shared/` — `anthropic.ts`, `supabase.ts`, `resend.ts`.
 - **Content generation:** Anthropic API (Claude Haiku `claude-haiku-4-5-20251001`).
-- **Payments:** Stripe (Payment Links + webhooks → Make → Supabase).
+- **Payments:** Stripe (Payment Links + webhooks → Make → Supabase). Plan Pro: 9,90 €/mes (test mode).
 - **Email:** Resend (`noreply@criterialsignals.com`, domain verified).
 
 ### Schema notes (audited 2026-05-08)
@@ -364,6 +395,13 @@ scripts/funnel-metrics.sh
   conditions per plan tier).
 - Dual audience: individual professionals and institutional teams (M&A
   boutiques, search funds, advisory firms).
+
+### Advisory
+- Tres servicios activos: Valoración de empresa, Análisis sectorial, Pitch deck.
+- Contacto vía formulario web (`encargos.html`) con notificación interna a
+  `pablopirer@gmail.com` y confirmación automática al usuario.
+- Email de notificación interna temporal a Gmail personal — pendiente migrar a
+  cuenta Criterial cuando esté lista.
 
 ### Distribution and lead acquisition strategy
 - Snapshots published on LinkedIn in a reduced format with a CTA to get the
