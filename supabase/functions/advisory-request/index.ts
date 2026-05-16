@@ -1,4 +1,4 @@
-import { sendEmail } from "../_shared/resend.ts";
+import { sendAdvisoryEmails } from "../_shared/resend.ts";
 
 const TIPO_LABEL: Record<string, string> = {
   valoracion: "Valoración de empresa",
@@ -58,49 +58,16 @@ Deno.serve(async (req: Request) => {
 
   const tipoDisplay = TIPO_LABEL[tipo_encargo] ?? tipo_encargo;
 
-  // 4. Send internal notification
-  const internalText = [
-    "Nueva consulta Advisory recibida.",
-    "",
-    `Nombre: ${full_name}`,
-    `Email: ${email}`,
-    `Tipo: ${tipoDisplay}`,
-    "",
-    "Descripción:",
-    descripcion?.trim() || "(sin descripción)",
-  ].join("\n");
-
-  await sendEmail({
-    to: "pablopirer@gmail.com",
-    subject: `Nueva consulta Advisory — ${tipoDisplay}`,
-    text: internalText,
+  // 4. Send both emails (confirmation to user + internal notification)
+  await sendAdvisoryEmails({
+    toUser: email,
+    toInternal: "pablopirer@gmail.com",
+    recipientName: full_name,
+    tipoEncargo: tipoDisplay,
+    descripcion: descripcion?.trim() || "(sin descripción)",
   });
 
-  // 5. Send confirmation to user
-  const firstName = full_name.split(" ")[0];
-  const greeting = firstName ? `Hola ${firstName},` : "Hola,";
-
-  const confirmationText = [
-    greeting,
-    "",
-    "Hemos recibido tu consulta de Advisory en Criterial.",
-    "",
-    `Tipo de encargo: ${tipoDisplay}`,
-    "",
-    "Te responderemos con una propuesta de alcance y coste en menos de 24 horas.",
-    "",
-    "Si tienes alguna pregunta adicional, puedes responder directamente a este email.",
-    "",
-    "Criterial",
-  ].join("\n");
-
-  await sendEmail({
-    to: email,
-    subject: "Hemos recibido tu consulta — Criterial",
-    text: confirmationText,
-  });
-
-  // 6. Return success
+  // 5. Return success
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: {
