@@ -409,30 +409,32 @@
 
       if (!res.ok || !data || data.length === 0) {
         publicationsList.innerHTML =
-          '<p style="color: #AAAAAA; font-size: 14px; padding: 40px 0;">No hay publicaciones disponibles todavía.</p>';
+          '<p style="padding:40px 0;color:#AAAAAA;font-size:14px;">No hay publicaciones disponibles todavía.</p>';
         return;
       }
-
-      // Store globally for UI layer
-      window._archivePublications = data;
 
       // Update stats
       const weekly = data.filter(p => p.type === 'weekly').length;
       const monthly = data.filter(p => p.type === 'monthly').length;
       const sample = data.filter(p => p.type === 'sample').length;
+      const statTotal = document.getElementById('stat-total');
+      const statWeekly = document.getElementById('stat-weekly');
+      const statMonthly = document.getElementById('stat-monthly');
+      const countAll = document.getElementById('count-all');
+      const countWeekly = document.getElementById('count-weekly');
+      const countMonthly = document.getElementById('count-monthly');
+      const countSample = document.getElementById('count-sample');
+      if (statTotal) statTotal.textContent = data.length;
+      if (statWeekly) statWeekly.textContent = weekly || '—';
+      if (statMonthly) statMonthly.textContent = monthly || '—';
+      if (countAll) countAll.textContent = data.length;
+      if (countWeekly) countWeekly.textContent = weekly;
+      if (countMonthly) countMonthly.textContent = monthly;
+      if (countSample) countSample.textContent = sample;
 
-      document.getElementById('stat-total').textContent = data.length;
-      document.getElementById('stat-weekly').textContent = weekly || '—';
-      document.getElementById('stat-monthly').textContent = monthly || '—';
-      document.getElementById('count-all').textContent = data.length;
-      document.getElementById('count-weekly').textContent = weekly;
-      document.getElementById('count-monthly').textContent = monthly;
-      document.getElementById('count-sample').textContent = sample;
-      if (weekly > 0) document.getElementById('stat-weekly-sub').textContent = 'publicaciones';
-      if (monthly > 0) document.getElementById('stat-monthly-sub').textContent = 'publicaciones';
-
-      // Render with new UI
-      renderArchive(data, 'all');
+      // Store and render
+      window._pubs = data;
+      renderArchive('all');
     }
 
     document.getElementById("send-magic-link").addEventListener("click", async () => {
@@ -505,26 +507,29 @@
     // Tabs filter
     let currentFilter = 'all';
 
-    function renderArchive(pubs, filter) {
-      window._archivePublications = pubs || window._archivePublications || [];
-      const data = window._archivePublications;
+    function renderArchive(filter) {
+      const data = window._pubs || [];
       const list = document.getElementById('publications-list');
       if (!list) return;
 
-      const filtered = filter === 'all' ? data : data.filter(p => p.type === filter);
       const groups = { weekly: [], monthly: [], sample: [] };
+      const filtered = filter === 'all' ? data : data.filter(p => p.type === filter);
       filtered.forEach(p => { if (groups[p.type]) groups[p.type].push(p); });
 
       let html = '';
-      html += renderSection('Weekly Signals', 'Señales semanales de mercado', groups.weekly,
-        'La primera edición está en preparación.', 'Las señales semanales se publican cada lunes.',
-        filter !== 'all' && filter !== 'weekly');
-      html += renderSection('Brief Mensual', 'Análisis mensual premium', groups.monthly,
-        'El primer brief mensual se publicará en junio.', 'Los briefs mensuales se publican el primer lunes de cada mes.',
-        filter !== 'all' && filter !== 'monthly');
-      html += renderSection('Muestras', 'Briefs generados bajo demanda', groups.sample,
-        'No hay muestras disponibles.', '',
-        filter !== 'all' && filter !== 'sample');
+
+      if (filter === 'all' || filter === 'weekly') {
+        html += buildSection('Weekly Signals', 'Señales semanales de mercado', groups.weekly,
+          'La primera edición está en preparación.', 'Las señales semanales se publican cada lunes.');
+      }
+      if (filter === 'all' || filter === 'monthly') {
+        html += buildSection('Brief Mensual', 'Análisis mensual premium', groups.monthly,
+          'El primer brief mensual se publicará en junio.', 'Los briefs mensuales se publican el primer lunes de cada mes.');
+      }
+      if (filter === 'all' || filter === 'sample') {
+        html += buildSection('Muestras', 'Briefs generados bajo demanda', groups.sample,
+          'No hay muestras disponibles.', '');
+      }
 
       list.innerHTML = html;
       list.querySelectorAll('.pub-card-archive').forEach(card => {
@@ -532,14 +537,12 @@
       });
     }
 
-    function renderSection(title, meta, pubs, emptyTitle, emptySub, hidden) {
-      if (hidden) return '';
+    function buildSection(title, meta, pubs, emptyTitle, emptySub) {
       let html = `<div style="margin-bottom:48px;">
         <div class="archive-section-header">
           <h2 class="archive-section-title">${title}</h2>
           <span class="archive-section-meta">${meta}</span>
         </div>`;
-
       if (pubs.length === 0) {
         html += `<div class="empty-state">
           <p class="empty-state-label">Próximamente</p>
@@ -548,38 +551,30 @@
         </div>`;
       } else {
         html += '<div class="pub-grid">';
-        pubs.forEach(pub => { html += renderCard(pub); });
+        pubs.forEach(pub => {
+          const date = pub.period_start
+            ? new Date(pub.period_start).toLocaleDateString('es-ES', {year:'numeric',month:'long',day:'numeric'})
+            : new Date(pub.created_at).toLocaleDateString('es-ES', {year:'numeric',month:'long',day:'numeric'});
+          const typeLabel = {weekly:'Weekly',monthly:'Brief Mensual',sample:'Muestra'}[pub.type] || pub.type;
+          const excerpt = pub.body_markdown ? pub.body_markdown.replace(/[#*`\[\]]/g,'').slice(0,180)+'...' : '';
+          const safeTitle = (pub.title||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          const safeBody = (pub.body_markdown||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          html += `<div class="pub-card-archive"
+            data-title="${safeTitle}"
+            data-type="${typeLabel}"
+            data-date="${date}"
+            data-body="${safeBody}">
+            <div class="pub-type-badge"><span class="pub-type-dot ${pub.type}"></span>${typeLabel}</div>
+            <p class="pub-card-date">${date}</p>
+            <h3 class="pub-card-title">${pub.title||''}</h3>
+            <p class="pub-card-excerpt">${excerpt}</p>
+            <span class="pub-read-link">Leer →</span>
+          </div>`;
+        });
         html += '</div>';
       }
-
       html += '</div>';
       return html;
-    }
-
-    function renderCard(pub) {
-      const date = pub.period_start
-        ? new Date(pub.period_start).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
-        : new Date(pub.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      const typeLabel = { weekly: 'Weekly', monthly: 'Brief Mensual', sample: 'Muestra' }[pub.type] || pub.type;
-      const excerpt = pub.body_markdown
-        ? pub.body_markdown.replace(/[#*`]/g, '').slice(0, 180) + '...'
-        : '';
-
-      return `<div class="pub-card-archive"
-        data-title="${pub.title.replace(/"/g,'&quot;')}"
-        data-type="${typeLabel}"
-        data-date="${date}"
-        data-body="${(pub.body_markdown||'').replace(/"/g,'&quot;')}">
-        <div class="pub-type-badge">
-          <span class="pub-type-dot ${pub.type}"></span>
-          ${typeLabel}
-        </div>
-        <p class="pub-card-date">${date}</p>
-        <h3 class="pub-card-title">${pub.title}</h3>
-        <p class="pub-card-excerpt">${excerpt}</p>
-        <span class="pub-read-link">Leer →</span>
-      </div>`;
     }
 
     // Tab switching
@@ -589,7 +584,7 @@
       document.querySelectorAll('.archive-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentFilter = tab.dataset.filter || 'all';
-      renderArchive(null, currentFilter);
+      renderArchive(currentFilter);
     });
 
     // Modal
