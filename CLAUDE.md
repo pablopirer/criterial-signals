@@ -194,6 +194,18 @@ It is currently an MVP in early validation. The repository contains the full sys
   `STRIPE_WEBHOOK_SECRET`, hace upsert en `subscribers` en `checkout.session.completed`.
   Reemplaza el escenario `stripe-subscription-mvp` de Make, que ha sido desactivado.
 - Make ya no interviene en ningún flujo activo del sistema.
+- Rediseño visual completo: sistema EB Garamond + Inter, heroes con paisajes paralax
+  (lago helado, bosque, montaña, tundra), cursor con mix-blend-mode difference,
+  transiciones entre páginas, scroll reveal.
+- `criterial-shared.js` creado como módulo compartido de efectos visuales (cursor,
+  parallax, reveal, page transition).
+- `archive.html` rediseñado con barra de usuario, tabs de categoría (Todo / Weekly /
+  Brief Mensual / Muestras), stats grid, strip de próxima publicación, cards con
+  modal lector inline.
+- Email templates actualizados al nuevo sistema visual: fondo blanco, sin border-radius,
+  tipografía Georgia serif, labels 9px uppercase, boxes F8F6F2 con borde 0.5px.
+- Edge Function `get-publications` actualizada para incluir tipo `sample` en plan Pro.
+- 7 sample briefs publicados en base de datos (status draft → published).
 
 ### Day 13 — Complete (2026-05-15)
 - Model upgraded from `claude-sonnet-4-6` (previously `claude-haiku-4-5-20251001`) in
