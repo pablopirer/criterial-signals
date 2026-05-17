@@ -409,26 +409,30 @@
 
       if (!res.ok || !data || data.length === 0) {
         publicationsList.innerHTML =
-          '<p style="color: #AAAAAA; font-size: 14px;">No hay publicaciones disponibles todavía.</p>';
+          '<p style="color: #AAAAAA; font-size: 14px; padding: 40px 0;">No hay publicaciones disponibles todavía.</p>';
         return;
       }
 
-      publicationsList.innerHTML = data.map((pub) => {
-        const date = pub.period_start
-          ? new Date(pub.period_start).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
-          : new Date(pub.created_at).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+      // Store globally for UI layer
+      window._archivePublications = data;
 
-        const body = pub.body_markdown
-          ? marked.parse(pub.body_markdown)
-          : "<p><em>Contenido no disponible.</em></p>";
+      // Update stats
+      const weekly = data.filter(p => p.type === 'weekly').length;
+      const monthly = data.filter(p => p.type === 'monthly').length;
+      const sample = data.filter(p => p.type === 'sample').length;
 
-        return `
-          <div class="pub-card">
-            <p class="pub-meta">${pub.type} &mdash; ${date}</p>
-            <h2>${pub.title}</h2>
-            <div class="pub-body">${body}</div>
-          </div>`;
-      }).join("");
+      document.getElementById('stat-total').textContent = data.length;
+      document.getElementById('stat-weekly').textContent = weekly || '—';
+      document.getElementById('stat-monthly').textContent = monthly || '—';
+      document.getElementById('count-all').textContent = data.length;
+      document.getElementById('count-weekly').textContent = weekly;
+      document.getElementById('count-monthly').textContent = monthly;
+      document.getElementById('count-sample').textContent = sample;
+      if (weekly > 0) document.getElementById('stat-weekly-sub').textContent = 'publicaciones';
+      if (monthly > 0) document.getElementById('stat-monthly-sub').textContent = 'publicaciones';
+
+      // Render with new UI
+      renderArchive(data, 'all');
     }
 
     document.getElementById("send-magic-link").addEventListener("click", async () => {
@@ -499,41 +503,30 @@
     }
 
     // Tabs filter
-    let allPublications = [];
     let currentFilter = 'all';
 
-    function renderPublications(filter) {
+    function renderArchive(pubs, filter) {
+      window._archivePublications = pubs || window._archivePublications || [];
+      const data = window._archivePublications;
       const list = document.getElementById('publications-list');
       if (!list) return;
 
-      const filtered = filter === 'all'
-        ? allPublications
-        : allPublications.filter(p => p.type === filter);
-
-      // Group by type
+      const filtered = filter === 'all' ? data : data.filter(p => p.type === filter);
       const groups = { weekly: [], monthly: [], sample: [] };
       filtered.forEach(p => { if (groups[p.type]) groups[p.type].push(p); });
 
       let html = '';
-
-      // Weekly
       html += renderSection('Weekly Signals', 'Señales semanales de mercado', groups.weekly,
         'La primera edición está en preparación.', 'Las señales semanales se publican cada lunes.',
         filter !== 'all' && filter !== 'weekly');
-
-      // Monthly
       html += renderSection('Brief Mensual', 'Análisis mensual premium', groups.monthly,
         'El primer brief mensual se publicará en junio.', 'Los briefs mensuales se publican el primer lunes de cada mes.',
         filter !== 'all' && filter !== 'monthly');
-
-      // Samples
       html += renderSection('Muestras', 'Briefs generados bajo demanda', groups.sample,
         'No hay muestras disponibles.', '',
         filter !== 'all' && filter !== 'sample');
 
       list.innerHTML = html;
-
-      // Add modal listeners
       list.querySelectorAll('.pub-card-archive').forEach(card => {
         card.addEventListener('click', () => openPubModal(card));
       });
@@ -589,40 +582,6 @@
       </div>`;
     }
 
-    function updateStats(pubs) {
-      const weekly = pubs.filter(p => p.type === 'weekly').length;
-      const monthly = pubs.filter(p => p.type === 'monthly').length;
-      const sample = pubs.filter(p => p.type === 'sample').length;
-
-      document.getElementById('stat-total').textContent = pubs.length || '—';
-      document.getElementById('stat-weekly').textContent = weekly || '—';
-      document.getElementById('stat-monthly').textContent = monthly || '—';
-      document.getElementById('count-all').textContent = pubs.length;
-      document.getElementById('count-weekly').textContent = weekly;
-      document.getElementById('count-monthly').textContent = monthly;
-      document.getElementById('count-sample').textContent = sample;
-
-      if (weekly > 0) document.getElementById('stat-weekly-sub').textContent = 'publicaciones';
-      if (monthly > 0) document.getElementById('stat-monthly-sub').textContent = 'publicaciones';
-    }
-
-    // Intercept publications data after load
-    const origFetch = window.fetch;
-    window.fetch = async (...args) => {
-      const res = await origFetch(...args);
-      if (args[0] && args[0].toString().includes('get-publications')) {
-        const clone = res.clone();
-        clone.json().then(json => {
-          if (json.publications) {
-            allPublications = json.publications;
-            updateStats(allPublications);
-            setTimeout(() => renderPublications(currentFilter), 100);
-          }
-        }).catch(() => {});
-      }
-      return res;
-    };
-
     // Tab switching
     document.addEventListener('click', e => {
       const tab = e.target.closest('.archive-tab');
@@ -630,7 +589,7 @@
       document.querySelectorAll('.archive-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentFilter = tab.dataset.filter || 'all';
-      renderPublications(currentFilter);
+      renderArchive(null, currentFilter);
     });
 
     // Modal
