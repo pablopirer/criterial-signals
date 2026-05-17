@@ -51,7 +51,7 @@ function buildBriefHtml(input: SendBriefEmailInput): string {
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F0EA;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
 <tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
   <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
@@ -62,7 +62,7 @@ function buildBriefHtml(input: SendBriefEmailInput): string {
   </td></tr>
   <tr><td style="padding:32px 44px;">
     <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#444;margin:0 0 28px;">${greeting}</p>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 12px;">Executive Snapshot</div>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 12px;">Resumen ejecutivo</div>
     <p style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.75;color:#333;border-left:1.5px solid #0D1F3C;padding-left:16px;margin:0 0 32px;">${briefData.snapshot}</p>
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 4px;">Señales relevantes</div>
     <div style="margin:0 0 32px;">${signalsHtml}</div>
@@ -195,7 +195,7 @@ function buildWelcomeHtml(input: SendWelcomeEmailInput): string {
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F0EA;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
 <tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
   <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
@@ -247,7 +247,7 @@ function buildAdvisoryConfirmationHtml(recipientName: string, tipoEncargo: strin
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F0EA;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
 <tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
   <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
@@ -282,7 +282,7 @@ function buildAdvisoryInternalHtml(recipientName: string, userEmail: string, tip
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F0EA;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
 <tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
   <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
