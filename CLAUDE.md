@@ -178,7 +178,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 - CNAME añadido: criterialsignals.com operativo en GitHub Pages.
 - HTTPS activo tras propagación del certificado SSL de GitHub Pages.
 - Edge Function `advisory-request` desplegada: valida payload, envía email de
-  notificación interna a pablopirer@gmail.com y confirmación al usuario vía Resend.
+  notificación interna a criterialam@gmail.com y confirmación al usuario vía Resend.
 - Templates HTML añadidos a todos los emails: advisory confirmación, advisory interno
   y welcome suscriptor Pro. Sistema visual consistente con el email del sample brief.
 - Payment Link de Stripe actualizado a 9,90 €/mes (modo test). URL actualizada en
@@ -283,6 +283,7 @@ It is currently an MVP in early validation. The repository contains the full sys
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, archive, encargos, advisory-received, request-received, success, cancel
 ├── styles.css
+├── criterial-shared.js
 ├── /supabase
 │   ├── /functions
 │   │   ├── /_shared            ← anthropic.ts, supabase.ts, resend.ts
@@ -350,7 +351,7 @@ Goal: activate distribution and begin converting leads to Pro.
 
 ### Phase 4 — Robustness (ongoing, lower priority)
 
-- ~~Idempotency on Stripe webhook → subscribers~~ ✅ Resolved Day 14 via upsert in Make (on_conflict=email).
+- ~~Idempotency on Stripe webhook → subscribers~~ ✅ Resolved Day 14. Edge Function stripe-webhook uses upsert on conflict=email.
 - Error handling and retry logic in Edge Functions.
 - Alert on `generation_failed` sample requests.
 - ~~Migrate Stripe webhook from Make to a dedicated Edge Function~~ ✅ Resolved Day 14. Edge Function `stripe-webhook` deployed and validated.
@@ -418,7 +419,7 @@ scripts/funnel-metrics.sh
 ### Advisory
 - Tres servicios activos: Valoración de empresa, Análisis sectorial, Pitch deck.
 - Contacto vía formulario web (`encargos.html`) con notificación interna a
-  `pablopirer@gmail.com` y confirmación automática al usuario.
+  `criterialam@gmail.com` y confirmación automática al usuario.
 - Email de notificación interna temporal a Gmail personal — pendiente migrar a
   cuenta Criterial cuando esté lista.
 
