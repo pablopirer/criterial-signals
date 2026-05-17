@@ -3,63 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Suscripción activa | Criterial Signals</title>
-  <meta name="description" content="Suscripción activada en Criterial Signals." />
+  <title>Suscripción activa | Criterial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
-      </div>
-    </div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <header class="site-header light-header" id="siteHeader">
+    <a href="index.html" class="brand">Criterial</a>
+    <nav class="nav">
+      <a href="sample.html">Signals</a>
+      <a href="encargos.html">Advisory</a>
+      <a href="about.html">Nosotros</a>
+    </nav>
   </header>
 
-  <main class="container hero status-page">
-    <p class="eyebrow">Suscripción activa</p>
-    <h1>Tu suscripción Pro está activa.</h1>
-    <p class="subheadline">
-      El pago se ha procesado correctamente.
-    </p>
-    <p class="bodycopy">
-      Recibirás señales semanales y un brief mensual premium. Accede al archivo para ver las publicaciones disponibles.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="archive.html">Ir al archivo</a>
-      <a class="btn btn-secondary" href="index.html">Volver al inicio</a>
+  <div class="status-hero">
+    <p class="eyebrow" style="color: var(--label); animation: none; opacity: 1;">Suscripción activa</p>
+    <h1 class="status-h1">Tu suscripción Pro está activa.</h1>
+    <p class="status-sub">El pago se ha procesado correctamente.</p>
+    <div class="cta-group cta-group-center cta-group-no-anim">
+      <a href="archive.html" class="btn-dark">Ir al archivo</a>
+      <a href="index.html" class="btn-outline">Volver al inicio</a>
     </div>
-  </main>
+  </div>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Ya tienes acceso</h2>
-        <p>Tu suscripción ha quedado registrada. El archivo ya está disponible para ti.</p>
-      </div>
-      <div class="card">
-        <h2>Qué incluye Pro</h2>
-        <p>Señales semanales de mercado, brief mensual premium y acceso completo al archivo de publicaciones.</p>
-      </div>
-      <div class="card">
-        <h2>¿Necesitas un análisis concreto?</h2>
-        <p>Consulta nuestros servicios de Advisory para encargos puntuales.</p>
-      </div>
+  <div class="info-grid reveal">
+    <div class="info-cell">
+      <p class="info-title">Ya tienes acceso</p>
+      <p class="info-body">Tu suscripción ha quedado registrada. El archivo ya está disponible para ti.</p>
     </div>
-  </section>
+    <div class="info-cell">
+      <p class="info-title">Qué incluye Pro</p>
+      <p class="info-body">Señales semanales de mercado, brief mensual premium y acceso completo al archivo de publicaciones.</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-title">¿Necesitas un análisis concreto?</p>
+      <p class="info-body">Consulta nuestros servicios de Advisory para encargos puntuales.</p>
+    </div>
+  </div>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

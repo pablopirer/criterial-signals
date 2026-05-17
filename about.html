@@ -4,62 +4,65 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nosotros | Criterial</title>
-  <meta name="description" content="Sobre Criterial Signals — producto editorial de inteligencia de mercado centrado en el mercado español." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html" aria-current="page">Nosotros</a>
-        </nav>
-      </div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <div class="hero-wrap hero-short">
+    <img class="hero-img" id="heroImg"
+      src="https://images.unsplash.com/photo-1520769945061-0a448c463865?w=1800&q=88&fit=crop"
+      alt="Tundra" />
+    <div class="hero-overlay"></div>
+
+    <header class="site-header" id="siteHeader">
+      <a href="index.html" class="brand">Criterial</a>
+      <nav class="nav">
+        <a href="sample.html">Signals</a>
+        <a href="encargos.html">Advisory</a>
+        <a href="about.html" aria-current="page">Nosotros</a>
+      </nav>
+    </header>
+
+    <div class="hero-content">
+      <p class="eyebrow">Criterial</p>
+      <h1 class="hero-h1 hero-h1-lg">Análisis financiero con criterio editorial.</h1>
+      <p class="hero-sub">Firma analítica independiente especializada en el mercado español de inversión privada.</p>
     </div>
-  </header>
+  </div>
 
-  <main class="container hero">
-    <p class="eyebrow">Criterial</p>
-    <h1>Análisis financiero con criterio editorial.</h1>
-    <p class="subheadline">
-      Criterial es una firma analítica independiente especializada en el mercado español de inversión privada.
-    </p>
-  </main>
+  <div class="text-section reveal">
+    <p>Combinamos rigor financiero y disciplina editorial para producir análisis útiles en contextos reales: operaciones de M&amp;A, procesos de captación de capital, due diligence y seguimiento de mercado.</p>
+    <p>Trabajamos con equipos pequeños y medianos que necesitan documentación de calidad sin estructura interna dedicada. Encargos concretos, plazos definidos, entregables listos para usar.</p>
+    <p>Nuestra cobertura se centra en España, con foco en M&amp;A, real estate y capital markets.</p>
+  </div>
 
-  <section class="container section">
-    <div class="card">
-      <p>
-        Combinamos rigor financiero y disciplina editorial para producir análisis útiles en contextos reales: operaciones de M&amp;A, procesos de captación de capital, due diligence y seguimiento de mercado.
-      </p>
-      <p>
-        Trabajamos con equipos pequeños y medianos que necesitan documentación de calidad sin estructura interna dedicada. Advisory concreto, plazos definidos, entregables listos para usar.
-      </p>
-      <p>
-        Nuestra cobertura se centra en España, con foco en M&amp;A, real estate y capital markets.
-      </p>
+  <div class="lower-grid">
+    <div class="lower-cell reveal">
+      <p class="cell-label">Advisory</p>
+      <h2 class="cell-title">¿Tienes un proyecto concreto?</h2>
+      <p class="cell-body">Cuéntanos qué necesitas. Respondemos en menos de 24 horas con una propuesta de alcance y coste.</p>
+      <a href="encargos.html" class="btn-dark">Contactar</a>
     </div>
-  </section>
-
-  <section class="container section">
-    <div class="card">
-      <h2>¿Tienes un proyecto concreto?</h2>
-      <p>Cuéntanos qué necesitas.</p>
-      <div class="cta-group">
-        <a class="btn btn-primary" href="encargos.html">Contactar</a>
-      </div>
+    <div class="lower-cell cream reveal reveal-delay">
+      <p class="cell-label">Criterial Signals</p>
+      <h2 class="cell-title">Señales de mercado cada semana.</h2>
+      <p class="cell-body">Publicación editorial con señales semanales y brief mensual sobre M&amp;A, real estate y capital markets en España.</p>
+      <a href="sample.html" class="btn-outline">Solicitar muestra</a>
     </div>
-  </section>
+  </div>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

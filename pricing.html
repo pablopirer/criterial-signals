@@ -4,76 +4,92 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Signals | Criterial</title>
-  <meta name="description" content="Planes de Criterial Signals para profesionales que necesitan visibilidad útil sobre el mercado español." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <div class="hero-wrap hero-short">
+    <img class="hero-img" id="heroImg"
+      src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1800&q=88&fit=crop"
+      alt="Montaña nevada" />
+    <div class="hero-overlay"></div>
+
+    <header class="site-header" id="siteHeader">
+      <a href="index.html" class="brand">Criterial</a>
+      <nav class="nav">
+        <a href="sample.html" aria-current="page">Signals</a>
+        <a href="encargos.html">Advisory</a>
+        <a href="about.html">Nosotros</a>
+      </nav>
+    </header>
+
+    <div class="hero-content">
+      <p class="eyebrow">Criterial Signals</p>
+      <h1 class="hero-h1 hero-h1-lg">Señales de mercado. España, cada semana.</h1>
+      <p class="hero-sub">Publicación editorial con señales semanales y brief mensual sobre M&amp;A, real estate y capital markets en España.</p>
+      <div class="cta-group cta-group-center">
+        <a href="sample.html" class="btn-white">Solicitar muestra</a>
+        <a href="archive.html" class="btn-ghost">Ver archivo</a>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="container hero">
-    <p class="eyebrow">Criterial Signals</p>
-    <h1>Señales de mercado. España, cada semana.</h1>
-    <p class="subheadline">
-      Publicación editorial con señales semanales y un brief mensual sobre M&amp;A, real estate y capital markets en España. Para profesionales que necesitan visibilidad continua sin dedicar tiempo interno a recopilar información dispersa.
-    </p>
-  </main>
-
-  <section class="container section">
+  <section class="section reveal">
+    <p class="section-label">Planes</p>
     <div class="pricing-grid">
-
       <div class="pricing-card">
-        <h2>Free</h2>
-        <p class="price">Gratis</p>
-        <p>Solicita una muestra gratuita y entiende el formato antes de suscribirte. Sin tarjeta, sin compromiso.</p>
-        <div class="cta-group">
-          <a class="btn btn-secondary" href="sample.html">Solicitar muestra</a>
-        </div>
+        <p class="pricing-plan-name">Free</p>
+        <p class="pricing-price">Gratis</p>
+        <p class="pricing-desc">Una muestra del formato y criterio editorial de Criterial Signals. Sin tarjeta, sin compromiso.</p>
+        <ul class="pricing-features">
+          <li>Una muestra del formato y criterio editorial</li>
+          <li>Entregada por email en minutos</li>
+          <li>Sin suscripción, sin tarjeta</li>
+        </ul>
+        <a href="sample.html" class="btn-outline cta-group-no-anim">Solicitar muestra</a>
       </div>
-
-      <div class="pricing-card pricing-card--featured">
-        <p class="eyebrow" style="margin-bottom: 6px;">Recomendado</p>
-        <h2>Pro</h2>
-        <p class="price">9,90 €<span>/mes</span></p>
-        <p>Señales semanales de mercado, brief mensual premium y acceso al archivo completo de publicaciones.</p>
-        <div class="cta-group">
-          <a class="btn btn-primary" href="https://buy.stripe.com/test_6oU4gy8vW9GU6tMfFc8g001" target="_blank" rel="noopener">Suscribirme</a>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <section class="container section">
-    <div class="card">
-      <h2>¿Quieres entender el formato primero?</h2>
-      <p>
-        La muestra es la forma más directa de ver el nivel de síntesis y el tipo de lectura que entrega Criterial Signals.
-      </p>
-      <div class="cta-group">
-        <a class="btn btn-primary" href="sample.html">Solicitar muestra</a>
-        <a class="btn btn-secondary" href="archive.html">Ver archivo</a>
+      <div class="pricing-card">
+        <p class="pricing-plan-name">Pro</p>
+        <p class="pricing-price">9,90 €<span>/mes</span></p>
+        <p class="pricing-desc">Acceso completo al producto: señales semanales, brief mensual y archivo completo.</p>
+        <ul class="pricing-features">
+          <li>Señales semanales de mercado sobre España</li>
+          <li>Brief mensual premium</li>
+          <li>Acceso al archivo completo de publicaciones</li>
+          <li>Acceso individual</li>
+        </ul>
+        <a href="https://buy.stripe.com/test_6oU4gy8vW9GU6tMfFc8g001" target="_blank" rel="noopener" class="btn-dark cta-group-no-anim">Suscribirme a Pro</a>
       </div>
     </div>
   </section>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <div class="lower-grid">
+    <div class="lower-cell reveal">
+      <p class="cell-label">¿No sabes por dónde empezar?</p>
+      <h2 class="cell-title">La muestra es gratuita y llega en minutos.</h2>
+      <p class="cell-body">Entiende el formato, el nivel de síntesis y el criterio editorial antes de suscribirte. Sin compromiso.</p>
+      <a href="sample.html" class="btn-dark">Solicitar muestra</a>
+    </div>
+    <div class="lower-cell cream reveal reveal-delay">
+      <p class="cell-label">Advisory</p>
+      <h2 class="cell-title">¿Necesitas un análisis concreto?</h2>
+      <p class="cell-body">Valoraciones, análisis sectoriales y pitch decks bajo demanda. Encargos puntuales sin retainer.</p>
+      <a href="encargos.html" class="btn-outline">Ver Advisory</a>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

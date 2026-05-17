@@ -4,87 +4,101 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Advisory | Criterial</title>
-  <meta name="description" content="Advisory analítico bajo demanda: valoraciones, análisis sectoriales y pitch decks para el mercado español." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html" aria-current="page">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <div class="hero-wrap hero-short">
+    <img class="hero-img" id="heroImg"
+      src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1800&q=88&fit=crop"
+      alt="Bosque frondoso" />
+    <div class="hero-overlay-left"></div>
+
+    <header class="site-header" id="siteHeader">
+      <a href="index.html" class="brand">Criterial</a>
+      <nav class="nav">
+        <a href="sample.html">Signals</a>
+        <a href="encargos.html" aria-current="page">Advisory</a>
+        <a href="about.html">Nosotros</a>
+      </nav>
+    </header>
+
+    <div class="hero-content-left">
+      <p class="eyebrow">Trabajo analítico bajo demanda</p>
+      <h1 class="hero-h1 hero-h1-lg">Análisis financiero para decisiones concretas.</h1>
+      <p class="hero-sub">Advisory puntual para equipos que necesitan documentación rigurosa en un plazo definido. Sin estructura interna, sin retainer.</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <p class="section-label">Advisory — Servicios</p>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <p class="service-num">01</p>
+        <p class="service-title">Valoración de empresa</p>
+        <p class="service-body">Informe con metodología explícita y documentación de soporte orientada al uso previsto: compraventa, negociación, due diligence o reporting interno.</p>
+      </div>
+      <div class="service-card reveal reveal-delay">
+        <p class="service-num">02</p>
+        <p class="service-title">Análisis sectorial</p>
+        <p class="service-body">Lectura estructurada de un sector o mercado concreto: dinámica competitiva, actores principales y señales de cambio con impacto económico.</p>
+      </div>
+      <div class="service-card reveal reveal-delay">
+        <p class="service-num">03</p>
+        <p class="service-title">Pitch deck</p>
+        <p class="service-body">Presentación para levantar capital, cerrar una operación o presentar una tesis. Narrativa y estructura financiera alineadas con el interlocutor.</p>
       </div>
     </div>
-  </header>
+  </section>
 
-  <main class="container hero">
-    <p class="eyebrow">Trabajo analítico bajo demanda</p>
-    <h1>Análisis financiero para decisiones concretas.</h1>
-    <p class="subheadline">
-      Advisory puntual para equipos que necesitan documentación rigurosa en un plazo definido. Sin estructura interna, sin retainer.
-    </p>
-  </main>
+  <section class="section reveal">
+    <p class="section-label">¿Cómo funciona?</p>
+    <div class="lower-grid" style="border: 0.5px solid var(--border);">
+      <div style="padding: 44px 40px; border-right: 0.5px solid var(--border);">
+        <h2 class="cell-title" style="margin-bottom: 16px;">Cuéntanos el encargo.</h2>
+        <p class="cell-body">Dinos el uso previsto y el plazo. Respondemos con una propuesta de alcance y coste en menos de 24 horas.</p>
+        <p style="font-size: 13px; color: var(--label); margin-top: 24px;">También puedes escribirnos a <a href="mailto:hola@criterialsignals.com" style="color: var(--navy);">hola@criterialsignals.com</a></p>
+      </div>
+      <div style="padding: 44px 40px;">
+        <form id="advisory-form" style="margin-top: 20px;">
+          <label for="full_name">Nombre</label>
+          <input id="full_name" name="full_name" type="text" />
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Valoración de empresa</h2>
-        <p>Informe de valoración con metodología explícita, documentación de soporte y conclusiones orientadas al uso previsto: compraventa, negociación, due diligence o reporting interno.</p>
-      </div>
-      <div class="card">
-        <h2>Análisis sectorial</h2>
-        <p>Lectura estructurada de un sector o mercado concreto: dinámica competitiva, tendencias relevantes, actores principales y señales de cambio con impacto económico.</p>
-      </div>
-      <div class="card">
-        <h2>Pitch deck</h2>
-        <p>Presentación elaborada para un objetivo específico: levantar capital, cerrar una operación o presentar una tesis de inversión. Narrativa, estructura financiera y diseño alineados con el interlocutor.</p>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" />
+
+          <label for="tipo_encargo">Tipo de encargo</label>
+          <select id="tipo_encargo" name="tipo_encargo">
+            <option value="">Selecciona una opción</option>
+            <option value="valoracion">Valoración de empresa</option>
+            <option value="sectorial">Análisis sectorial</option>
+            <option value="pitch_deck">Pitch deck</option>
+            <option value="otro">Otro</option>
+          </select>
+
+          <label for="descripcion">Descripción del encargo</label>
+          <textarea id="descripcion" name="descripcion" rows="5"></textarea>
+
+          <div class="cta-group">
+            <button type="submit" class="btn btn-primary">Enviar consulta</button>
+          </div>
+
+          <p id="form-status" style="margin-top: 16px; font-size: 14px; color: #555;"></p>
+        </form>
       </div>
     </div>
   </section>
 
-  <section class="container section">
-    <div class="card">
-      <h2>¿Cómo funciona?</h2>
-      <p>Cuéntanos el encargo, el uso previsto y el plazo. Respondemos con una propuesta de alcance y coste en menos de 24 horas.</p>
-      <form id="advisory-form" style="margin-top: 20px;">
-        <label for="full_name">Nombre</label>
-        <input id="full_name" name="full_name" type="text" />
-
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" />
-
-        <label for="tipo_encargo">Tipo de encargo</label>
-        <select id="tipo_encargo" name="tipo_encargo">
-          <option value="">Selecciona una opción</option>
-          <option value="valoracion">Valoración de empresa</option>
-          <option value="sectorial">Análisis sectorial</option>
-          <option value="pitch_deck">Pitch deck</option>
-          <option value="otro">Otro</option>
-        </select>
-
-        <label for="descripcion">Descripción del encargo</label>
-        <textarea id="descripcion" name="descripcion" rows="5"></textarea>
-
-        <div class="cta-group">
-          <button type="submit" class="btn btn-primary">Enviar consulta</button>
-        </div>
-
-        <p id="form-status" style="margin-top: 16px; font-size: 14px; color: #555;"></p>
-      </form>
-      <p style="margin-top: 8px; font-size: 14px; color: #555;">También puedes escribirnos a <a href="mailto:hola@criterialsignals.com">hola@criterialsignals.com</a></p>
-    </div>
-  </section>
-
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
   <script>
@@ -127,6 +141,6 @@
       }
     });
   </script>
-
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

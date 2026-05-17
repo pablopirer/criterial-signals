@@ -3,73 +3,120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Criterial Signals</title>
-  <meta name="description" content="Señales semanales e inteligencia de mercado para firmas que necesitan visibilidad útil sobre el mercado español." />
+  <title>Criterial — Análisis financiero para el mercado español</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <!-- HERO ICE -->
+  <div class="hero-wrap">
+    <img class="hero-img" id="heroImg"
+      src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1800&q=88&fit=crop"
+      alt="Paisaje helado" />
+    <div class="hero-overlay"></div>
+
+    <header class="site-header" id="siteHeader">
+      <a href="index.html" class="brand">Criterial</a>
+      <nav class="nav">
+        <a href="sample.html">Signals</a>
+        <a href="encargos.html">Advisory</a>
+        <a href="about.html">Nosotros</a>
+      </nav>
+    </header>
+
+    <div class="hero-content">
+      <p class="eyebrow">Inteligencia de mercado · España</p>
+      <h1 class="hero-h1">Análisis financiero para el mercado español de inversión privada.</h1>
+      <div class="hero-divider"></div>
+      <p class="hero-sub">Boutiques de M&amp;A, search funds y firmas de advisory que necesitan análisis riguroso sin estructura interna dedicada.</p>
+      <div class="cta-group cta-group-center">
+        <a href="encargos.html" class="btn-white">Ver Advisory</a>
+        <a href="sample.html" class="btn-ghost">Explorar Signals</a>
       </div>
     </div>
-  </header>
 
-  <main class="container hero">
-    <p class="eyebrow">Inteligencia de mercado · España</p>
-    <h1>Criterial. Análisis financiero para el mercado español.</h1>
-    <p class="subheadline">
-      Trabajamos con boutiques de M&amp;A, search funds, firmas de advisory y equipos de inversión que necesitan análisis riguroso sin estructura interna dedicada.
-    </p>
-    <p class="bodycopy">
-      Desde valoraciones de empresa y análisis sectoriales hasta pitch decks para levantar capital o cerrar operaciones. Advisory concreto, entregables claros.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="encargos.html">Ver Advisory</a>
-      <a class="btn btn-secondary" href="sample.html">Explorar Signals</a>
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <span class="scroll-label">Scroll</span>
     </div>
-  </main>
+  </div>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Advisory analítico</h2>
-        <p>Valoraciones, análisis sectoriales y pitch decks elaborados con rigor financiero y conocimiento del mercado español. Para operaciones concretas con fechas reales.</p>
+  <!-- SECTORS -->
+  <div class="sectors-strip">
+    <div class="sector-item"><p class="sector-name">M&amp;A</p><p class="sector-label">Fusiones y adquisiciones</p></div>
+    <div class="sector-item"><p class="sector-name">Real Estate</p><p class="sector-label">Mercado inmobiliario</p></div>
+    <div class="sector-item"><p class="sector-name">Capital Markets</p><p class="sector-label">Mercados de capitales</p></div>
+    <div class="sector-item"><p class="sector-name">Private Equity</p><p class="sector-label">Mercados privados</p></div>
+  </div>
+
+  <!-- SERVICES -->
+  <section class="section reveal">
+    <p class="section-label">Advisory — Servicios</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <p class="service-num">01</p>
+        <p class="service-title">Valoración de empresa</p>
+        <p class="service-body">Informe con metodología explícita y documentación de soporte orientada al uso previsto: compraventa, negociación, due diligence o reporting interno.</p>
       </div>
-      <div class="card">
-        <h2>Criterial Signals</h2>
-        <p>Publicación editorial con señales semanales y briefs mensuales sobre M&amp;A, real estate y capital markets en España. Disponible por suscripción.</p>
+      <div class="service-card">
+        <p class="service-num">02</p>
+        <p class="service-title">Análisis sectorial</p>
+        <p class="service-body">Lectura estructurada de un sector o mercado concreto: dinámica competitiva, actores principales y señales de cambio con impacto económico.</p>
       </div>
-      <div class="card">
-        <h2>Cómo trabajamos</h2>
-        <p>Advisory directo, sin intermediarios. Entregamos documentación estructurada y lista para usar en el proceso para el que fue concebida.</p>
+      <div class="service-card">
+        <p class="service-num">03</p>
+        <p class="service-title">Pitch deck</p>
+        <p class="service-body">Presentación para levantar capital, cerrar una operación o presentar una tesis. Narrativa y estructura financiera alineadas con el interlocutor.</p>
       </div>
     </div>
   </section>
 
-  <section class="container section">
-    <div class="card">
-      <h2>¿Tienes un encargo concreto?</h2>
-      <p>Cuéntanos qué necesitas. Respondemos en menos de 24 horas.</p>
-      <div class="cta-group">
-        <a class="btn btn-primary" href="encargos.html">Contactar</a>
+  <!-- FOREST / SIGNALS -->
+  <div class="image-section">
+    <img class="image-section-img"
+      src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1800&q=88&fit=crop"
+      alt="Bosque frondoso" />
+    <div class="image-overlay-left"></div>
+    <div class="image-content-left reveal">
+      <p class="image-eyebrow">Criterial Signals</p>
+      <h2 class="image-title">Señales de mercado. España, cada semana.</h2>
+      <p class="image-body">Publicación editorial con señales semanales y un brief mensual sobre M&amp;A, real estate y capital markets. Para profesionales que necesitan visibilidad continua sin dedicar tiempo interno.</p>
+      <div class="image-plans">
+        <div><p class="image-plan-name">Free</p><p class="image-plan-price">Gratis</p></div>
+        <div><p class="image-plan-name">Pro</p><p class="image-plan-price">9,90 €/mes</p></div>
       </div>
+      <a href="sample.html" class="btn-white-sm">Solicitar muestra gratuita</a>
     </div>
-  </section>
+  </div>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <!-- LOWER GRID -->
+  <div class="lower-grid">
+    <div class="lower-cell reveal">
+      <p class="cell-label">Criterial Signals</p>
+      <h2 class="cell-title">Visibilidad continua sobre el mercado español.</h2>
+      <p class="cell-body">Señales semanales de mercado, brief mensual premium y acceso al archivo completo de publicaciones. Sin dedicar tiempo interno a recopilar información dispersa.</p>
+      <a href="sample.html" class="btn-outline">Explorar Signals</a>
+    </div>
+    <div class="lower-cell cream reveal reveal-delay">
+      <p class="cell-label">Advisory</p>
+      <h2 class="cell-title">¿Tienes un encargo concreto?</h2>
+      <p class="cell-body">Valoraciones de empresa, análisis sectoriales, pitch decks. Cuéntanos el encargo, el uso previsto y el plazo. Respondemos con una propuesta en menos de 24 horas.</p>
+      <a href="encargos.html" class="btn-dark">Contactar</a>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

@@ -4,62 +4,56 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Consulta recibida | Criterial</title>
-  <meta name="description" content="Consulta de Advisory recibida correctamente." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
-      </div>
-    </div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <header class="site-header light-header" id="siteHeader">
+    <a href="index.html" class="brand">Criterial</a>
+    <nav class="nav">
+      <a href="sample.html">Signals</a>
+      <a href="encargos.html">Advisory</a>
+      <a href="about.html">Nosotros</a>
+    </nav>
   </header>
 
-  <main class="container hero status-page">
-    <p class="eyebrow">Consulta recibida</p>
-    <h1>Hemos recibido tu consulta.</h1>
-    <p class="subheadline">
-      Te responderemos con una propuesta de alcance y coste en menos de 24 horas.
-    </p>
-    <p class="bodycopy">
-      Mientras tanto, puedes explorar Criterial Signals si necesitas visibilidad continua sobre el mercado español.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="sample.html">Explorar Signals</a>
-      <a class="btn btn-secondary" href="index.html">Volver al inicio</a>
+  <div class="status-hero">
+    <p class="eyebrow" style="color: var(--label); animation: none; opacity: 1;">Consulta recibida</p>
+    <h1 class="status-h1">Hemos recibido tu consulta.</h1>
+    <p class="status-sub">Te responderemos con una propuesta de alcance y coste en menos de 24 horas.</p>
+    <div class="cta-group cta-group-center cta-group-no-anim">
+      <a href="sample.html" class="btn-dark">Explorar Signals</a>
+      <a href="index.html" class="btn-outline">Volver al inicio</a>
     </div>
-  </main>
+  </div>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Qué ocurre ahora</h2>
-        <p>Revisamos tu consulta y preparamos una propuesta con el alcance, la metodología y el coste estimado del encargo.</p>
-      </div>
-      <div class="card">
-        <h2>Plazo de respuesta</h2>
-        <p>Te responderemos en menos de 24 horas en el email que has indicado. Revisa también tu carpeta de spam si no lo ves.</p>
-      </div>
-      <div class="card">
-        <h2>¿Tienes más preguntas?</h2>
-        <p>Puedes escribirnos directamente a <a href="mailto:hola@criterialsignals.com">hola@criterialsignals.com</a> si necesitas algo antes.</p>
-      </div>
+  <div class="info-grid reveal">
+    <div class="info-cell">
+      <p class="info-title">Qué ocurre ahora</p>
+      <p class="info-body">Revisamos los detalles de tu consulta y preparamos una propuesta de alcance y coste.</p>
     </div>
-  </section>
+    <div class="info-cell">
+      <p class="info-title">Plazo de respuesta</p>
+      <p class="info-body">Respondemos en menos de 24 horas en días laborables.</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-title">¿Tienes más preguntas?</p>
+      <p class="info-body">Puedes escribirnos directamente a <a href="mailto:hola@criterialsignals.com" style="color: var(--navy);">hola@criterialsignals.com</a></p>
+    </div>
+  </div>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

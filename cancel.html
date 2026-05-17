@@ -3,63 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Suscripción no completada | Criterial Signals</title>
-  <meta name="description" content="Proceso de suscripción no completado." />
+  <title>Suscripción no completada | Criterial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
-      </div>
-    </div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <header class="site-header light-header" id="siteHeader">
+    <a href="index.html" class="brand">Criterial</a>
+    <nav class="nav">
+      <a href="sample.html">Signals</a>
+      <a href="encargos.html">Advisory</a>
+      <a href="about.html">Nosotros</a>
+    </nav>
   </header>
 
-  <main class="container hero status-page">
-    <p class="eyebrow">Suscripción no completada</p>
-    <h1>El proceso no se ha completado.</h1>
-    <p class="subheadline">
-      No se ha realizado ningún cargo.
-    </p>
-    <p class="bodycopy">
-      Puedes revisar la muestra o volver a los planes cuando quieras.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="sample.html">Solicitar muestra</a>
-      <a class="btn btn-secondary" href="pricing.html">Ver planes</a>
+  <div class="status-hero">
+    <p class="eyebrow" style="color: var(--label); animation: none; opacity: 1;">Suscripción no completada</p>
+    <h1 class="status-h1">El proceso no se ha completado.</h1>
+    <p class="status-sub">No se ha realizado ningún cargo.</p>
+    <div class="cta-group cta-group-center cta-group-no-anim">
+      <a href="sample.html" class="btn-dark">Solicitar muestra</a>
+      <a href="pricing.html" class="btn-outline">Ver planes</a>
     </div>
-  </main>
+  </div>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Sin ningún cargo</h2>
-        <p>El proceso quedó cancelado antes de completarse. No se ha cobrado nada.</p>
-      </div>
-      <div class="card">
-        <h2>Empieza por la muestra</h2>
-        <p>Solicita una muestra gratuita antes de comprometerte con ninguna suscripción.</p>
-      </div>
-      <div class="card">
-        <h2>Vuelve cuando quieras</h2>
-        <p>El plan Pro sigue disponible. Puedes retomar el proceso en cualquier momento.</p>
-      </div>
+  <div class="info-grid reveal">
+    <div class="info-cell">
+      <p class="info-title">Sin ningún cargo</p>
+      <p class="info-body">El proceso quedó cancelado antes de completarse. No se ha cobrado nada.</p>
     </div>
-  </section>
+    <div class="info-cell">
+      <p class="info-title">Empieza por la muestra</p>
+      <p class="info-body">Solicita una muestra gratuita antes de comprometerte con ninguna suscripción.</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-title">Vuelve cuando quieras</p>
+      <p class="info-body">El plan Pro sigue disponible. Puedes retomar el proceso en cualquier momento.</p>
+    </div>
+  </div>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

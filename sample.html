@@ -3,99 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Muestra | Criterial Signals</title>
-  <meta name="description" content="Solicita una muestra de Criterial Signals y entiende el formato del producto." />
+  <title>Signals | Criterial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html" aria-current="page">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <div class="hero-wrap hero-short">
+    <img class="hero-img" id="heroImg"
+      src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1800&q=88&fit=crop"
+      alt="Bosque neblinoso" />
+    <div class="hero-overlay"></div>
+
+    <header class="site-header" id="siteHeader">
+      <a href="index.html" class="brand">Criterial</a>
+      <nav class="nav">
+        <a href="sample.html" aria-current="page">Signals</a>
+        <a href="encargos.html">Advisory</a>
+        <a href="about.html">Nosotros</a>
+      </nav>
+    </header>
+
+    <div class="hero-content">
+      <p class="eyebrow">Criterial Signals</p>
+      <h1 class="hero-h1 hero-h1-sm">Solicita una muestra del producto.</h1>
+      <p class="hero-sub">Entiende el formato, el nivel de síntesis y el criterio editorial antes de suscribirte.</p>
+      <div class="cta-group cta-group-center">
+        <a href="pricing.html" class="btn-ghost">Ver plan Pro</a>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="container hero">
-    <p class="eyebrow">Criterial Signals</p>
-    <h1>Solicita una muestra del producto.</h1>
-    <p class="subheadline">
-      Entiende el formato, el nivel de síntesis y el criterio editorial antes de suscribirte.
-    </p>
-    <p class="bodycopy">
-      Si el formato encaja con lo que necesitas, el siguiente paso es el plan Pro.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-secondary" href="pricing.html">Ver plan Pro</a>
-    </div>
-  </main>
-
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Qué te muestra</h2>
-        <p>El tipo de lectura que produce Criterial Signals: señales relevantes de mercado sintetizadas con criterio editorial.</p>
-      </div>
-      <div class="card">
-        <h2>Qué no es</h2>
-        <p>No es un informe de consultoría ni un análisis exhaustivo. Es una muestra del formato y del nivel de síntesis del producto.</p>
-      </div>
-      <div class="card">
-        <h2>Qué sigue</h2>
-        <p>Si el formato te convence, puedes activar el plan Pro y empezar a recibir señales semanales y el brief mensual.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="container section">
-    <div class="card">
-      <h2>Solicitar muestra</h2>
-      <form id="sample-form" style="margin-top: 20px;">
-        <label for="full_name">Nombre</label>
-        <input id="full_name" name="full_name" type="text" required />
-
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required />
-
-        <label for="company_name">Empresa</label>
-        <input id="company_name" name="company_name" type="text" required />
-
-        <label for="website">Website</label>
-        <input id="website" name="website" type="url" required />
-
-        <label for="interest_type">Interés principal</label>
-        <select id="interest_type" name="interest_type" required>
-          <option value="">Selecciona una opción</option>
-          <option value="m_and_a">M&amp;A</option>
-          <option value="real_estate">Real Estate</option>
-          <option value="capital_markets">Capital Markets</option>
-          <option value="general">Mercado español — visión general</option>
-        </select>
-
-        <label for="notes">Notas</label>
-        <textarea id="notes" name="notes" rows="4"></textarea>
-
-        <div class="cta-group">
-          <button type="submit" class="btn btn-primary">Solicitar muestra</button>
-          <a class="btn btn-secondary" href="https://buy.stripe.com/test_6oU4gy8vW9GU6tMfFc8g001" target="_blank" rel="noopener">Ir a Pro</a>
+  <section class="section reveal">
+    <p class="section-label">Muestra gratuita</p>
+    <div class="lower-grid" style="border: 0.5px solid var(--border);">
+      <div style="padding: 44px 40px; border-right: 0.5px solid var(--border);">
+        <h2 class="cell-title" style="margin-bottom: 20px;">Qué incluye la muestra</h2>
+        <div class="info-grid" style="border-top: none; grid-template-columns: 1fr;">
+          <div style="padding: 16px 0; border-bottom: 0.5px solid var(--border);">
+            <p class="info-title">Qué te muestra</p>
+            <p class="info-body">El tipo de lectura que produce Criterial Signals: señales relevantes de mercado sintetizadas con criterio editorial.</p>
+          </div>
+          <div style="padding: 16px 0; border-bottom: 0.5px solid var(--border);">
+            <p class="info-title">Qué no es</p>
+            <p class="info-body">No es un informe de consultoría ni un análisis exhaustivo. Es una muestra del formato y del nivel de síntesis del producto.</p>
+          </div>
+          <div style="padding: 16px 0;">
+            <p class="info-title">Qué sigue</p>
+            <p class="info-body">Si el formato te convence, puedes activar el plan Pro y empezar a recibir señales semanales y el brief mensual.</p>
+          </div>
         </div>
+      </div>
+      <div style="padding: 44px 40px;">
+        <form id="sample-form" style="margin-top: 20px;">
+          <label for="full_name">Nombre</label>
+          <input id="full_name" name="full_name" type="text" required />
 
-        <p id="form-status" style="margin-top: 16px; font-size: 14px; color: #555;"></p>
-      </form>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required />
+
+          <label for="company_name">Empresa</label>
+          <input id="company_name" name="company_name" type="text" required />
+
+          <label for="website">Website</label>
+          <input id="website" name="website" type="url" required />
+
+          <label for="interest_type">Interés principal</label>
+          <select id="interest_type" name="interest_type" required>
+            <option value="">Selecciona una opción</option>
+            <option value="m_and_a">M&amp;A</option>
+            <option value="real_estate">Real Estate</option>
+            <option value="capital_markets">Capital Markets</option>
+            <option value="general">Mercado español — visión general</option>
+          </select>
+
+          <label for="notes">Notas</label>
+          <textarea id="notes" name="notes" rows="4"></textarea>
+
+          <div class="cta-group">
+            <button type="submit" class="btn btn-primary">Solicitar muestra</button>
+            <a class="btn btn-secondary" href="https://buy.stripe.com/test_6oU4gy8vW9GU6tMfFc8g001" target="_blank" rel="noopener">Ir a Pro</a>
+          </div>
+
+          <p id="form-status" style="margin-top: 16px; font-size: 14px; color: #555;"></p>
+        </form>
+      </div>
     </div>
   </section>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
   <script>
@@ -140,5 +144,6 @@
       }
     });
   </script>
+  <script src="criterial-shared.js"></script>
 </body>
 </html>

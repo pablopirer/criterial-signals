@@ -3,63 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Solicitud recibida | Criterial Signals</title>
-  <meta name="description" content="Solicitud recibida correctamente." />
+  <title>Solicitud recibida | Criterial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="topbar">
-        <a href="index.html" class="brand">Criterial</a>
-        <nav class="nav">
-          <a href="sample.html">Signals</a>
-          <a href="encargos.html">Advisory</a>
-          <a href="about.html">Nosotros</a>
-        </nav>
-      </div>
-    </div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+
+  <header class="site-header light-header" id="siteHeader">
+    <a href="index.html" class="brand">Criterial</a>
+    <nav class="nav">
+      <a href="sample.html">Signals</a>
+      <a href="encargos.html">Advisory</a>
+      <a href="about.html">Nosotros</a>
+    </nav>
   </header>
 
-  <main class="container hero status-page">
-    <p class="eyebrow">Solicitud recibida</p>
-    <h1>Hemos recibido tu solicitud.</h1>
-    <p class="subheadline">
-      La muestra está siendo generada y la recibirás por email en breve.
-    </p>
-    <p class="bodycopy">
-      Si quieres acceder al producto completo, puedes activar el plan Pro ahora.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="pricing.html">Ver plan Pro</a>
-      <a class="btn btn-secondary" href="index.html">Volver al inicio</a>
+  <div class="status-hero">
+    <p class="eyebrow" style="color: var(--label); animation: none; opacity: 1;">Solicitud recibida</p>
+    <h1 class="status-h1">Hemos recibido tu solicitud.</h1>
+    <p class="status-sub">La muestra está siendo generada y la recibirás por email en breve.</p>
+    <div class="cta-group cta-group-center cta-group-no-anim">
+      <a href="pricing.html" class="btn-dark">Ver plan Pro</a>
+      <a href="index.html" class="btn-outline">Volver al inicio</a>
     </div>
-  </main>
+  </div>
 
-  <section class="container section">
-    <div class="grid">
-      <div class="card">
-        <h2>Qué recibirás</h2>
-        <p>Una muestra breve del formato y criterio editorial de Criterial Signals, entregada por email.</p>
-      </div>
-      <div class="card">
-        <h2>Qué desbloquea Pro</h2>
-        <p>Señales semanales, brief mensual premium y acceso al archivo completo de publicaciones.</p>
-      </div>
-      <div class="card">
-        <h2>¿Tienes un encargo concreto?</h2>
-        <p>Si necesitas un análisis, valoración o pitch deck, cuéntanoslo en Advisory.</p>
-      </div>
+  <div class="info-grid reveal">
+    <div class="info-cell">
+      <p class="info-title">Qué recibirás</p>
+      <p class="info-body">Una muestra breve del formato y criterio editorial de Criterial Signals, entregada por email.</p>
     </div>
-  </section>
+    <div class="info-cell">
+      <p class="info-title">Qué desbloquea Pro</p>
+      <p class="info-body">Señales semanales, brief mensual premium y acceso al archivo completo de publicaciones.</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-title">¿Tienes un encargo concreto?</p>
+      <p class="info-body">Si necesitas un análisis, valoración o pitch deck, cuéntanoslo en Advisory.</p>
+    </div>
+  </div>
 
-  <footer class="site-footer container">
-    <p>Criterial &mdash; Inteligencia de mercado para España.</p>
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
   </footer>
 
+  <script src="criterial-shared.js"></script>
 </body>
 </html>
