@@ -62,15 +62,20 @@ body {
 }
 
 .site-header.light-header { position: relative; background: #fff; border-bottom: 0.5px solid var(--border); padding: 22px 64px; }
-.site-header.light-header .brand { color: var(--navy); }
+.site-header.light-header .brand {
+  color: var(--navy);
+}
 .site-header.light-header .nav a { color: var(--label); }
 .site-header.light-header .nav a:hover { color: var(--navy); }
 .site-header.light-header .nav a::after { background: var(--navy); }
 
 .brand {
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: 23px; font-weight: 400; color: #fff;
-  text-decoration: none; letter-spacing: 0.05em; text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 400;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: -0.01em;
 }
 
 .nav { display: flex; gap: 34px; }
@@ -590,7 +595,9 @@ button.btn-dark {
 
 .footer-brand {
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: 14px; color: #BBB; text-transform: uppercase; letter-spacing: 0.09em;
+  font-size: 15px;
+  color: #BBB;
+  letter-spacing: -0.01em;
 }
 
 .footer-right { font-size: 11px; color: #C0BDB8; }
