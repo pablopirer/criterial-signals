@@ -71,7 +71,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Determine which publication types the plan grants.
   const planTypes: Record<string, string[]> = {
-    pro: ["weekly", "monthly"],
+    pro: ["weekly", "monthly", "sample"],
   };
   const allowedTypes = planTypes[subscriber.plan] ?? [];
 
