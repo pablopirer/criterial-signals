@@ -452,6 +452,7 @@
 
     document.getElementById("sign-out").addEventListener("click", async () => {
       await client.auth.signOut();
+      window.location.href = window.location.pathname;
     });
 
     let sessionResolved = false;
