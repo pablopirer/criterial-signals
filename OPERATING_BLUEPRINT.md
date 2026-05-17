@@ -1,445 +1,173 @@
-# Criterial Signals — MVP Operating Blueprint v1
+# Criterial — Operating Blueprint v2
 
-## 1. Objetivo del MVP
+## 1. Qué es Criterial
 
-Criterial Signals es un MVP orientado a validar una ruta simple de captación, generación de muestra y monetización para un producto de inteligencia de mercado centrado en el mercado español.
+Criterial es una firma analítica independiente especializada en el mercado español de inversión privada. Ofrece dos líneas de producto:
 
-### Lo que el MVP ya hace
-- Captar leads desde una página web pública.
-- Registrar automáticamente leads en Supabase.
-- Registrar solicitudes de muestra (`sample_requests`).
-- Generar una muestra con OpenAI.
-- Guardar esa muestra en `publications`.
-- Ofrecer un checkout real del plan Pro mediante Stripe Payment Link.
-- Registrar automáticamente suscriptores pagados en `subscribers` a través de webhook de Stripe y Make.
-
-### Lo que el MVP todavía no hace
-- Entregar automáticamente la muestra al usuario por email.
-- Dar acceso autenticado o diferenciado a contenido premium.
-- Generar de forma recurrente weekly digests o monthly briefs en producción.
-- Gestionar deduplicación robusta, idempotencia avanzada o manejo exhaustivo de errores.
+- **Advisory** — trabajo analítico bajo demanda: valoraciones de empresa, análisis sectoriales, pitch decks.
+- **Criterial Signals** — publicación editorial con señales semanales y briefs mensuales sobre M&A, real estate y capital markets en España.
 
 ---
 
 ## 2. Stack tecnológico
 
-### Frontend / web pública
-- **GitHub Pages**
-- HTML + CSS estático
-- Repositorio: `criterial-signals`
+### Frontend
+- **GitHub Pages** — HTML + CSS estático en la raíz del repositorio
+- Dominio: `criterialsignals.com`
+- Sistema visual: EB Garamond + Inter, heroes con paisajes paralax, cursor mix-blend-mode
 
-### Base de datos
-- **Supabase**
+### Backend
+- **Supabase** — base de datos PostgreSQL + Edge Functions + Auth
 
 ### Automatización
-- **Make**
+- **Make** — desactivado. Todos los flujos gestionados por Edge Functions.
 
 ### Generación de contenido
-- **Anthropic API** (claude-sonnet-4-6)
+- **Anthropic API** — modelo `claude-sonnet-4-6`, con override vía `ANTHROPIC_MODEL`
 
-### Cobro
-- **Stripe**
-- Payment Link para el plan Pro
-- Webhook Stripe → Make para alta automática de subscriber
+### Pagos
+- **Stripe** — Payment Links + webhook → Edge Function `stripe-webhook` → Supabase
+- Plan Pro: 9,90 €/mes (test mode)
 
----
-
-## 3. Arquitectura general
-
-## 3.1 Flujo de sample request
-
-**Usuario web → `sample.html` → webhook de Make → `leads` → `sample_requests` → Anthropic → `publications` → `request-received.html`**
-
-Resultado:
-- se crea un lead,
-- se registra una solicitud de muestra,
-- se genera una publicación sample en borrador.
-
-## 3.2 Flujo de pago / suscripción
-
-**Usuario web → `pricing.html` o CTA desde `sample.html` → Stripe Payment Link Pro → Stripe Checkout → `success.html` → Stripe webhook → Make → `subscribers`**
-
-Resultado:
-- se realiza el pago,
-- Stripe envía `checkout.session.completed`,
-- Make registra el subscriber en Supabase.
+### Email
+- **Resend** — `noreply@criterialsignals.com`, dominio verificado
 
 ---
 
-## 4. Base de datos Supabase
+## 3. Arquitectura de flujos
 
-## 4.1 Tablas creadas
+### 3.1 Sample request
+`sample.html` → Edge Function `sample-request` → `leads` + `sample_requests` → Anthropic API → `publications` (draft) → Resend → email usuario → `request-received.html`
+
+### 3.2 Advisory
+`encargos.html` → Edge Function `advisory-request` → Resend → email interno (criterialam@gmail.com) + confirmación usuario → `advisory-received.html`
+
+### 3.3 Pago / suscripción
+`pricing.html` → Stripe Payment Link → Stripe Checkout → `success.html` → Stripe webhook → Edge Function `stripe-webhook` → upsert `subscribers`
+
+### 3.4 Welcome email
+INSERT en `subscribers` → Supabase Database Webhook → Edge Function `welcome-subscriber` → Resend → email bienvenida
+
+### 3.5 Archivo Pro
+`archive.html` → Supabase Auth magic link → Edge Function `get-publications` → publicaciones `weekly` + `monthly` + `sample` con status `published`
+
+---
+
+## 4. Edge Functions
+
+| Función | Descripción |
+|---|---|
+| `sample-request` | Lead capture, brief generation, email delivery |
+| `advisory-request` | Formulario Advisory, notificación interna y confirmación usuario |
+| `stripe-webhook` | Recibe eventos Stripe, verifica firma, upsert subscribers |
+| `welcome-subscriber` | Triggered por DB Webhook en INSERT a subscribers |
+| `get-publications` | Acceso autenticado al archivo Pro (weekly, monthly, sample) |
+| `_shared/anthropic.ts` | Cliente Anthropic compartido |
+| `_shared/supabase.ts` | Cliente Supabase compartido |
+| `_shared/resend.ts` | Templates HTML y envío de emails |
+
+---
+
+## 5. Base de datos
 
 ### `leads`
-Función:
-- almacenar leads captados desde el formulario de muestra.
-
-Campos relevantes:
-- `id`
-- `created_at`
-- `full_name`
-- `email`
-- `company_name`
-- `website`
-- `interest_type`
-- `source`
-- `status`
-- `last_contact_at`
-- `notes`
+Leads captados desde `sample.html`. Campos: `id`, `created_at`, `full_name`, `email`, `company_name`, `website`, `interest_type`, `source`, `status`, `notes`. Unique index en `lower(email)`.
 
 ### `subscribers`
-Función:
-- almacenar usuarios/suscriptores que han completado el checkout.
-
-Campos relevantes:
-- `id`
-- `created_at`
-- `email`
-- `full_name`
-- `company_name`
-- `plan`
-- `status`
-- `stripe_customer_id`
-- `stripe_subscription_id`
-- `subscription_start`
-- `renewal_date`
-
-### `source_items`
-Función:
-- tabla pensada para futuras fuentes, señales o inputs de mercado.
-- actualmente no es crítica en el flujo MVP ya validado.
-
-### `publications`
-Función:
-- almacenar muestras y publicaciones generadas.
-
-Campos relevantes:
-- `id`
-- `created_at`
-- `type`
-- `title`
-- `period_start`
-- `period_end`
-- `body_markdown`
-- `body_html`
-- `pdf_url`
-- `status`
+Suscriptores Pro. Campos: `id`, `created_at`, `email`, `full_name`, `company_name`, `plan`, `status`, `stripe_customer_id`, `stripe_subscription_id`. Unique constraint en `email`.
 
 ### `sample_requests`
-Función:
-- registrar solicitudes de muestra y vincularlas a un lead.
+Solicitudes de muestra vinculadas a leads. Campos: `id`, `created_at`, `lead_id`, `topic`, `status`.
 
-Campos relevantes:
-- `id`
-- `created_at`
-- `lead_id`
-- `topic`
-- `status`
-- `sample_publication_id`
-- `sent_at`
+### `publications`
+Publicaciones generadas. Campos: `id`, `created_at`, `type` (sample/weekly/monthly), `title`, `period_start`, `period_end`, `body_markdown`, `status` (draft/published).
+
+### `source_items`
+Reservada para futuras fuentes de señales. No activa.
 
 ### `outreach_events`
-Función:
-- tabla reservada para seguimiento futuro de outreach / eventos comerciales.
-- no está aún integrada en el flujo activo.
-
----
-
-## 5. Escenarios Make
-
-## 5.1 Escenario `sample-request-mvp`
-
-### Finalidad
-Procesar una solicitud de muestra lanzada desde la web.
-
-### Orden actual correcto de módulos
-1. **Webhook**
-2. **HTTP → `leads`**
-3. **HTTP → `sample_requests`**
-4. **OpenAI**
-5. **HTTP → `publications`**
-
-### Detalle de cada módulo
-
-#### 1. Webhook
-- recibe payload JSON desde `sample.html`
-- campos esperados:
-  - `full_name`
-  - `email`
-  - `company_name`
-  - `website`
-  - `interest_type`
-  - `notes`
-
-#### 2. HTTP → `leads`
-Inserta una fila en `leads`.
-
-Payload lógico:
-- `full_name` ← webhook
-- `email` ← webhook
-- `company_name` ← webhook
-- `website` ← webhook
-- `interest_type` ← webhook
-- `source` = `sample_form`
-- `status` = `new`
-- `notes` ← webhook
-
-#### 3. HTTP → `sample_requests`
-Inserta una fila en `sample_requests`.
-
-Payload lógico:
-- `lead_id` ← `id` devuelto por el módulo HTTP de `leads`
-- `topic` ← webhook `interest_type`
-- `status` = `queued`
-
-#### 4. OpenAI
-Genera un sample brief usando el interés principal del usuario.
-
-Prompt base:
-- sample breve
-- español profesional
-- estructura:
-  - Executive Snapshot
-  - Three Relevant Signals
-  - What to Watch
-
-#### 5. HTTP → `publications`
-Inserta una fila en `publications`.
-
-Payload lógico:
-- `type` = `sample`
-- `title` = `Auto-generated sample brief`
-- `body_markdown` ← texto generado por OpenAI
-- `status` = `draft`
-
-### Estado actual
-- validado de extremo a extremo desde web real
-- funcional
-
----
-
-## 5.2 Escenario `stripe-subscription-mvp`
-
-### Finalidad
-Registrar automáticamente suscriptores tras el pago en Stripe.
-
-### Orden actual
-1. **Webhook**
-2. **HTTP → `subscribers`**
-
-### Detalle
-
-#### 1. Webhook
-- recibe eventos reales de Stripe
-- evento usado:
-  - `checkout.session.completed`
-
-#### 2. HTTP → `subscribers`
-Inserta una fila en `subscribers`.
-
-Payload lógico:
-- `email` ← email del checkout Stripe
-- `full_name` ← nombre del cliente si está disponible
-- `company_name` ← vacío por ahora
-- `plan` = `pro`
-- `status` = `active`
-- `stripe_customer_id` ← `customer`
-- `stripe_subscription_id` ← `subscription`
-
-### Estado actual
-- validado con compra real en test mode
-- funcional
+Reservada para seguimiento comercial. No activa.
 
 ---
 
 ## 6. Web pública
 
-## 6.1 Páginas existentes
+### Páginas principales
+- `index.html` — Home de firma: posicionamiento, Advisory y Signals
+- `encargos.html` — Advisory: servicios y formulario de contacto
+- `pricing.html` — Signals: planes Free y Pro
+- `about.html` — Nosotros: presentación de la firma
+- `archive.html` — Archivo Pro: autenticado via magic link
 
-### `index.html`
-Home principal del proyecto.
+### Páginas transaccionales
+- `sample.html` — Formulario de solicitud de muestra
+- `request-received.html` — Confirmación de muestra
+- `advisory-received.html` — Confirmación de consulta Advisory
+- `success.html` — Suscripción Pro activada
+- `cancel.html` — Suscripción no completada
 
-### `sample.html`
-Página de solicitud de muestra con formulario real conectado al webhook de Make.
-
-### `pricing.html`
-Página de pricing.
-Actualmente el plan Pro enlaza al Payment Link de Stripe.
-
-### `about.html`
-Página descriptiva del producto.
-
-### `success.html`
-Página de éxito tras completar el pago.
-
-### `cancel.html`
-Página de cancelación o no finalización del pago.
-
-### `archive.html`
-Página placeholder para archivo de publicaciones.
-
-### `request-received.html`
-Página de confirmación tras enviar correctamente el formulario de sample request.
+### Assets compartidos
+- `styles.css` — Sistema de diseño completo
+- `criterial-shared.js` — Cursor, parallax, scroll reveal, page transition
 
 ---
 
 ## 7. Stripe
 
-## 7.1 Configuración actual
-
-### Producto
-- `Criterial Signals Pro`
-
-### Precio
-- recurrente mensual
-- `249 EUR / mes`
-
-### Enlace de pago
-- Payment Link del plan Pro
-- conectado ya a la web
-
-### Redirect post-pago
-- `success.html`
-
-### Cancel URL
-- no aplica en el enfoque actual basado en Payment Links
-
-## 7.2 Webhook Stripe
-- endpoint configurado hacia Make
-- evento escuchado:
-  - `checkout.session.completed`
-
-### Estado
-- validado con evento real en test mode
+- Producto: `Criterial Signals Pro`
+- Precio: 9,90 €/mes (test mode)
+- Webhook: `checkout.session.completed` → Edge Function `stripe-webhook`
+- Redirect post-pago: `success.html`
 
 ---
 
-## 8. Anthropic
+## 8. Supabase Auth
 
-## 8.1 Uso actual
-Anthropic se usa para generar muestras breves basadas en `interest_type`.
-El modelo activo es `claude-sonnet-4-6`. El output es JSON estructurado que
-se parsea antes de persistir en `publications`.
-
-## 8.2 Estado
-- API con billing operativo
-- integrada en Edge Function `sample-request`
-- generando contenido real correctamente
+- Magic link para acceso al archivo Pro
+- Site URL: `https://criterialsignals.com/archive.html`
+- Redirect URL: `https://criterialsignals.com/archive.html`
+- Template magic link: HTML personalizado con sistema visual Criterial
 
 ---
 
 ## 9. Estado operativo actual
 
-## 9.1 Validado
-- web pública activa
-- formulario funcional
-- webhook Make funcional
-- leads guardados
-- sample_requests guardadas
-- sample generado y guardado
-- checkout Stripe funcional
-- success page funcional
-- subscriber guardado tras pago
+### Validado y en producción
+- Web pública con identidad visual completa
+- Formulario de muestra → brief generado → email entregado
+- Formulario Advisory → notificación interna + confirmación usuario
+- Checkout Stripe → suscriptor registrado → welcome email
+- Archivo Pro autenticado con magic link
+- 9 publicaciones en archivo (1 weekly, 8 samples)
 
-## 9.2 No validado todavía
-- entrega automática del sample al usuario
-- acceso premium real tras pago
-- onboarding del subscriber
-- uso recurrente semanal/mensual en producción
-- email transaccional
-- deduplicación e idempotencia robusta
+### No construido todavía
+- Motor de contenido recurrente automatizado (weekly/monthly)
+- Company Snapshot como producto on-demand
+- Distribución LinkedIn
+- Conversión de leads a Pro (outreach)
 
 ---
 
-## 10. Riesgos y limitaciones actuales
+## 10. Próximos pasos
 
-### 10.1 Manejo de errores
-- Make puede desactivar escenarios ante errores si una inserción falla.
-- Falta reforzar tratamiento de errores e idempotencia.
+### Prioridad 1 — Contenido recurrente
+- Establecer cadencia semanal con `scripts/generate-content.sh weekly`
+- Establecer cadencia mensual con `scripts/generate-content.sh monthly`
+- Publicar primer Weekly Signals de producción
 
-### 10.2 Duplicados
-- un mismo usuario puede generar múltiples leads o requests si reenvía formularios.
-- un mismo pago puede necesitar protección adicional contra duplicados.
+### Prioridad 2 — Advisory
+- Conseguir primer encargo real
+- Validar formato y entregables con cliente real
 
-### 10.3 Entrega
-- el usuario no recibe todavía la muestra por email ni accede automáticamente al contenido generado.
-
-### 10.4 Producto recurrente
-- no existe aún un motor de producción recurrente de weekly digest / monthly brief.
-
-### 10.5 Dependencia de herramientas
-- el sistema depende hoy de:
-  - GitHub Pages
-  - Supabase
-  - Make
-  - OpenAI
-  - Stripe
+### Prioridad 3 — Distribución
+- Company Snapshot como producto LinkedIn
+- Lead capture desde LinkedIn hacia `sample.html`
 
 ---
 
-## 11. Próximos pasos recomendados
+## 11. Convenciones operativas
 
-## 11.1 Prioridad inmediata
-**Optimización de conversión de la web**
-
-Objetivos:
-- mejorar copy
-- reducir fricción
-- clarificar propuesta de valor
-- empujar mejor hacia Pro
-
-## 11.2 Prioridad siguiente
-**Construcción del motor de contenido recurrente**
-
-Objetivos:
-- weekly digest
-- monthly brief
-- archivo más útil
-- entregables repetibles
-
-## 11.3 Prioridad posterior
-**Entrega y activación**
-- email transaccional
-- onboarding del suscriptor
-- acceso al contenido
-- vínculo entre `sample_requests` y `publications`
-
----
-
-## 12. Convenciones y notas operativas
-
-### 12.1 Entorno
-Todo lo validado hasta ahora se ha probado en:
-- GitHub Pages público
-- Supabase operativo
-- Stripe test mode
-- Make activo
-
-### 12.2 Criterio de éxito usado
-Cada flujo se ha considerado válido cuando:
-- la acción se ejecuta desde web o Stripe,
-- Make la procesa,
-- y la fila correspondiente aparece en Supabase.
-
-### 12.3 Filosofía de construcción seguida
-- primero flujos reales,
-- luego robustez,
-- luego sofisticación.
-
----
-
-## 13. Resumen ejecutivo final
-
-Criterial Signals dispone ya de un MVP operativo capaz de:
-- captar leads desde una web pública,
-- generar una muestra automatizada,
-- cobrar un plan Pro mediante Stripe,
-- y registrar automáticamente suscriptores en base de datos.
-
-El sistema todavía no está en fase de producto plenamente autónomo y maduro, pero ya ha superado la fase conceptual y dispone de:
-- captación real,
-- generación real,
-- cobro real,
-- registro real de suscriptores.
-
-La prioridad siguiente recomendada es optimizar la conversión comercial antes de ampliar la sofisticación del motor de contenido.
+- Make está desactivado. Ningún flujo activo depende de Make.
+- Todos los cambios de schema van por migraciones en `/supabase/migrations/`.
+- Secrets nunca en el código — siempre vía `supabase secrets set`.
+- El archivo `CLAUDE.md` es la fuente de verdad técnica. Este blueprint es la visión de negocio.
