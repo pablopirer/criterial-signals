@@ -207,6 +207,29 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Edge Function `get-publications` actualizada para incluir tipo `sample` en plan Pro.
 - 7 sample briefs publicados en base de datos (status draft → published).
 
+### Day 15 — Complete (2026-05-18)
+- Identidad visual completa definida y aplicada en todos los elementos del producto.
+- Email templates actualizados al nuevo sistema visual: fondo blanco, sin border-radius,
+  tipografía Georgia serif, labels 9px uppercase, separadores 0.5px #E2DED8.
+- Labels de email en español: "Resumen ejecutivo", "Señales relevantes", "Qué vigilar".
+- Magic link de Supabase Auth rediseñado con template HTML propio consistente con la web.
+- `archive.html` rediseñado: barra de usuario navy, tabs filtro con contadores, stats row,
+  strip próxima publicación, cards con hover y modal lector markdown.
+- Edge Function `get-publications` actualizada para incluir tipo `sample` en plan Pro.
+- 8 sample briefs publicados en base de datos (status draft → published).
+- Botones de formulario (`sample.html`, `encargos.html`) actualizados con estilos inline
+  consistentes con el sistema visual (navy, sin border-radius).
+- Logo y brand package definidos: wordmark `Criterial.` en EB Garamond con punto pegado,
+  monograma `C.` para favicon y usos compactos. Brand package completo documentado.
+- Favicon implementado en todos los HTML como SVG inline (cuadrado navy, C. blanca).
+- Wordmark actualizado a `Criterial.` (con punto) en header, footer y títulos de todas
+  las páginas. CSS corregido: EB Garamond 30px, sin text-transform.
+- Note: GitHub Pages cachea CSS agresivamente. Para forzar invalidación, renombrar el
+  archivo CSS (styles.css → styles.vX.css → styles.css) y hacer commit. El parámetro
+  `?v=X` en el href NO invalida la caché de GitHub Pages.
+- Note: todos los cambios de código deben ejecutarse vía Claude Code. No editar archivos
+  directamente desde la terminal sin pasar por Claude Code como ejecutor.
+
 ### Day 13 — Complete (2026-05-15)
 - Model upgraded from `claude-sonnet-4-6` (previously `claude-haiku-4-5-20251001`) in
   `_shared/anthropic.ts`. `max_tokens` raised from 1024 to 2048.
@@ -368,6 +391,7 @@ Goal: activate distribution and begin converting leads to Pro.
 6. **Use `git mv` to move files.**
 7. **When in doubt about scope, ask.**
 8. **Always include explicit GRANTs in new migrations.** From May 30 2026, new Supabase projects do not expose public schema tables to the Data API by default. Any migration that creates a new table must include explicit GRANT statements for `anon`, `authenticated`, and `service_role` as needed, plus RLS enabled. Example in `/supabase/migrations/`.
+9. **Claude Code es el ejecutor oficial.** Todos los cambios de código, CSS y HTML deben realizarse a través de Claude Code. No editar archivos directamente desde la terminal fuera de Claude Code salvo comandos de git, bash utilitario o diagnóstico.
 
 ---
 
