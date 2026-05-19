@@ -10,175 +10,240 @@
   <link rel="stylesheet" href="styles.v4.css" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230D1F3C'/><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='white' font-family='Georgia,serif' font-size='18' font-weight='400'>C.</text></svg>" />
   <style>
-    /* ── Admin layout ─────────────────────────────────────────────────────── */
+    /* ── Top bar ──────────────────────────────────────────────────────────── */
     .admin-topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      height: 52px;
-      background: #fff;
+      height: 52px; background: #fff;
       border-bottom: 0.5px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 40px;
     }
-    .admin-topbar-left {
+    .topbar-brand {
       font-family: 'EB Garamond', Georgia, serif;
       font-size: 18px; font-weight: 400; color: var(--navy);
-      letter-spacing: 0.01em;
     }
-    .admin-topbar-left span {
-      font-family: 'Inter', sans-serif;
-      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--label); margin-left: 12px; vertical-align: middle;
+    .topbar-brand span {
+      font-family: 'Inter', sans-serif; font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--label); margin-left: 10px; vertical-align: middle;
     }
-    .admin-topbar-right {
-      display: flex; align-items: center; gap: 20px;
-    }
-    .admin-user-email {
-      font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif;
-    }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-email { font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif; }
     .btn-signout {
       font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase;
       color: var(--navy); border: 0.5px solid var(--border);
-      padding: 6px 14px; background: none; cursor: none; font-family: 'Inter', sans-serif;
-      transition: border-color 0.2s, color 0.2s;
+      padding: 6px 14px; background: none; cursor: none;
+      font-family: 'Inter', sans-serif; transition: border-color 0.18s;
     }
     .btn-signout:hover { border-color: var(--navy); }
 
-    /* ── Main content ─────────────────────────────────────────────────────── */
+    /* ── Tab bar ──────────────────────────────────────────────────────────── */
+    .admin-tabbar {
+      position: fixed; top: 52px; left: 0; right: 0; z-index: 190;
+      background: #fff; border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: flex-end; gap: 0; padding: 0 40px;
+    }
+    .tab-btn {
+      font-family: 'Inter', sans-serif; font-size: 11px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--label); background: none; border: none; cursor: none;
+      padding: 14px 20px 13px; border-bottom: 2px solid transparent;
+      transition: color 0.18s, border-color 0.18s; margin-bottom: -0.5px;
+    }
+    .tab-btn:hover { color: var(--navy); }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+    /* ── Main layout ──────────────────────────────────────────────────────── */
     .admin-main {
       max-width: 1040px; margin: 0 auto;
-      padding: 88px 40px 80px;
+      padding: 116px 40px 80px;
     }
-    .admin-section {
-      margin-bottom: 56px;
-      padding-bottom: 56px;
-      border-bottom: 0.5px solid var(--border);
-    }
-    .admin-section:last-child { border-bottom: none; }
+    .admin-section { margin-bottom: 52px; }
     .section-label {
       font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--label); margin-bottom: 20px; font-family: 'Inter', sans-serif;
+      color: var(--label); margin-bottom: 16px; font-family: 'Inter', sans-serif;
     }
     .section-title {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 28px; font-weight: 400; color: var(--navy);
-      margin-bottom: 24px; line-height: 1.2;
+      font-size: 26px; font-weight: 400; color: var(--navy);
+      margin-bottom: 20px; line-height: 1.2;
+    }
+    .section-divider {
+      border: none; border-top: 0.5px solid var(--border); margin: 48px 0;
     }
 
     /* ── Generate buttons ─────────────────────────────────────────────────── */
-    .gen-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-    .btn-gen {
-      background: var(--navy); color: #fff;
-      padding: 13px 28px; font-size: 13px; font-weight: 500;
-      font-family: 'Inter', sans-serif; border: none; cursor: none;
-      transition: background 0.22s; letter-spacing: 0.02em;
+    .gen-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .btn-primary {
+      background: var(--navy); color: #fff; padding: 12px 26px;
+      font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif;
+      border: none; cursor: none; letter-spacing: 0.04em;
+      transition: background 0.2s;
     }
-    .btn-gen:hover:not(:disabled) { background: #162d57; }
-    .btn-gen:disabled { opacity: 0.45; }
-    .btn-gen-secondary {
+    .btn-primary:hover:not(:disabled) { background: #162d57; }
+    .btn-primary:disabled { opacity: 0.4; }
+    .btn-outline {
       background: none; color: var(--navy); border: 0.5px solid var(--navy);
-      padding: 13px 28px; font-size: 13px; font-weight: 500;
-      font-family: 'Inter', sans-serif; cursor: none;
-      transition: background 0.22s; letter-spacing: 0.02em;
+      padding: 12px 26px; font-size: 12px; font-weight: 500;
+      font-family: 'Inter', sans-serif; cursor: none; letter-spacing: 0.04em;
+      transition: background 0.2s;
     }
-    .btn-gen-secondary:hover:not(:disabled) { background: var(--cream); }
-    .btn-gen-secondary:disabled { opacity: 0.45; }
+    .btn-outline:hover:not(:disabled) { background: #f5f4f2; }
+    .btn-outline:disabled { opacity: 0.4; }
     .gen-status {
       font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif;
-      min-height: 18px; letter-spacing: 0.02em;
+      min-height: 18px;
     }
 
     /* ── Variations ───────────────────────────────────────────────────────── */
-    .variations-grid {
-      display: flex; flex-direction: column; gap: 32px;
-      margin-top: 8px;
+    .variations-stack { display: flex; flex-direction: column; gap: 28px; margin-top: 4px; }
+    .variation-card { border: 0.5px solid var(--border); }
+    .variation-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 0.5px solid var(--border);
+      background: #fafaf9;
     }
-    .variation-card {
-      border: 0.5px solid var(--border);
-      display: flex; flex-direction: column;
-    }
-    .variation-label {
+    .variation-num {
       font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-      color: var(--label); padding: 14px 20px 12px;
-      border-bottom: 0.5px solid var(--border);
-      font-family: 'Inter', sans-serif;
-    }
-    .variation-body {
-      font-size: 13px; line-height: 1.8; color: #333;
-      padding: 20px; flex: 1;
-      max-height: 420px; overflow-y: auto;
-      font-family: 'Inter', sans-serif;
-      white-space: pre-wrap; word-break: break-word;
-    }
-    .variation-footer {
-      padding: 16px 20px;
-      border-top: 0.5px solid var(--border);
+      color: var(--label); font-family: 'Inter', sans-serif;
     }
     .btn-save {
-      background: var(--navy); color: #fff;
-      padding: 10px 20px; font-size: 12px; font-weight: 500;
-      font-family: 'Inter', sans-serif; border: none; cursor: none;
-      width: 100%; transition: background 0.22s; letter-spacing: 0.02em;
+      background: var(--navy); color: #fff; padding: 8px 18px;
+      font-size: 11px; font-weight: 500; font-family: 'Inter', sans-serif;
+      border: none; cursor: none; letter-spacing: 0.04em; transition: background 0.2s;
     }
     .btn-save:hover { background: #162d57; }
+    .variation-body {
+      padding: 24px 28px; font-size: 14px; line-height: 1.8; color: #333;
+      font-family: 'Inter', sans-serif;
+    }
+    .variation-body h1,.variation-body h2,.variation-body h3 {
+      font-family: 'EB Garamond', Georgia, serif; font-weight: 400;
+      color: var(--navy); margin: 20px 0 8px;
+    }
+    .variation-body h2 { font-size: 20px; }
+    .variation-body h3 { font-size: 17px; }
+    .variation-body p  { margin: 0 0 12px; }
+    .variation-body hr { border: none; border-top: 0.5px solid var(--border); margin: 16px 0; }
+    .variation-body strong { font-weight: 500; color: var(--navy); }
 
-    /* ── Publications table ───────────────────────────────────────────────── */
-    .pub-table {
-      width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif;
-      font-size: 13px;
+    /* ── Publication filters ──────────────────────────────────────────────── */
+    .filter-row {
+      display: flex; align-items: center; gap: 32px; margin-bottom: 24px;
+      flex-wrap: wrap;
     }
-    .pub-table th {
-      text-align: left; font-size: 10px; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--label); font-weight: 400;
-      padding: 0 16px 12px 0; border-bottom: 0.5px solid var(--border);
-    }
-    .pub-table td {
-      padding: 14px 16px 14px 0;
-      border-bottom: 0.5px solid var(--border);
-      color: #333; vertical-align: middle;
-    }
-    .pub-table tr:last-child td { border-bottom: none; }
-    .pub-table .col-title { max-width: 280px; }
-    .pub-table .col-title span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .badge {
-      display: inline-block; font-size: 10px; letter-spacing: 0.12em;
-      text-transform: uppercase; padding: 3px 8px; font-family: 'Inter', sans-serif;
-    }
-    .badge-weekly  { background: #EEF2FF; color: #3730A3; }
-    .badge-monthly { background: #F0FDF4; color: #166534; }
-    .badge-sample  { background: #FFF7ED; color: #9A3412; }
-    .badge-published { background: #F0FDF4; color: #166534; }
-    .badge-draft     { background: #F9FAFB; color: #6B7280; border: 0.5px solid #E5E7EB; }
-
-    .btn-action {
-      font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase;
-      color: var(--navy); border: 0.5px solid var(--navy);
-      padding: 5px 12px; background: none; cursor: none;
-      font-family: 'Inter', sans-serif; transition: background 0.2s;
+    .filter-group { display: flex; align-items: center; gap: 0; }
+    .filter-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--label); font-family: 'Inter', sans-serif; margin-right: 12px;
       white-space: nowrap;
     }
-    .btn-action:hover { background: var(--navy); color: #fff; }
-    .btn-action.secondary {
-      color: var(--muted); border-color: var(--border);
+    .filter-btn {
+      font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.06em;
+      color: var(--label); background: none; border: none; cursor: none;
+      padding: 6px 12px; border-bottom: 1.5px solid transparent;
+      transition: color 0.18s, border-color 0.18s;
     }
-    .btn-action.secondary:hover { background: var(--border); color: var(--navy); }
+    .filter-btn:hover { color: var(--navy); }
+    .filter-btn.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 500; }
 
-    /* ── Auth / loading / denied sections ────────────────────────────────── */
+    /* ── Publication cards ────────────────────────────────────────────────── */
+    .pub-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    }
+    @media (max-width: 720px) { .pub-grid { grid-template-columns: 1fr; } }
+    .pub-card {
+      border: 0.5px solid var(--border); padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: border-color 0.18s;
+    }
+    .pub-card:hover { border-color: #c8c4be; }
+    .pub-card-top { display: flex; align-items: center; gap: 8px; }
+    .pub-card-title {
+      font-family: 'EB Garamond', Georgia, serif; font-size: 17px;
+      font-weight: 400; color: var(--navy); line-height: 1.3;
+    }
+    .pub-card-date {
+      font-size: 11px; color: var(--label); font-family: 'Inter', sans-serif;
+    }
+    .pub-card-footer {
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-top: 8px; border-top: 0.5px solid var(--border);
+    }
+    .badge {
+      display: inline-block; font-size: 10px; letter-spacing: 0.10em;
+      text-transform: uppercase; padding: 3px 8px;
+      font-family: 'Inter', sans-serif; font-weight: 500;
+    }
+    .badge-weekly   { background: #EEF2FF; color: #3730A3; }
+    .badge-monthly  { background: #F0FDF4; color: #166534; }
+    .badge-sample   { background: #F3F4F6; color: #6B7280; }
+    .badge-draft    { background: #FEF3C7; color: #92400E; }
+    .badge-published { background: #F0FDF4; color: #166534; }
+    .btn-card-action {
+      font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      border: 0.5px solid var(--navy); color: var(--navy); background: none;
+      padding: 5px 14px; cursor: none; font-family: 'Inter', sans-serif;
+      transition: background 0.18s, color 0.18s;
+    }
+    .btn-card-action:hover { background: var(--navy); color: #fff; }
+    .btn-card-action.muted {
+      border-color: var(--border); color: var(--label);
+    }
+    .btn-card-action.muted:hover { background: #f0ede8; color: var(--navy); border-color: #c8c4be; }
+    .pub-empty {
+      grid-column: 1/-1; padding: 40px 0; text-align: center;
+      font-size: 13px; color: var(--label); font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Metrics grid ─────────────────────────────────────────────────────── */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+    }
+    @media (max-width: 600px) { .metrics-grid { grid-template-columns: 1fr; } }
+    .metric-card {
+      border: 0.5px solid var(--border); padding: 28px 28px 24px;
+    }
+    .metric-label {
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--label); font-family: 'Inter', sans-serif; margin-bottom: 12px;
+    }
+    .metric-number {
+      font-family: 'EB Garamond', Georgia, serif; font-size: 56px;
+      font-weight: 400; color: var(--navy); line-height: 1; margin-bottom: 16px;
+    }
+    .metric-breakdown { display: flex; flex-direction: column; gap: 5px; }
+    .metric-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-family: 'Inter', sans-serif;
+    }
+    .metric-row-key {
+      font-size: 11px; color: var(--muted); letter-spacing: 0.02em;
+    }
+    .metric-row-val { font-size: 13px; color: var(--navy); font-weight: 500; }
+    .metric-loading {
+      font-size: 12px; color: var(--label); font-family: 'Inter', sans-serif;
+      padding: 40px 0; text-align: center; grid-column: 1/-1;
+    }
+
+    /* ── Auth / loading / denied ──────────────────────────────────────────── */
     .center-wrap {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
       padding: 40px;
     }
-    .auth-card {
-      width: 100%; max-width: 420px;
-    }
+    .auth-card { width: 100%; max-width: 400px; }
     .auth-wordmark {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 24px; color: var(--navy); margin-bottom: 32px; display: block;
+      font-family: 'EB Garamond', Georgia, serif; font-size: 24px;
+      color: var(--navy); margin-bottom: 32px; display: block;
     }
-    .auth-label {
+    .auth-eyebrow {
       font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--label); margin-bottom: 10px;
-      font-family: 'Inter', sans-serif; display: block;
+      color: var(--label); margin-bottom: 28px; font-family: 'Inter', sans-serif;
+    }
+    .auth-field-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--label); margin-bottom: 8px; font-family: 'Inter', sans-serif;
+      display: block;
     }
     .auth-input {
       width: 100%; padding: 12px 14px; border: 0.5px solid var(--border);
@@ -189,12 +254,12 @@
     }
     .auth-input:focus { border-color: var(--navy); }
     .auth-status {
-      margin-top: 12px; font-size: 12px; color: var(--label);
+      margin-top: 10px; font-size: 12px; color: var(--label);
       font-family: 'Inter', sans-serif; min-height: 18px;
     }
     .denied-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 32px; font-weight: 400; color: var(--navy); margin-bottom: 12px;
+      font-family: 'EB Garamond', Georgia, serif; font-size: 30px;
+      font-weight: 400; color: var(--navy); margin-bottom: 10px;
     }
     .denied-body {
       font-size: 14px; color: var(--muted); font-family: 'Inter', sans-serif;
@@ -213,10 +278,12 @@
   <div id="section-auth" class="center-wrap" style="display:none;">
     <div class="auth-card">
       <span class="auth-wordmark">Criterial.</span>
-      <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--label);margin-bottom:28px;font-family:'Inter',sans-serif;">Panel de administración</p>
-      <label for="auth-email" class="auth-label">Email</label>
-      <input id="auth-email" type="email" placeholder="tu@email.com" class="auth-input" />
-      <button id="send-magic-link" class="btn-gen" style="width:100%;"
+      <p class="auth-eyebrow">Panel de administración</p>
+      <label for="auth-email" class="auth-field-label">Email</label>
+      <input id="auth-email" type="email" placeholder="tu@email.com" class="auth-input"
+        onfocus="this.style.borderColor='var(--navy)'"
+        onblur="this.style.borderColor='var(--border)'" />
+      <button id="send-magic-link" class="btn-primary" style="width:100%;"
         onmouseover="this.style.background='#162d57'"
         onmouseout="this.style.background='var(--navy)'">Enviar enlace de acceso</button>
       <p id="auth-status" class="auth-status"></p>
@@ -228,8 +295,8 @@
     <div class="auth-card">
       <span class="auth-wordmark">Criterial.</span>
       <p class="denied-title">Acceso restringido</p>
-      <p class="denied-body">Este panel de administración no está disponible para tu cuenta.</p>
-      <button id="btn-denied-signout" class="btn-gen-secondary">Cerrar sesión</button>
+      <p class="denied-body">Este panel no está disponible para tu cuenta.</p>
+      <button id="btn-denied-signout" class="btn-outline">Cerrar sesión</button>
     </div>
   </div>
 
@@ -237,63 +304,88 @@
   <div id="section-admin" style="display:none;">
 
     <div class="admin-topbar">
-      <div class="admin-topbar-left">
-        Criterial. <span>Admin</span>
-      </div>
-      <div class="admin-topbar-right">
-        <span class="admin-user-email" id="user-email"></span>
+      <div class="topbar-brand">Criterial. <span>Admin</span></div>
+      <div class="topbar-right">
+        <span class="topbar-email" id="user-email"></span>
         <button id="sign-out" class="btn-signout"
           onmouseover="this.style.borderColor='var(--navy)'"
           onmouseout="this.style.borderColor='var(--border)'">Cerrar sesión</button>
       </div>
     </div>
 
-    <div class="admin-main">
+    <div class="admin-tabbar">
+      <button class="tab-btn active" data-tab="contenido">Contenido</button>
+      <button class="tab-btn" data-tab="metricas">Métricas</button>
+    </div>
 
-      <!-- Generate section -->
+    <!-- ── TAB: CONTENIDO ───────────────────────────────────────────────── -->
+    <div id="tab-contenido" class="admin-main">
+
+      <!-- Generate -->
       <div class="admin-section">
-        <p class="section-label">Contenido</p>
-        <h2 class="section-title">Generar publicación</h2>
+        <p class="section-label">Generación</p>
+        <h2 class="section-title">Nuevo contenido</h2>
         <div class="gen-buttons">
-          <button id="btn-weekly" class="btn-gen"
+          <button id="btn-weekly" class="btn-primary"
             onmouseover="if(!this.disabled)this.style.background='#162d57'"
             onmouseout="this.style.background='var(--navy)'">Generar Weekly</button>
-          <button id="btn-monthly" class="btn-gen-secondary"
-            onmouseover="if(!this.disabled)this.style.background='var(--cream)'"
+          <button id="btn-monthly" class="btn-outline"
+            onmouseover="if(!this.disabled)this.style.background='#f5f4f2'"
             onmouseout="this.style.background=''">Generar Brief Mensual</button>
         </div>
         <p class="gen-status" id="gen-status"></p>
       </div>
 
-      <!-- Variations section (hidden until generation) -->
-      <div class="admin-section" id="section-variations" style="display:none;">
+      <!-- Variations (hidden until generation) -->
+      <div id="section-variations" style="display:none;" class="admin-section">
+        <hr class="section-divider" style="margin-top:0;" />
         <p class="section-label">Selecciona una variación</p>
-        <h2 class="section-title" id="variations-title">Variaciones generadas</h2>
-        <div class="variations-grid" id="variations-container"></div>
+        <h2 class="section-title" id="variations-title"></h2>
+        <div class="variations-stack" id="variations-container"></div>
       </div>
 
-      <!-- Publications section -->
+      <hr class="section-divider" />
+
+      <!-- Publications -->
       <div class="admin-section">
         <p class="section-label">Publicaciones</p>
-        <h2 class="section-title">Todas las publicaciones</h2>
-        <table class="pub-table">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Título</th>
-              <th>Período</th>
-              <th>Estado</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody id="pub-tbody">
-            <tr><td colspan="5" style="padding:24px 0;color:#999;font-size:13px;">Cargando publicaciones...</td></tr>
-          </tbody>
-        </table>
+        <h2 class="section-title">Archivo</h2>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <span class="filter-label">Tipo</span>
+            <button class="filter-btn active" data-filter-type="all">Todos</button>
+            <button class="filter-btn" data-filter-type="weekly">Weekly</button>
+            <button class="filter-btn" data-filter-type="monthly">Brief Mensual</button>
+            <button class="filter-btn" data-filter-type="sample">Muestra</button>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Estado</span>
+            <button class="filter-btn active" data-filter-status="all">Todos</button>
+            <button class="filter-btn" data-filter-status="draft">Draft</button>
+            <button class="filter-btn" data-filter-status="published">Published</button>
+          </div>
+        </div>
+
+        <div class="pub-grid" id="pub-grid">
+          <p class="pub-empty">Cargando publicaciones...</p>
+        </div>
       </div>
 
     </div>
-  </div>
+
+    <!-- ── TAB: MÉTRICAS ────────────────────────────────────────────────── -->
+    <div id="tab-metricas" class="admin-main" style="display:none;">
+      <div class="admin-section">
+        <p class="section-label">Panel</p>
+        <h2 class="section-title">Métricas</h2>
+        <div class="metrics-grid" id="metrics-grid">
+          <p class="metric-loading">Cargando métricas...</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /section-admin -->
 
   <div id="cursorDot" class="cursor-dot"></div>
   <div id="cursorRing" class="cursor-ring"></div>
@@ -302,30 +394,46 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
-    const SUPABASE_URL   = "https://epmltqhtxkmfboaxdois.supabase.co";
+    const SUPABASE_URL    = "https://epmltqhtxkmfboaxdois.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
-    const ADMIN_EMAIL    = "pablopirer@gmail.com";
-    const EF_BASE        = `${SUPABASE_URL}/functions/v1`;
+    const ADMIN_EMAIL     = "pablopirer@gmail.com";
+    const EF_BASE         = `${SUPABASE_URL}/functions/v1`;
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let _session     = null;
-    let _pending     = null; // { variations, type, title, period_start, period_end }
+    let _pending     = null;
+    let _allPubs     = [];
+    let _filterType  = "all";
+    let _filterStatus = "all";
     let _initialized = false;
+    let _metricsLoaded = false;
 
-    // ── Section management ─────────────────────────────────────────────────
+    // ── Section / tab management ───────────────────────────────────────────
     function showSection(id) {
-      ["section-loading", "section-auth", "section-denied", "section-admin"]
+      ["section-loading","section-auth","section-denied","section-admin"]
         .forEach(s => document.getElementById(s).style.display = s === id ? "" : "none");
     }
 
-    // ── Auth flow ──────────────────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === name);
+      });
+      document.getElementById("tab-contenido").style.display = name === "contenido" ? "" : "none";
+      document.getElementById("tab-metricas").style.display  = name === "metricas"  ? "" : "none";
+      if (name === "metricas" && !_metricsLoaded) loadMetrics();
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => showTab(btn.dataset.tab));
+    });
+
+    // ── Auth ───────────────────────────────────────────────────────────────
     async function handleSession(session) {
       if (_initialized) return;
       _initialized = true;
 
       if (!session) { showSection("section-auth"); return; }
-
       if (session.user.email !== ADMIN_EMAIL) {
         await client.auth.signOut();
         showSection("section-denied");
@@ -338,161 +446,15 @@
       showSection("section-admin");
     }
 
-    const fallbackTimer = setTimeout(() => {
+    const _fallback = setTimeout(() => {
       if (!_initialized) { _initialized = true; showSection("section-auth"); }
     }, 5000);
 
-    client.auth.onAuthStateChange((_event, session) => {
-      clearTimeout(fallbackTimer);
+    client.auth.onAuthStateChange((_e, session) => {
+      clearTimeout(_fallback);
       handleSession(session);
     });
 
-    // ── Publications ───────────────────────────────────────────────────────
-    async function loadPublications() {
-      try {
-        const res  = await fetch(`${EF_BASE}/admin-publications`, {
-          headers: { "Authorization": `Bearer ${_session.access_token}` }
-        });
-        const json = await res.json();
-        renderPublications(json.publications || []);
-      } catch {
-        renderPublications([]);
-      }
-    }
-
-    function renderPublications(pubs) {
-      const tbody = document.getElementById("pub-tbody");
-      if (!pubs.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px 0;color:#999;font-size:13px;">No hay publicaciones.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = pubs.map(p => `
-        <tr>
-          <td><span class="badge badge-${p.type}">${p.type}</span></td>
-          <td class="col-title"><span title="${escapeHtml(p.title)}">${escapeHtml(p.title)}</span></td>
-          <td style="white-space:nowrap;">${formatPeriod(p.period_start, p.period_end)}</td>
-          <td><span class="badge badge-${p.status}">${p.status}</span></td>
-          <td>
-            ${p.status === "draft"
-              ? `<button class="btn-action" onclick="updateStatus('${p.id}','published')">Publicar</button>`
-              : `<button class="btn-action secondary" onclick="updateStatus('${p.id}','draft')">Despublicar</button>`
-            }
-          </td>
-        </tr>
-      `).join("");
-    }
-
-    async function updateStatus(id, status) {
-      const res = await fetch(`${EF_BASE}/admin-publications`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${_session.access_token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ id, status })
-      });
-      if (res.ok) {
-        await loadPublications();
-      } else {
-        const json = await res.json().catch(() => ({}));
-        alert(json.error || "Error al actualizar el estado.");
-      }
-    }
-
-    // ── Generate content ───────────────────────────────────────────────────
-    async function generate(type) {
-      setGenerating(true, "Generando 3 variaciones... (puede tardar ~20 seg)");
-      document.getElementById("section-variations").style.display = "none";
-      _pending = null;
-
-      try {
-        const res  = await fetch(`${EF_BASE}/generate-content`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${_session.access_token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ type })
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Error desconocido");
-
-        _pending = json;
-        renderVariations(json);
-        setGenerating(false, "");
-      } catch (err) {
-        setGenerating(false, `Error: ${err.message}`);
-      }
-    }
-
-    function renderVariations(data) {
-      document.getElementById("variations-title").textContent = data.title;
-      const container = document.getElementById("variations-container");
-      container.innerHTML = data.variations.map((v, i) => `
-        <div class="variation-card">
-          <div class="variation-label">Variación ${i + 1}</div>
-          <div class="variation-body">${marked.parse(v)}</div>
-          <div class="variation-footer">
-            <button class="btn-save" onclick="saveDraft(${i})"
-              onmouseover="this.style.background='#162d57'"
-              onmouseout="this.style.background='var(--navy)'">Guardar como borrador</button>
-          </div>
-        </div>
-      `).join("");
-      document.getElementById("section-variations").style.display = "";
-    }
-
-    async function saveDraft(index) {
-      if (!_pending) return;
-      const body = {
-        type:          _pending.type,
-        title:         _pending.title,
-        body_markdown: _pending.variations[index],
-        period_start:  _pending.period_start,
-        period_end:    _pending.period_end,
-      };
-      const res = await fetch(`${EF_BASE}/admin-publications`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${_session.access_token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        alert(json.error || "Error al guardar el borrador.");
-        return;
-      }
-      _pending = null;
-      document.getElementById("section-variations").style.display = "none";
-      await loadPublications();
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────
-    function setGenerating(loading, msg) {
-      document.getElementById("gen-status").textContent = msg;
-      document.getElementById("btn-weekly").disabled  = loading;
-      document.getElementById("btn-monthly").disabled = loading;
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function formatPeriod(start, end) {
-      if (!start) return "—";
-      const fmt = d => new Date(d + "T12:00:00Z").toLocaleDateString("es-ES", {
-        day: "numeric", month: "short", year: "numeric"
-      });
-      return start === end ? fmt(start) : `${fmt(start)} – ${fmt(end)}`;
-    }
-
-    // ── Event listeners ────────────────────────────────────────────────────
     document.getElementById("send-magic-link").addEventListener("click", async () => {
       const email  = document.getElementById("auth-email").value.trim();
       const status = document.getElementById("auth-status");
@@ -517,8 +479,242 @@
       window.location.href = window.location.pathname;
     });
 
-    document.getElementById("btn-weekly").addEventListener("click", () => generate("weekly"));
+    // ── Publications ───────────────────────────────────────────────────────
+    async function loadPublications() {
+      try {
+        const res  = await fetch(`${EF_BASE}/admin-publications`, {
+          headers: { "Authorization": `Bearer ${_session.access_token}` }
+        });
+        const json = await res.json();
+        _allPubs = json.publications || [];
+        renderPublications();
+      } catch {
+        document.getElementById("pub-grid").innerHTML =
+          '<p class="pub-empty">Error al cargar publicaciones.</p>';
+      }
+    }
+
+    function renderPublications() {
+      const filtered = _allPubs.filter(p => {
+        const typeOk   = _filterType   === "all" || p.type   === _filterType;
+        const statusOk = _filterStatus === "all" || p.status === _filterStatus;
+        return typeOk && statusOk;
+      });
+
+      const grid = document.getElementById("pub-grid");
+      if (!filtered.length) {
+        grid.innerHTML = '<p class="pub-empty">No hay publicaciones con estos filtros.</p>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="pub-card">
+          <div class="pub-card-top">
+            <span class="badge badge-${p.type}">${typeLabel(p.type)}</span>
+            <span class="badge badge-${p.status}">${p.status}</span>
+          </div>
+          <div class="pub-card-title">${escapeHtml(p.title)}</div>
+          <div class="pub-card-date">${formatPeriod(p.period_start, p.period_end)}</div>
+          <div class="pub-card-footer">
+            ${p.status === "draft"
+              ? `<button class="btn-card-action" onclick="updateStatus('${p.id}','published')">Publicar</button>`
+              : `<button class="btn-card-action muted" onclick="updateStatus('${p.id}','draft')">Despublicar</button>`
+            }
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function updateStatus(id, status) {
+      const res = await fetch(`${EF_BASE}/admin-publications`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${_session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ id, status })
+      });
+      if (res.ok) {
+        await loadPublications();
+      } else {
+        const json = await res.json().catch(() => ({}));
+        alert(json.error || "Error al actualizar.");
+      }
+    }
+
+    // Filters
+    document.querySelectorAll("[data-filter-type]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-filter-type]")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        _filterType = btn.dataset.filterType;
+        renderPublications();
+      });
+    });
+
+    document.querySelectorAll("[data-filter-status]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-filter-status]")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        _filterStatus = btn.dataset.filterStatus;
+        renderPublications();
+      });
+    });
+
+    // ── Generate content ───────────────────────────────────────────────────
+    async function generate(type) {
+      setGenerating(true, "Generando 3 variaciones... (puede tardar ~20 seg)");
+      document.getElementById("section-variations").style.display = "none";
+      _pending = null;
+
+      try {
+        const res  = await fetch(`${EF_BASE}/generate-content`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${_session.access_token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ type })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Error desconocido");
+        _pending = json;
+        renderVariations(json);
+        setGenerating(false, "");
+      } catch (err) {
+        setGenerating(false, `Error: ${err.message}`);
+      }
+    }
+
+    function renderVariations(data) {
+      document.getElementById("variations-title").textContent = data.title;
+      document.getElementById("variations-container").innerHTML = data.variations
+        .map((v, i) => `
+          <div class="variation-card">
+            <div class="variation-header">
+              <span class="variation-num">Variación ${i + 1}</span>
+              <button class="btn-save" onclick="saveDraft(${i})"
+                onmouseover="this.style.background='#162d57'"
+                onmouseout="this.style.background='var(--navy)'">Guardar como borrador</button>
+            </div>
+            <div class="variation-body">${marked.parse(v)}</div>
+          </div>
+        `).join("");
+      document.getElementById("section-variations").style.display = "";
+    }
+
+    async function saveDraft(index) {
+      if (!_pending) return;
+      const res = await fetch(`${EF_BASE}/admin-publications`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${_session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type:          _pending.type,
+          title:         _pending.title,
+          body_markdown: _pending.variations[index],
+          period_start:  _pending.period_start,
+          period_end:    _pending.period_end,
+        })
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        alert(json.error || "Error al guardar el borrador.");
+        return;
+      }
+      _pending = null;
+      document.getElementById("section-variations").style.display = "none";
+      await loadPublications();
+    }
+
+    function setGenerating(loading, msg) {
+      document.getElementById("gen-status").textContent = msg;
+      document.getElementById("btn-weekly").disabled  = loading;
+      document.getElementById("btn-monthly").disabled = loading;
+    }
+
+    document.getElementById("btn-weekly").addEventListener("click",  () => generate("weekly"));
     document.getElementById("btn-monthly").addEventListener("click", () => generate("monthly"));
+
+    // ── Metrics ────────────────────────────────────────────────────────────
+    async function loadMetrics() {
+      _metricsLoaded = true;
+      const grid = document.getElementById("metrics-grid");
+      try {
+        const res  = await fetch(`${EF_BASE}/admin-publications?action=metrics`, {
+          headers: { "Authorization": `Bearer ${_session.access_token}` }
+        });
+        const m = await res.json();
+        if (!res.ok) throw new Error(m.error || "Error");
+        renderMetrics(m);
+      } catch (err) {
+        grid.innerHTML = `<p class="metric-loading">Error al cargar métricas: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    function renderMetrics(m) {
+      const breakdown = entries =>
+        Object.entries(entries).map(([k, v]) => `
+          <div class="metric-row">
+            <span class="metric-row-key">${k.replace(/_/g, ' ')}</span>
+            <span class="metric-row-val">${v}</span>
+          </div>
+        `).join("");
+
+      document.getElementById("metrics-grid").innerHTML = `
+        <div class="metric-card">
+          <p class="metric-label">Leads totales</p>
+          <div class="metric-number">${m.leads.total}</div>
+          <div class="metric-breakdown">${breakdown(m.leads.byStatus)}</div>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Suscriptores Pro</p>
+          <div class="metric-number">${m.subscribers.proActive}</div>
+          <div class="metric-breakdown">
+            <div class="metric-row">
+              <span class="metric-row-key">activos</span>
+              <span class="metric-row-val">${m.subscribers.proActive}</span>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Muestras solicitadas</p>
+          <div class="metric-number">${m.sampleRequests.total}</div>
+          <div class="metric-breakdown">${breakdown(m.sampleRequests.byStatus)}</div>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Publicaciones</p>
+          <div class="metric-number">${m.publications.total}</div>
+          <div class="metric-breakdown">
+            ${breakdown(m.publications.byType)}
+            <div style="height:8px;"></div>
+            ${breakdown(m.publications.byStatus)}
+          </div>
+        </div>
+      `;
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function formatPeriod(start, end) {
+      if (!start) return "—";
+      const fmt = d => new Date(d + "T12:00:00Z")
+        .toLocaleDateString("es-ES", { day:"numeric", month:"short", year:"numeric" });
+      return start === end ? fmt(start) : `${fmt(start)} – ${fmt(end)}`;
+    }
+
+    function typeLabel(type) {
+      return type === "monthly" ? "Brief Mensual" : type === "sample" ? "Muestra" : "Weekly";
+    }
   </script>
   <script src="criterial-shared.js?v=3"></script>
 </body>

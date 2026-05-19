@@ -6,6 +6,7 @@
  *
  * Methods:
  *   GET    — list all publications (draft + published), newest first
+ *             ?action=metrics  — returns aggregated counts across all tables
  *   POST   — create a draft. Body: { type, title, body_markdown, period_start, period_end }
  *   PATCH  — update status.  Body: { id, status: "published" | "draft" }
  */
@@ -47,8 +48,58 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ error: "Acceso restringido" }, 403);
   }
 
-  // ── GET: list all publications ─────────────────────────────────────────────
+  // ── GET ───────────────────────────────────────────────────────────────────
   if (req.method === "GET") {
+    const url = new URL(req.url);
+
+    // ?action=metrics — aggregated counts across all tables
+    if (url.searchParams.get("action") === "metrics") {
+      const [leadsRes, subsRes, samplesRes, pubsRes] = await Promise.all([
+        supabase.from("leads").select("status"),
+        supabase.from("subscribers").select("plan, status"),
+        supabase.from("sample_requests").select("status"),
+        supabase.from("publications").select("type, status"),
+      ]);
+
+      const groupBy = <T extends Record<string, string>>(
+        rows: T[] | null,
+        key: keyof T,
+      ): Record<string, number> =>
+        (rows ?? []).reduce((acc, row) => {
+          const val = row[key] ?? "unknown";
+          acc[val] = (acc[val] ?? 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+      const leads      = leadsRes.data ?? [];
+      const subs       = subsRes.data ?? [];
+      const samples    = samplesRes.data ?? [];
+      const pubs       = pubsRes.data ?? [];
+
+      const pubsByType   = groupBy(pubs as Record<string, string>[], "type");
+      const pubsByStatus = groupBy(pubs as Record<string, string>[], "status");
+
+      return jsonResponse({
+        leads: {
+          total:    leads.length,
+          byStatus: groupBy(leads as Record<string, string>[], "status"),
+        },
+        subscribers: {
+          proActive: subs.filter(s => s.plan === "pro" && s.status === "active").length,
+        },
+        sampleRequests: {
+          total:    samples.length,
+          byStatus: groupBy(samples as Record<string, string>[], "status"),
+        },
+        publications: {
+          total:    pubs.length,
+          byType:   pubsByType,
+          byStatus: pubsByStatus,
+        },
+      }, 200);
+    }
+
+    // default — list all publications
     const { data, error } = await supabase
       .from("publications")
       .select("id, type, title, period_start, period_end, status, created_at")
