@@ -32,11 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
       mx = e.clientX; my = e.clientY;
       dot.style.left = mx + 'px';
       dot.style.top  = my + 'px';
-    });
-
-    document.querySelectorAll('a, button').forEach(el => {
-      el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
-      el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
+      ring.classList.toggle('hovering', !!e.target.closest('a, button'));
     });
   }
 
