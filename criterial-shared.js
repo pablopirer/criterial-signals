@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.pointerType === 'touch') return;
       if (!cursorActive) {
         cursorActive = true;
+        dot.style.display  = 'block';
+        ring.style.display = 'block';
         mx = rx = e.clientX;
         my = ry = e.clientY;
         dot.style.left  = mx + 'px';
