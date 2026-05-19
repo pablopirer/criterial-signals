@@ -13,29 +13,31 @@
     /* ── Top bar ──────────────────────────────────────────────────────────── */
     .admin-topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      height: 52px; background: #fff;
-      border-bottom: 0.5px solid var(--border);
+      height: 52px; background: var(--navy);
+      border-bottom: none;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 40px;
     }
     .topbar-brand {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 18px; font-weight: 400; color: var(--navy);
+      font-size: 18px; font-weight: 400; color: #fff;
     }
     .topbar-brand span {
       font-family: 'Inter', sans-serif; font-size: 10px;
       letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--label); margin-left: 10px; vertical-align: middle;
+      color: rgba(255,255,255,0.6); margin-left: 10px; vertical-align: middle;
+      border: 0.5px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.1); padding: 2px 8px;
     }
     .topbar-right { display: flex; align-items: center; gap: 16px; }
-    .topbar-email { font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif; }
+    .topbar-email { font-size: 12px; color: rgba(255,255,255,0.5); font-family: 'Inter', sans-serif; }
     .btn-signout {
       font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase;
-      color: var(--navy); border: 0.5px solid var(--border);
+      color: #fff; border: 0.5px solid rgba(255,255,255,0.25);
       padding: 6px 14px; background: none; cursor: none;
       font-family: 'Inter', sans-serif; transition: border-color 0.18s;
     }
-    .btn-signout:hover { border-color: var(--navy); }
+    .btn-signout:hover { border-color: rgba(255,255,255,0.7); }
 
     /* ── Tab bar ──────────────────────────────────────────────────────────── */
     .admin-tabbar {
@@ -47,7 +49,7 @@
       font-family: 'Inter', sans-serif; font-size: 11px;
       letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--label); background: none; border: none; cursor: none;
-      padding: 14px 20px 13px; border-bottom: 2px solid transparent;
+      padding: 18px 20px 17px; border-bottom: 2px solid transparent;
       transition: color 0.18s, border-color 0.18s; margin-bottom: -0.5px;
     }
     .tab-btn:hover { color: var(--navy); }
@@ -56,7 +58,7 @@
     /* ── Main layout ──────────────────────────────────────────────────────── */
     .admin-main {
       max-width: 1040px; margin: 0 auto;
-      padding: 116px 40px 80px;
+      padding: 124px 40px 80px;
     }
     .admin-section { margin-bottom: 52px; }
     .section-label {
@@ -153,14 +155,19 @@
     }
     @media (max-width: 720px) { .pub-grid { grid-template-columns: 1fr; } }
     .pub-card {
-      border: 0.5px solid var(--border); padding: 20px 22px;
+      border: 0.5px solid var(--border);
+      border-left: 3px solid #9CA3AF;
+      padding: 20px 22px;
       display: flex; flex-direction: column; gap: 12px;
       transition: border-color 0.18s;
     }
-    .pub-card:hover { border-color: #c8c4be; }
+    .pub-card:hover { border-color: #c8c4be; border-left-color: inherit; }
+    .pub-card-weekly  { border-left-color: #0D1F3C; }
+    .pub-card-monthly { border-left-color: #166534; }
+    .pub-card-sample  { border-left-color: #9CA3AF; }
     .pub-card-top { display: flex; align-items: center; gap: 8px; }
     .pub-card-title {
-      font-family: 'EB Garamond', Georgia, serif; font-size: 17px;
+      font-family: 'EB Garamond', Georgia, serif; font-size: 19px;
       font-weight: 400; color: var(--navy); line-height: 1.3;
     }
     .pub-card-date {
@@ -182,13 +189,13 @@
     .badge-published { background: #F0FDF4; color: #166534; }
     .btn-card-action {
       font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
-      border: 0.5px solid var(--navy); color: var(--navy); background: none;
+      border: none; color: #fff; background: var(--navy);
       padding: 5px 14px; cursor: none; font-family: 'Inter', sans-serif;
-      transition: background 0.18s, color 0.18s;
+      transition: background 0.18s;
     }
-    .btn-card-action:hover { background: var(--navy); color: #fff; }
+    .btn-card-action:hover { background: #162d57; }
     .btn-card-action.muted {
-      border-color: var(--border); color: var(--label);
+      background: none; color: var(--label); border: 0.5px solid var(--border);
     }
     .btn-card-action.muted:hover { background: #f0ede8; color: var(--navy); border-color: #c8c4be; }
     .pub-empty {
@@ -210,7 +217,13 @@
     }
     .metric-number {
       font-family: 'EB Garamond', Georgia, serif; font-size: 56px;
-      font-weight: 400; color: var(--navy); line-height: 1; margin-bottom: 16px;
+      font-weight: 400; color: var(--navy); line-height: 1; margin-bottom: 4px;
+    }
+    .metric-progress {
+      height: 3px; background: #F0EDE8; margin-bottom: 16px; overflow: hidden;
+    }
+    .metric-progress-fill {
+      height: 100%; background: var(--navy); transition: width 0.6s ease;
     }
     .metric-breakdown { display: flex; flex-direction: column; gap: 5px; }
     .metric-row {
@@ -308,8 +321,8 @@
       <div class="topbar-right">
         <span class="topbar-email" id="user-email"></span>
         <button id="sign-out" class="btn-signout"
-          onmouseover="this.style.borderColor='var(--navy)'"
-          onmouseout="this.style.borderColor='var(--border)'">Cerrar sesión</button>
+          onmouseover="this.style.borderColor='rgba(255,255,255,0.7)'"
+          onmouseout="this.style.borderColor='rgba(255,255,255,0.25)'">Cerrar sesión</button>
       </div>
     </div>
 
@@ -325,15 +338,17 @@
       <div class="admin-section">
         <p class="section-label">Generación</p>
         <h2 class="section-title">Nuevo contenido</h2>
-        <div class="gen-buttons">
-          <button id="btn-weekly" class="btn-primary"
-            onmouseover="if(!this.disabled)this.style.background='#162d57'"
-            onmouseout="this.style.background='var(--navy)'">Generar Weekly</button>
-          <button id="btn-monthly" class="btn-outline"
-            onmouseover="if(!this.disabled)this.style.background='#f5f4f2'"
-            onmouseout="this.style.background=''">Generar Brief Mensual</button>
+        <div style="background:#F8F6F2;border:0.5px solid var(--border);padding:24px 28px;">
+          <div class="gen-buttons">
+            <button id="btn-weekly" class="btn-primary"
+              onmouseover="if(!this.disabled)this.style.background='#162d57'"
+              onmouseout="this.style.background='var(--navy)'">Generar Weekly</button>
+            <button id="btn-monthly" class="btn-outline"
+              onmouseover="if(!this.disabled)this.style.background='#f5f4f2'"
+              onmouseout="this.style.background=''">Generar Brief Mensual</button>
+          </div>
+          <p class="gen-status" id="gen-status"></p>
         </div>
-        <p class="gen-status" id="gen-status"></p>
       </div>
 
       <!-- Variations (hidden until generation) -->
@@ -508,7 +523,7 @@
       }
 
       grid.innerHTML = filtered.map(p => `
-        <div class="pub-card">
+        <div class="pub-card pub-card-${p.type}">
           <div class="pub-card-top">
             <span class="badge badge-${p.type}">${typeLabel(p.type)}</span>
             <span class="badge badge-${p.status}">${p.status}</span>
@@ -657,10 +672,26 @@
     }
 
     function renderMetrics(m) {
+      const LABELS = {
+        new: "Nuevos", contacted: "Contactados", converted: "Convertidos",
+        generated: "Generados", cancelled: "Cancelados",
+        generation_failed: "Error de generación",
+        draft: "Borrador", published: "Publicados",
+        weekly: "Weekly", monthly: "Brief Mensual", sample: "Muestras",
+        activos: "Activos", active: "Activos",
+        completed: "Completados", pending: "Pendientes",
+      };
+
+      const totals  = [m.leads.total, m.subscribers.proActive, m.sampleRequests.total, m.publications.total];
+      const maxVal  = Math.max(...totals, 1);
+      const bar     = val => `
+        <div class="metric-progress">
+          <div class="metric-progress-fill" style="width:${Math.round((val / maxVal) * 100)}%"></div>
+        </div>`;
       const breakdown = entries =>
         Object.entries(entries).map(([k, v]) => `
           <div class="metric-row">
-            <span class="metric-row-key">${k.replace(/_/g, ' ')}</span>
+            <span class="metric-row-key">${LABELS[k] || k.replace(/_/g, ' ')}</span>
             <span class="metric-row-val">${v}</span>
           </div>
         `).join("");
@@ -669,14 +700,16 @@
         <div class="metric-card">
           <p class="metric-label">Leads totales</p>
           <div class="metric-number">${m.leads.total}</div>
+          ${bar(m.leads.total)}
           <div class="metric-breakdown">${breakdown(m.leads.byStatus)}</div>
         </div>
         <div class="metric-card">
           <p class="metric-label">Suscriptores Pro</p>
           <div class="metric-number">${m.subscribers.proActive}</div>
+          ${bar(m.subscribers.proActive)}
           <div class="metric-breakdown">
             <div class="metric-row">
-              <span class="metric-row-key">activos</span>
+              <span class="metric-row-key">Activos</span>
               <span class="metric-row-val">${m.subscribers.proActive}</span>
             </div>
           </div>
@@ -684,11 +717,13 @@
         <div class="metric-card">
           <p class="metric-label">Muestras solicitadas</p>
           <div class="metric-number">${m.sampleRequests.total}</div>
+          ${bar(m.sampleRequests.total)}
           <div class="metric-breakdown">${breakdown(m.sampleRequests.byStatus)}</div>
         </div>
         <div class="metric-card">
           <p class="metric-label">Publicaciones</p>
           <div class="metric-number">${m.publications.total}</div>
+          ${bar(m.publications.total)}
           <div class="metric-breakdown">
             ${breakdown(m.publications.byType)}
             <div style="height:8px;"></div>
