@@ -12,7 +12,7 @@ Set these as Function Secrets in Supabase (`supabase secrets set`):
 | Variable | Purpose |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | API key for the Anthropic Messages API. |
-| `ANTHROPIC_MODEL` | Optional override of the default model ID. Defaults to `claude-haiku-4-5-20251001`. |
+| `ANTHROPIC_MODEL` | Optional override of the default model ID. Defaults to `claude-sonnet-4-6`. |
 | `SAMPLE_REQUEST_SECRET` | Shared secret expected in the `x-criterial-signal` header. The web form must send the same value. |
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected by Supabase
