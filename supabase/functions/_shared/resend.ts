@@ -5,7 +5,7 @@
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 const FROM_ADDRESS = "noreply@criterialsignals.com";
-const ARCHIVE_URL = "https://pablopirer.github.io/criterial-signals/archive.html";
+const ARCHIVE_URL = "https://criterialsignals.com/archive.html";
 
 export interface BriefData {
   titulo: string;
