@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ── CURSOR ──────────────────────────────────
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const dot  = document.getElementById('cursorDot');
   const ring = document.getElementById('cursorRing');
   if (dot && ring) {
