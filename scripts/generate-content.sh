@@ -20,7 +20,7 @@ fi
 : "${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is not set. Run: source .env.local}"
 
 ANTHROPIC_API="https://api.anthropic.com/v1/messages"
-MODEL="claude-haiku-4-5-20251001"
+MODEL="claude-sonnet-4-6"
 BOLD='\033[1m'; CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
 # ── Period label ───────────────────────────────────────────────────────────────
