@@ -45,9 +45,6 @@ body {
 
 .cursor-ring.hovering { width: 68px; height: 68px; opacity: 0.6; }
 
-@media (hover: none), (pointer: coarse) {
-  .cursor-dot, .cursor-ring { display: none !important; }
-}
 
 /* HEADER */
 .site-header {
