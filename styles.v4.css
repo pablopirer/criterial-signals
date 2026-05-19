@@ -72,7 +72,7 @@ body {
   padding: 22px 64px;
   z-index: 200;
 }
-.site-header.light-header ~ * {
+.site-header.light-header ~ *:not(.cursor-dot):not(.cursor-ring):not(.page-transition) {
   padding-top: 72px;
 }
 .site-header.light-header .brand {
