@@ -119,7 +119,7 @@ body {
 .hero-wrap {
   position: relative;
   height: 100vh; min-height: 660px;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .hero-wrap.hero-short { height: 60vh; min-height: 420px; }
@@ -129,7 +129,6 @@ body {
   top: -15%; left: -5%;
   width: 110%; height: 130%;
   object-fit: cover; object-position: center 30%;
-  will-change: transform;
 }
 
 .hero-overlay {
