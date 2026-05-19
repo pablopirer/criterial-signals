@@ -556,10 +556,17 @@
         html += '<div class="pub-grid">';
         pubs.forEach(pub => {
           const date = pub.period_start
-            ? new Date(pub.period_start).toLocaleDateString('es-ES', {year:'numeric',month:'long',day:'numeric'})
-            : new Date(pub.created_at).toLocaleDateString('es-ES', {year:'numeric',month:'long',day:'numeric'});
+            ? new Date(pub.period_start + 'T12:00:00').toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'})
+            : new Date(pub.created_at).toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'});
           const typeLabel = {weekly:'Weekly',monthly:'Brief Mensual',sample:'Muestra'}[pub.type] || pub.type;
-          const excerpt = pub.body_markdown ? pub.body_markdown.replace(/[#*`\[\]]/g,'').slice(0,180)+'...' : '';
+          const excerpt = (() => {
+            if (!pub.body_markdown) return '';
+            const tokens = marked.lexer(pub.body_markdown);
+            const para = tokens.find(t => t.type === 'paragraph');
+            if (!para) return '';
+            const text = para.text.replace(/[*_`\[\]]/g, '').trim();
+            return text.length > 180 ? text.slice(0, 180) + '...' : text;
+          })();
           const safeTitle = (pub.title||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
           const safeBody = (pub.body_markdown||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
           html += `<div class="pub-card-archive"
