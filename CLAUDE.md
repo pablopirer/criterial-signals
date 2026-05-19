@@ -196,6 +196,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 8. **When in doubt about scope, ask.**
 9. **Claude Code is the official executor.** All code, CSS, and HTML changes must go through Claude Code. Do not edit files directly from the terminal outside Claude Code, except git commands, shell diagnostics, or utility commands.
 10. **Do not deploy, push, or commit without explicit user approval.**
+11. **Default operating workflow.** Claude Code executes scoped tasks end-to-end (branch → edit → checks → commit → push → PR). Hermes acts as read-only auditor/reviewer for high-risk or production-sensitive changes. Terminal Ubuntu should be used mainly for final production actions, final verification, emergency recovery, or when Claude Code cannot perform a task. Avoid slow manual step-by-step terminal workflows for changes that Claude Code can handle safely.
+12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 
 ---
 
