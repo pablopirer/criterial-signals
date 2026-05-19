@@ -207,6 +207,35 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Edge Function `get-publications` actualizada para incluir tipo `sample` en plan Pro.
 - 7 sample briefs publicados en base de datos (status draft → published).
 
+### Day 17 — Complete (2026-05-19)
+- Añadido enlace "Acceso Pro" al nav en todos los HTML (`archive.html`).
+  - Estilo `.nav-access`: borde fino 0.5px en lugar de subrayado animado — se distingue
+    visualmente como acción de login frente a Signals, Advisory y Nosotros (páginas de contenido).
+  - Funciona en header oscuro (hero) y `light-header`. `aria-current="page"` activo en
+    `archive.html`.
+- Mejoras visuales en nav y hero:
+  - Nav items: `font-size: 10.5px / opacity 0.42` → `11px / 0.72` para mejor legibilidad.
+  - Nav gap: `34px` → `28px`. `.nav` con `align-items: center`.
+  - `.nav-access`: `padding: 6px 14px`, `align-self: center`.
+  - `.eyebrow`: `opacity 0.36 / letter-spacing 0.22em` → `0.6 / 0.18em`.
+  - `.hero-sub`: `opacity 0.52` → `0.75`.
+  - `.hero-overlay`: gradiente más suave — `rgba(4,10,20,0.45/0.25/0.55)` en lugar de
+    `rgba(5,12,24,0.62/0.22/0.78)`. La foto respira más; el texto compensa con mayor opacidad.
+- Cursor en archive corregido:
+  - Root causes: (1) los listeners `mouseenter/mouseleave` per-elemento no funcionaban con
+    contenido generado dinámicamente (tarjetas Supabase) ni cuando elementos desaparecían
+    (modal al cerrarse → ring bloqueado en 68px). (2) `cursor: pointer` en el inline style
+    de archive.html sobreescribía `cursor: none` (mayor especificidad) mostrando el cursor
+    nativo en tarjetas y botones.
+  - Fix JS: reemplazados los listeners per-elemento por
+    `ring.classList.toggle('hovering', !!e.target.closest('a, button'))` directamente en
+    el handler de `pointermove`. Se re-evalúa en cada movimiento → nunca se bloquea,
+    funciona con contenido dinámico.
+  - Fix CSS: eliminados los 4 `cursor: pointer` del inline style de archive.html.
+- Note: cuando se actualiza `criterial-shared.js`, bumear el parámetro `?v=N` en todos los
+  HTML para forzar recarga del JS cacheado en GitHub Pages. Actualmente en `?v=3` (pendiente
+  de aplicar en los HTML — se interrumpió la sesión antes de completarlo).
+
 ### Day 16 — Complete (2026-05-19)
 - Mejoras de interacción visual: transición entre páginas, cursor custom, comportamiento móvil.
 - Transición entre páginas: cambiada de wipe vertical (translateY) a fade blanco (opacity 0.28s).
