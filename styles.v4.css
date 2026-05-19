@@ -47,7 +47,6 @@ body {
 
 @media (hover: none), (pointer: coarse) {
   .cursor-dot, .cursor-ring { display: none !important; }
-  * { cursor: auto !important; }
 }
 
 /* HEADER */
