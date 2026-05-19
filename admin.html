@@ -89,10 +89,9 @@
 
     /* ── Variations ───────────────────────────────────────────────────────── */
     .variations-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+      display: flex; flex-direction: column; gap: 32px;
       margin-top: 8px;
     }
-    @media (max-width: 860px) { .variations-grid { grid-template-columns: 1fr; } }
     .variation-card {
       border: 0.5px solid var(--border);
       display: flex; flex-direction: column;
@@ -301,6 +300,7 @@
   <div id="pageTransition" class="page-transition"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     const SUPABASE_URL   = "https://epmltqhtxkmfboaxdois.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
@@ -431,7 +431,7 @@
       container.innerHTML = data.variations.map((v, i) => `
         <div class="variation-card">
           <div class="variation-label">Variación ${i + 1}</div>
-          <div class="variation-body">${escapeHtml(v)}</div>
+          <div class="variation-body">${marked.parse(v)}</div>
           <div class="variation-footer">
             <button class="btn-save" onclick="saveDraft(${i})"
               onmouseover="this.style.background='#162d57'"
