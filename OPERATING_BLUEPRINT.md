@@ -107,7 +107,7 @@ Reservada para seguimiento comercial. No activa.
 - `cancel.html` — Suscripción no completada
 
 ### Assets compartidos
-- `styles.css` — Sistema de diseño completo
+- `styles.v4.css` — Sistema de diseño activo. (`styles.css` está presente en el repositorio pero no está cargado en ninguna página.)
 - `criterial-shared.js` — Cursor, parallax, scroll reveal, page transition
 
 ---
