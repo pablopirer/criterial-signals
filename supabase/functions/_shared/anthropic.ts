@@ -16,9 +16,9 @@ const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 
 /**
- * The default model. Pinned to a snapshot so behavior does not silently
- * drift if Anthropic moves the `claude-haiku-4-5` alias forward. Override
- * via the ANTHROPIC_MODEL env var when you want to test a newer model.
+ * The default model. Pinned to a specific snapshot ID so behavior does not
+ * silently drift if Anthropic updates model aliases. Override via the
+ * ANTHROPIC_MODEL env var at runtime (no redeploy needed).
  */
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 
