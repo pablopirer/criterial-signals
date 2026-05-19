@@ -69,17 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── PAGE TRANSITION ──────────────────────────
   const pt = document.getElementById('pageTransition');
   if (pt) {
-    // Entrada: slide out hacia arriba al cargar
-    pt.style.transition = 'none';
-    pt.style.transform  = 'translateY(-100%)';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        pt.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1)';
-      });
-    });
+    pt.style.opacity = '0';
+    pt.style.transform = 'none';
     window.addEventListener('pageshow', () => {
       pt.style.transition = 'none';
-      pt.style.transform  = 'translateY(-100%)';
+      pt.style.opacity = '0';
     });
     document.querySelectorAll('a').forEach(a => {
       const href = a.getAttribute('href');
@@ -87,9 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
         a.addEventListener('click', e => {
           e.preventDefault();
           const dest = a.href;
-          pt.style.transition = 'transform 0.42s cubic-bezier(0.76,0,0.24,1)';
-          pt.style.transform  = 'translateY(0)';
-          setTimeout(() => window.location.href = dest, 430);
+          pt.style.transition = 'opacity 0.28s ease';
+          pt.style.opacity = '1';
+          setTimeout(() => window.location.href = dest, 290);
         });
       }
     });
