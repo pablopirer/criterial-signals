@@ -128,29 +128,52 @@ fi
 
 SELECTED_TEXT="${VARIATIONS[$((SELECTION-1))]}"
 
-# ── Save to Supabase as draft (via CLI) ───────────────────────────────────────
+# ── Save to Supabase as draft (via REST API) ──────────────────────────────────
 echo ""
 echo -n "Guardando borrador en Supabase... "
 
-ESCAPED_TEXT=$(python3 -c "
-import sys
-text = '''$SELECTED_TEXT'''
-print(text.replace(\"'\", \"''\"))
-")
+TMPBODY=$(mktemp)
+printf '%s' "$SELECTED_TEXT" > "$TMPBODY"
 
-ESCAPED_TITLE=$(echo "$TITLE" | sed "s/'/''/g")
+PUB_ID=$(python3 - "$TMPBODY" "$TYPE" "$TITLE" "$PERIOD_START" "$PERIOD_END" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
+import json, sys, urllib.request, urllib.error
 
-PUB_ID=$(supabase db query --linked \
-  "INSERT INTO publications (type, title, body_markdown, status, period_start, period_end)
-   VALUES ('$TYPE', '$ESCAPED_TITLE', '$ESCAPED_TEXT', 'draft', '$PERIOD_START', '$PERIOD_END')
-   RETURNING id;" 2>/dev/null \
-  | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-rows = data.get('rows', [])
-if rows:
-    print(rows[0].get('id', ''))
-" 2>/dev/null) || true
+body_file, pub_type, title, period_start, period_end, supabase_url, service_key = sys.argv[1:]
+
+with open(body_file) as f:
+    body_markdown = f.read()
+
+payload = json.dumps({
+    'type': pub_type,
+    'title': title,
+    'body_markdown': body_markdown,
+    'status': 'draft',
+    'period_start': period_start,
+    'period_end': period_end
+}).encode()
+
+req = urllib.request.Request(
+    f'{supabase_url}/rest/v1/publications',
+    data=payload,
+    headers={
+        'apikey': service_key,
+        'Authorization': f'Bearer {service_key}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+    }
+)
+try:
+    with urllib.request.urlopen(req) as resp:
+        data = json.loads(resp.read())
+        if isinstance(data, list) and data:
+            print(data[0]['id'])
+except urllib.error.HTTPError as e:
+    sys.stderr.write(e.read().decode() + '\n')
+    sys.exit(1)
+PYEOF
+) || true
+
+rm -f "$TMPBODY"
 
 if [[ -z "$PUB_ID" ]]; then
   echo "FAILED"
