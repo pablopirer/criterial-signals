@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let mx, my, rx, ry;
     let cursorActive = false;
 
-    document.addEventListener('mousemove', e => {
+    document.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
       if (!cursorActive) {
         cursorActive = true;
         mx = rx = e.clientX;
