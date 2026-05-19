@@ -91,10 +91,10 @@ body {
   letter-spacing: -0.01em;
 }
 
-.nav { display: flex; gap: 34px; }
+.nav { display: flex; gap: 28px; align-items: center; }
 
 .nav a {
-  font-size: 10.5px; font-weight: 400; color: rgba(255,255,255,0.42);
+  font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.72);
   text-decoration: none; letter-spacing: 0.11em; text-transform: uppercase;
   position: relative; padding-bottom: 3px;
   transition: color 0.22s;
@@ -115,9 +115,10 @@ body {
 
 .nav a.nav-access {
   border: 0.5px solid rgba(255,255,255,0.28);
-  padding: 5px 13px 6px;
+  padding: 6px 14px;
   letter-spacing: 0.14em;
   color: rgba(255,255,255,0.7);
+  align-self: center;
   transition: border-color 0.22s, color 0.22s;
 }
 .nav a.nav-access::after { display: none; }
@@ -149,7 +150,7 @@ body {
 
 .hero-overlay {
   position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(to bottom, rgba(5,12,24,0.62) 0%, rgba(5,12,24,0.22) 42%, rgba(5,12,24,0.78) 100%);
+  background: linear-gradient(to bottom, rgba(4,10,20,0.45) 0%, rgba(4,10,20,0.25) 40%, rgba(4,10,20,0.55) 100%);
 }
 
 .hero-overlay-left {
@@ -180,8 +181,8 @@ body {
 }
 
 .eyebrow {
-  font-size: 10px; letter-spacing: 0.22em;
-  text-transform: uppercase; color: rgba(255,255,255,0.36); margin-bottom: 28px;
+  font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 28px;
   opacity: 0; animation: fadeUp 1s 0.35s ease forwards;
 }
 
@@ -206,7 +207,7 @@ body {
 
 .hero-sub {
   font-size: 16px; line-height: 1.78;
-  color: rgba(255,255,255,0.52); margin-bottom: 42px;
+  color: rgba(255,255,255,0.75); margin-bottom: 42px;
   font-weight: 300; max-width: 560px;
   opacity: 0; animation: fadeUp 0.9s 1.05s ease forwards;
 }
