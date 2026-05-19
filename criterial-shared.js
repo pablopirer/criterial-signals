@@ -3,31 +3,33 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ── CURSOR ──────────────────────────────────
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   const dot  = document.getElementById('cursorDot');
   const ring = document.getElementById('cursorRing');
-
   if (dot && ring) {
-    let mx = window.innerWidth/2, my = window.innerHeight/2;
-    let rx = mx, ry = my;
-
-    document.addEventListener('mousemove', e => {
-      mx = e.clientX; my = e.clientY;
-      dot.style.left = mx + 'px';
-      dot.style.top  = my + 'px';
-    });
-
-    (function animRing() {
-      rx += (mx - rx) * 0.13;
-      ry += (my - ry) * 0.13;
-      ring.style.left = rx + 'px';
-      ring.style.top  = ry + 'px';
-      requestAnimationFrame(animRing);
-    })();
-
-    document.querySelectorAll('a, button').forEach(el => {
-      el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
-      el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
-    });
+    if (isTouchDevice) {
+      dot.style.display = 'none';
+      ring.style.display = 'none';
+    } else {
+      let mx = window.innerWidth/2, my = window.innerHeight/2;
+      let rx = mx, ry = my;
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        dot.style.left = mx + 'px';
+        dot.style.top  = my + 'px';
+      });
+      (function animRing() {
+        rx += (mx - rx) * 0.13;
+        ry += (my - ry) * 0.13;
+        ring.style.left = rx + 'px';
+        ring.style.top  = ry + 'px';
+        requestAnimationFrame(animRing);
+      })();
+      document.querySelectorAll('a, button').forEach(el => {
+        el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
+        el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
+      });
+    }
   }
 
   // ── HEADER SCROLL ───────────────────────────
@@ -67,20 +69,27 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── PAGE TRANSITION ──────────────────────────
   const pt = document.getElementById('pageTransition');
   if (pt) {
+    // Entrada: slide out hacia arriba al cargar
+    pt.style.transition = 'none';
+    pt.style.transform  = 'translateY(-100%)';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        pt.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1)';
+      });
+    });
     window.addEventListener('pageshow', () => {
       pt.style.transition = 'none';
       pt.style.transform  = 'translateY(-100%)';
     });
-
     document.querySelectorAll('a').forEach(a => {
       const href = a.getAttribute('href');
       if (href && href !== '#' && !href.startsWith('mailto') && !href.startsWith('http') && !href.startsWith('https')) {
         a.addEventListener('click', e => {
           e.preventDefault();
           const dest = a.href;
-          pt.style.transition = 'transform 0.45s cubic-bezier(0.77,0,0.18,1)';
+          pt.style.transition = 'transform 0.42s cubic-bezier(0.76,0,0.24,1)';
           pt.style.transform  = 'translateY(0)';
-          setTimeout(() => window.location.href = dest, 460);
+          setTimeout(() => window.location.href = dest, 430);
         });
       }
     });

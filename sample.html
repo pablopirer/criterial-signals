@@ -121,10 +121,10 @@
         notes: document.getElementById("notes").value
       };
 
-      statusEl.textContent = "Enviando solicitud...";
-
+      statusEl.style.color = 'var(--navy)';
+      statusEl.textContent = "Solicitud enviada. Generando tu brief...";
       try {
-        const res = await fetch(webhookUrl, {
+        fetch(webhookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -132,15 +132,12 @@
             "x-criterial-signal": "596394206a475b401e93639148407dd7b4c8ce7fffd36ccaa204aca73b527dcb"
           },
           body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          form.reset();
+        }).catch(() => {});
+        setTimeout(() => {
           window.location.href = "request-received.html";
-        } else {
-          statusEl.textContent = "La solicitud no se ha podido enviar.";
-        }
+        }, 800);
       } catch (err) {
+        statusEl.style.color = '#c0392b';
         statusEl.textContent = "Error de conexión al enviar la solicitud.";
       }
     });
