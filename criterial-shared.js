@@ -3,33 +3,29 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ── CURSOR ──────────────────────────────────
-  const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const dot  = document.getElementById('cursorDot');
   const ring = document.getElementById('cursorRing');
   if (dot && ring) {
-    if (isTouchDevice) {
-      dot.style.display = 'none';
-      ring.style.display = 'none';
-    } else {
-      let mx = window.innerWidth/2, my = window.innerHeight/2;
-      let rx = mx, ry = my;
-      document.addEventListener('mousemove', e => {
-        mx = e.clientX; my = e.clientY;
-        dot.style.left = mx + 'px';
-        dot.style.top  = my + 'px';
-      });
-      (function animRing() {
-        rx += (mx - rx) * 0.13;
-        ry += (my - ry) * 0.13;
-        ring.style.left = rx + 'px';
-        ring.style.top  = ry + 'px';
-        requestAnimationFrame(animRing);
-      })();
-      document.querySelectorAll('a, button').forEach(el => {
-        el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
-        el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
-      });
-    }
+    dot.style.display = '';
+    ring.style.display = '';
+    let mx = window.innerWidth/2, my = window.innerHeight/2;
+    let rx = mx, ry = my;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+    });
+    (function animRing() {
+      rx += (mx - rx) * 0.13;
+      ry += (my - ry) * 0.13;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      requestAnimationFrame(animRing);
+    })();
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
+    });
   }
 
   // ── HEADER SCROLL ───────────────────────────
