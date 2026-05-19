@@ -207,6 +207,32 @@ It is currently an MVP in early validation. The repository contains the full sys
 - Edge Function `get-publications` actualizada para incluir tipo `sample` en plan Pro.
 - 7 sample briefs publicados en base de datos (status draft → published).
 
+### Day 16 — Complete (2026-05-19)
+- Mejoras de interacción visual: transición entre páginas, cursor custom, comportamiento móvil.
+- Transición entre páginas: cambiada de wipe vertical (translateY) a fade blanco (opacity 0.28s).
+  `#pageTransition` ahora es overlay blanco; JS usa `opacity` en lugar de `transform`.
+- `sample.html`: formulario redirige inmediatamente a `request-received.html` (800ms) sin
+  esperar respuesta de Anthropic. El fetch se lanza en fire-and-forget con `.catch(() => {})`.
+- CSS renombrado a `styles.v4.css` para forzar invalidación de caché en GitHub Pages.
+  Todos los HTML actualizados. `styles.css` permanece en el repo sin cargarse.
+- `overflow-x: hidden` → `overflow-x: clip` en body; `overflow: hidden` → `overflow: clip`
+  en `.hero-wrap`, `.service-card` e `.image-section`. `clip` no crea stacking context,
+  lo que permite que los elementos `position: fixed` funcionen correctamente.
+- Cursor custom (`criterial-shared.js` + `styles.v4.css`): diagnóstico y resolución completa.
+  - Root cause: el laptop táctil del usuario reporta `(hover: none) and (pointer: coarse)`
+    en Chrome, lo que activaba el `display: none !important` del media query de táctil.
+  - Solución definitiva: `display: none` en CSS por defecto para `.cursor-dot` y `.cursor-ring`.
+    JS usa `pointermove` (no `mousemove`) y filtra `e.pointerType === 'touch'`. En el primer
+    evento de ratón/trackpad, se hace `display: block` y se inicia el bucle `requestAnimationFrame`.
+    En dispositivos táctiles puros nunca se activa; en laptops táctiles con trackpad funciona.
+  - `mix-blend-mode: difference` + `background: #fff` restaurados (estaban funcionando antes).
+  - `criterial-shared.js` cacheado con `?v=2` en todos los HTML.
+- Cursor divs (`#cursorDot`, `#cursorRing`, `#pageTransition`) movidos al final del `<body>`
+  en todos los HTML para garantizar orden de pintado correcto en el stacking context raíz.
+- Note: no usar media queries CSS `(hover: none), (pointer: coarse)` para ocultar el cursor.
+  El laptop del usuario los activa como true aunque tenga trackpad funcional. Usar siempre
+  detección por `pointermove` con filtro `e.pointerType === 'touch'` en JS.
+
 ### Day 15 — Complete (2026-05-18)
 - Identidad visual completa definida y aplicada en todos los elementos del producto.
 - Email templates actualizados al nuevo sistema visual: fondo blanco, sin border-radius,
