@@ -204,18 +204,19 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ## 5. Current roadmap
 
 ### In progress / next
-- **Recurring content cadence** — establish weekly rhythm (`generate-content.sh weekly`) and monthly rhythm (`generate-content.sh monthly`). Manual execution is sufficient for now; no automation required yet.
-- **Publishing workflow** — clarify and document the draft → published step; verify `archive.html` displays new publications correctly after each publish; run `scripts/test-e2e.sh` after each cycle.
+- **Fix `generate-content.sh` ID-capture bug** — after a successful INSERT, the script reports FAILED and exits without printing the publication ID. Root cause: the Python parser that extracts the ID from `supabase db query --linked ... RETURNING id` output does not match the actual JSON structure. Fix before running another generation cycle. Do not rerun the script until fixed — it calls Anthropic 3× and may create a duplicate draft.
+- **Recurring content cadence** — establish weekly rhythm (`generate-content.sh weekly`) and monthly rhythm (`generate-content.sh monthly`). Manual execution is sufficient for now; no automation required yet. Unblocked once the ID-capture bug is fixed.
 - **Advisory validation** — get first real Advisory engagement. Validate format and deliverables with a real client.
 
 ### Medium term
+- **Email delivery of weekly signal to Pro subscribers** — currently the weekly is only accessible via `archive.html` after login. As the subscriber base grows, pushing the weekly to their inbox reduces friction. Requires a new email template and a send-to-subscribers script or Edge Function. No urgency at current scale.
 - **Company Snapshot** — first on-demand product. Manual first (generate via Anthropic, deliver by email). Once validated, build Edge Function `company-snapshot`. Inputs: company name, context, requester email. Output: snapshot delivered by email + stored in `publications`.
 - **LinkedIn distribution** — publish reduced snapshot format on LinkedIn with CTA to get full version. Lead capture via existing `sample-request` flow. No new infrastructure needed for initial validation.
 - **Conversion optimisation** — review copy and UX on `pricing.html` and `sample.html`; clarify Free vs Pro value gap.
 
 ### Robustness (ongoing, lower priority)
+- Alert on `generation_failed` sample requests — the only silent failure that affects the end user directly (they see the confirmation page but receive no email). Higher priority than generic error handling.
 - Error handling and retry logic in Edge Functions.
-- Alert on `generation_failed` sample requests.
 - Migrate internal Advisory notification email from personal Gmail to a Criterial account.
 
 ---
