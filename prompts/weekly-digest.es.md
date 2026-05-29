@@ -151,3 +151,9 @@ Nunca uses clases antiguas: no pub-signal, no pub-section-label, no pub-vigilar-
 La tabla usa pub-ops-table, no pub-mapa.
 pub-vigilar-grid contiene pub-vigilar-card — nunca pub-vigilar-item.
 Señales: siempre incluye las dos filas (Patrón e Implicación) dentro de pub-signal-rows.
+
+## User
+
+Redacta el Weekly Signals de Criterial para la {{period}}.
+
+Usa web_search para buscar noticias verificables del mercado español de M&A, PE/VC y capital privado de esa semana. Luego genera el HTML completo siguiendo exactamente la estructura y clases definidas en el system prompt. Mínimo 4 señales, máximo 6.
