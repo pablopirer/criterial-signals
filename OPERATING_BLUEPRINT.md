@@ -5,7 +5,7 @@
 Criterial es una firma analítica independiente especializada en el mercado español de inversión privada. Ofrece dos líneas de producto:
 
 - **Advisory** — trabajo analítico bajo demanda: valoraciones de empresa, análisis sectoriales, pitch decks.
-- **Criterial Signals** — publicación editorial con señales semanales y briefs mensuales sobre M&A, real estate y capital markets en España.
+- **Criterial Signals** — publicación editorial de inteligencia de mercado: Weekly Signals y Brief Mensual sobre el mid-market español de capital privado (M&A, PE/VC, deuda privada y eventos de liquidez). Sin inmobiliario.
 
 ---
 
@@ -37,7 +37,7 @@ Criterial es una firma analítica independiente especializada en el mercado espa
 ## 3. Arquitectura de flujos
 
 ### 3.1 Sample request
-`sample.html` → Edge Function `sample-request` → `leads` + `sample_requests` → Anthropic API → `publications` (draft) → Resend → email usuario → `request-received.html`
+`sample.html` → Edge Function `sample-request` → `leads` + `sample_requests` → Anthropic API → `publications` (draft, HTML) → Resend → email usuario → `request-received.html`
 
 ### 3.2 Advisory
 `encargos.html` → Edge Function `advisory-request` → Resend → email interno (criterialam@gmail.com) + confirmación usuario → `advisory-received.html`
@@ -50,6 +50,9 @@ INSERT en `subscribers` → Supabase Database Webhook → Edge Function `welcome
 
 ### 3.5 Archivo Pro
 `archive.html` → Supabase Auth magic link → Edge Function `get-publications` → publicaciones `weekly` + `monthly` + `sample` con status `published`
+
+### 3.7 Generación de contenido (admin)
+`admin.html` → Edge Function `generate-content` → Anthropic API (web search) → `publications` (draft, HTML) → previsualización en admin → publicación manual
 
 ---
 
@@ -80,7 +83,7 @@ Suscriptores Pro. Campos: `id`, `created_at`, `email`, `full_name`, `company_nam
 Solicitudes de muestra vinculadas a leads. Campos: `id`, `created_at`, `lead_id`, `topic`, `status`.
 
 ### `publications`
-Publicaciones generadas. Campos: `id`, `created_at`, `type` (sample/weekly/monthly), `title`, `period_start`, `period_end`, `body_markdown`, `status` (draft/published).
+Publicaciones generadas. Campos: `id`, `created_at`, `type` (sample/weekly/monthly), `title`, `period_start`, `period_end`, `body_markdown` (almacena HTML desde 2026-05-29 — nombre legacy), `status` (draft/published).
 
 ### `source_items`
 Reservada para futuras fuentes de señales. No activa.
@@ -138,12 +141,13 @@ Reservada para seguimiento comercial. No activa.
 - Formulario Advisory → notificación interna + confirmación usuario
 - Checkout Stripe → suscriptor registrado → welcome email
 - Archivo Pro autenticado con magic link
-- 9 publicaciones en archivo (1 weekly, 8 samples)
+- Sistema de generación de contenido con web search (Weekly + Brief Mensual en HTML semántico)
+- Panel admin con previsualización de publicaciones antes de publicar
 
 ### No construido todavía
-- Motor de contenido recurrente automatizado (weekly/monthly)
 - Company Snapshot como producto on-demand
 - Distribución LinkedIn
+- Distribución por email del Weekly a suscriptores Pro (actualmente solo accesible via archive.html)
 - Conversión de leads a Pro (outreach)
 
 ---

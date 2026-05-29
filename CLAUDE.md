@@ -20,7 +20,7 @@ Criterial is an independent analytical firm specialised in the Spanish private i
 
 Two active business lines:
 - **Advisory** — analytical work on demand: company valuations, sector analysis, pitch decks.
-- **Criterial Signals** — editorial intelligence product: weekly digest and monthly brief covering M&A, real estate, and capital markets in Spain.
+- **Criterial Signals** — editorial intelligence product: Weekly Signals and Brief Mensual covering M&A, PE/VC, deuda privada, and liquidity events in the Spanish mid-market. Real estate excluded from scope.
 
 ### Geographic and product scope
 **Spain only.** Portugal and Iberia references in the historical changelog (§8) reflect earlier scope that was narrowed. Do not treat them as current.
@@ -41,9 +41,10 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Production snapshot (last documented: 2026-05-29)
 - 16 leads captured (all status `new`; none contacted or converted)
 - 1 active Pro subscriber (previous count of ~4 was incorrect or reflects cancellations — verify in Stripe before using for commercial claims)
-- 11 publications published (3 weekly + 8 samples); 36 sample drafts accumulated in DB (generated automatically by sample requests, never published)
+- 0 publications published; 0 drafts (reset completo ejecutado 2026-05-29 — el weekly generado en la sesión está pendiente de revisión visual antes de publicar)
 - 32 sample requests total: 18 generated successfully, 2 `generation_failed` (users did not receive email), 0 queued
 - `criterial-shared.js` confirmed at `?v=3` in all 10 active HTML files (open item from §7 closed 2026-05-29)
+- Reset completo de publicaciones ejecutado 2026-05-29. El sistema de contenido ha sido refactorizado — ver §2 y §8.
 
 > **These counts are sourced from `scripts/funnel-metrics.sh` run on 2026-05-29. Verify against Supabase before use in public copy, reporting, or commercial claims.**
 
@@ -75,6 +76,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 | `stripe-webhook` | Stripe event receiver: verifies signature, upserts `subscribers` |
 | `welcome-subscriber` | Triggered by DB Webhook on INSERT to `subscribers` (plan=pro) |
 | `get-publications` | Authenticated access to Pro publications |
+| `generate-content` | Generación de Weekly y Brief Mensual desde admin.html (web search + HTML semántico) |
+| `admin-publications` | CRUD publicaciones y métricas. Acceso restringido a `pablopirer@gmail.com` |
 | `_shared/anthropic.ts` | Shared Anthropic client |
 | `_shared/supabase.ts` | Shared Supabase client |
 | `_shared/resend.ts` | HTML email templates and send helpers |
@@ -82,8 +85,9 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Anthropic
 - Model: **`claude-sonnet-4-6`**
 - Runtime override: set the `ANTHROPIC_MODEL` environment variable (no redeploy needed).
-- `max_tokens`: 2048.
-- Brief output schema: `{ titulo, subtitulo, tags, snapshot, signals[], watch[] }` (JSON).
+- `max_tokens`: 2048 (sample-request Edge Function); 4000 (content generation script and generate-content Edge Function).
+- Brief output schema for sample-request: `{ titulo, subtitulo, tags, snapshot, signals[], watch[] }` (JSON).
+- Web search habilitado en generación de contenido via tools: `[{type: 'web_search_20250305', max_uses: 5}]`. El modelo busca noticias reales antes de generar el HTML.
 
 ### Resend
 - Sender: `noreply@criterialsignals.com` (domain verified).
@@ -117,12 +121,22 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 │   │   ├── /get-publications   ← index.ts
 │   │   ├── /welcome-subscriber ← index.ts
 │   │   ├── /advisory-request   ← index.ts
-│   │   └── /stripe-webhook     ← index.ts
+│   │   ├── /stripe-webhook     ← index.ts
+│   │   ├── /generate-content   ← index.ts (generación desde admin web)
+│   │   └── /admin-publications ← index.ts (CRUD publicaciones, métricas)
 │   └── /migrations
 ├── /prompts
 ├── /scripts
 └── /archive
 ```
+
+### Publication content system
+- El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
+- El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
+- Las clases `pub-*` están definidas en `styles.v4.css` bajo el bloque `Publication content — Weekly & Monthly`.
+- El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
+- `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
+- `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
 
 ### Schema notes
 - `leads.interest_type` — nullable.
@@ -172,17 +186,28 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - **Entry point:** `archive.html` → Supabase Auth magic link login.
 - **Edge Function:** `get-publications`
 - **Services touched:** Supabase Auth (JWT verification), Supabase DB (`publications` query, `subscribers` plan check).
-- **Frontend libraries:** `archive.html` uses the Supabase JS SDK (auth + data fetch) and marked.js CDN (markdown rendering of publication body).
+- **Frontend libraries:** `archive.html` uses the Supabase JS SDK (auth + data fetch). HTML content is rendered directly as innerHTML — marked.js removed 2026-05-29.
 - **Side effects:** none (read-only).
 - **Access rules:** plan=pro AND status=active in `subscribers`; publications with status=published and type in (weekly, monthly, sample).
 - **Caveats:** PostgREST/RLS is NOT the active path for publication access — it was found unreliable after a JWT key reset (see §8, Day 6). `get-publications` Edge Function is the authoritative path.
 
-### 3.6 Manual content generation
+### 3.6 Manual content generation (terminal script)
 - **Entry point:** developer runs script locally.
-- **Scripts:** `scripts/generate-content.sh weekly|monthly` (generates 3 Anthropic variations, prompts for selection, saves as draft); `scripts/publish-draft.sh <id>` (sets status=published).
-- **Services touched:** Anthropic API, Supabase.
+- **Scripts:** `scripts/generate-content.sh weekly|monthly` (generates 1 Anthropic variation with web search, prompts for confirmation, saves as draft); `scripts/publish-draft.sh <id>` (sets status=published).
+- **Services touched:** Anthropic API (web search + HTML generation), Supabase.
 - **Side effects:** new publication record inserted in `publications`; after publish, appears in archive for Pro subscribers.
-- **Caveats:** Execution is manual and not scheduled. Requires approval before running in production.
+- **Preview:** `admin.html` has a "Previsualizar" button on each card that opens a modal with the rendered HTML content. Allows review before publishing.
+- **Caveats:** Execution is manual and not scheduled. Requires approval before running in production. Use as fallback if `generate-content` Edge Function fails.
+
+### 3.7 Content generation (admin web)
+- **Entry point:** `admin.html` → botón "Generar Weekly" o "Generar Brief Mensual".
+- **Edge Function:** `generate-content`
+- **Services touched:** Anthropic API (claude-sonnet-4-6, web search habilitado, max_tokens=4000), Supabase (`publications` insert).
+- **Flow:** genera 1 variación con web search → muestra en admin → Pablo selecciona → guarda como draft → previsualiza → publica.
+- **Side effects:** nueva publicación en `publications` con status=draft.
+- **Script alternativo:** `scripts/generate-content.sh weekly|monthly` — mismo resultado desde terminal. Fallback validado si la Edge Function falla.
+- **Rate limit:** el web search consume tokens adicionales. Con el tier actual (30.000 tokens/min), solo 1 variación por llamada es viable sin rate limit error.
+- **Caveats:** la Edge Function `generate-content` presentaba errores al final de la sesión 2026-05-29. El script de terminal es el path validado hasta que se diagnostique.
 
 ---
 
@@ -200,6 +225,9 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 10. **Do not deploy, push, or commit without explicit user approval.**
 11. **Default operating workflow.** Claude Code executes scoped tasks end-to-end (branch → edit → checks → commit → push → PR). Hermes acts as read-only auditor/reviewer for high-risk or production-sensitive changes. Terminal Ubuntu should be used mainly for final production actions, final verification, emergency recovery, or when Claude Code cannot perform a task. Avoid slow manual step-by-step terminal workflows for changes that Claude Code can handle safely.
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
+13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
+14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
+15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v4.css` pub-* classes.
 
 ---
 
@@ -298,6 +326,15 @@ Do not read, log, or expose `.env.local`. Secrets are managed via `supabase secr
 
 ### Supabase free tier — auto-pause risk
 The project runs on Supabase free tier during validation. Supabase automatically pauses projects inactive for more than 7 days. The keep-alive mechanism is `.github/workflows/keep-alive.yml`: a scheduled GitHub Actions workflow (cron `0 9 */5 * *`) that pings `get-publications` every 5 days to register activity. If this workflow is disabled or removed, the project will be at risk of being paused again. Validate it is active before any extended pause in deployments.
+
+### `body_markdown` stores HTML (legacy field name)
+Since the 2026-05-29 refactor, `body_markdown` stores HTML generated by the model, not markdown. The field name is preserved to avoid a breaking migration. Any code that assumes this field contains markdown and passes it through a markdown parser will double-render or corrupt the content.
+
+### Web search rate limits in content generation
+The Anthropic API web search tool consumes significant input tokens per call. At the current tier (30,000 tokens/min org limit), generating more than 1 variation per execution causes rate limit errors. Do not increase the variation count without first upgrading the Anthropic billing tier.
+
+### `generate-content` Edge Function error (pending investigation)
+The "Generar Weekly" button in admin.html was giving errors at the end of the 2026-05-29 session. The terminal script (`scripts/generate-content.sh`) is the validated fallback. Investigate the Edge Function before relying on the admin web flow for production generation.
 
 ---
 
@@ -427,6 +464,36 @@ The project runs on Supabase free tier during validation. Supabase automatically
   - Fix JS: replaced per-element listeners with `ring.classList.toggle('hovering', !!e.target.closest('a, button'))` in `pointermove` handler. Re-evaluates on every move.
   - Fix CSS: removed 4 `cursor: pointer` declarations from archive.html inline styles.
 - Note: when `criterial-shared.js` is updated, bump `?v=N` in all HTML `<script>` tags. **The bump to `?v=3` may have been interrupted before all HTML files were updated — verify the actual parameter value in each HTML file before assuming consistency.**
+
+### Day 18 — Complete (2026-05-29)
+
+**Product definition:**
+- Criterial Signals scope narrowed and formalized: mid-market español de capital privado. Covers M&A, PE/VC, deuda privada (direct lending, fondos de crédito), and liquidity events (OPAs, salidas a bolsa). Real estate excluded from scope.
+- Weekly Signals structure defined: Apertura + Señales de la semana (3-5 señales con etiqueta de tipo, hecho, patrón, implicación) + Qué vigilar + Dato de contexto.
+- Brief Mensual structure defined: Tesis del mes + Sectores en movimiento + Mapa de capital + Operación del mes + Perspectiva.
+- Both formats target LinkedIn-active professionals: mid-market executives, boutique M&A advisors, family offices, independent investors.
+
+**Content pipeline refactor:**
+- Publication content format changed from markdown to semantic HTML with `pub-*` CSS classes.
+- `body_markdown` field now stores HTML (legacy name preserved — do not rename without migration).
+- marked.js removed from `admin.html` and `archive.html`.
+- `styles.v4.css` extended with 304 lines of `pub-*` classes for publication rendering.
+- Anthropic API web search tool enabled in content generation (tool: `web_search_20250305`, max_uses=5).
+- `max_tokens` raised from 1200 to 4000 in `scripts/generate-content.sh`.
+- Prompts updated to v3: web search instructions + HTML structure + strict class name rules (`pub-badge-ma` single dash, `pub-section-label`, `pub-vigilar-title`/`pub-vigilar-sub`).
+- Variation count reduced from 3 to 1 to avoid rate limit errors with web search enabled.
+
+**Database:**
+- Full reset of `publications` table: 47 records deleted (36 sample drafts + 8 published samples + 3 weekly published).
+- First Weekly generated with new system: web search active, real sources cited, HTML output correct.
+
+**Admin:**
+- Preview modal added to publication cards in `admin.html`: renders HTML content via `pub-content` class before publishing.
+- `admin-publications` Edge Function updated: `body_markdown` added to GET select response.
+
+**Known issues at session end:**
+- "Generar Weekly" button in `admin.html` giving errors (Edge Function `generate-content`). Terminal script is validated fallback.
+- Preview modal width may need improvement on desktop.
 
 ---
 
