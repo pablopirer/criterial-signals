@@ -102,7 +102,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // default — list all publications
     const { data, error } = await supabase
       .from("publications")
-      .select("id, type, title, period_start, period_end, status, created_at")
+      .select("id, type, title, body_markdown, period_start, period_end, status, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
