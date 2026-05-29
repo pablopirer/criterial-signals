@@ -175,6 +175,7 @@
     }
     .pub-card-footer {
       display: flex; align-items: center; justify-content: flex-end;
+      gap: 8px;
       padding-top: 8px; border-top: 0.5px solid var(--border);
     }
     .badge {
@@ -529,7 +530,8 @@
           </div>
           <div class="pub-card-title">${escapeHtml(p.title)}</div>
           <div class="pub-card-date">${formatPeriod(p.period_start, p.period_end)}</div>
-          <div class="pub-card-footer">
+          <div class="pub-card-footer" style="gap:8px;">
+            <button class="btn-card-action muted" onclick="previewPublication('${p.id}')">Previsualizar</button>
             ${p.status === "draft"
               ? `<button class="btn-card-action" onclick="updateStatus('${p.id}','published')">Publicar</button>`
               : `<button class="btn-card-action muted" onclick="updateStatus('${p.id}','draft')">Despublicar</button>`
@@ -749,7 +751,46 @@
     function typeLabel(type) {
       return type === "monthly" ? "Brief Mensual" : type === "sample" ? "Muestra" : "Weekly";
     }
+
+    function previewPublication(id) {
+      const pub = _allPubs.find(p => p.id === id);
+      if (!pub) return;
+
+      const label = pub.type === 'monthly' ? 'Brief Mensual' : pub.type === 'sample' ? 'Muestra' : 'Weekly';
+      const period = formatPeriod(pub.period_start, pub.period_end);
+      const statusLabel = pub.status === 'published' ? 'Publicado' : 'Borrador';
+
+      document.getElementById('preview-meta').textContent = `${label} · ${period}`;
+      document.getElementById('preview-status').textContent = statusLabel;
+      document.getElementById('preview-body').innerHTML = pub.body_markdown || '<p style="color:var(--label)">Sin contenido.</p>';
+
+      document.getElementById('preview-modal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePreview() {
+      document.getElementById('preview-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('preview-modal').addEventListener('click', function(e) {
+      if (e.target === this) closePreview();
+    });
   </script>
   <script src="criterial-shared.js?v=3"></script>
+
+<!-- PREVIEW MODAL -->
+<div id="preview-modal" style="display:none; position:fixed; inset:0; background:rgba(7,16,32,0.75); z-index:500; padding:40px 24px; overflow-y:auto;">
+  <div style="background:#fff; border:0.5px solid var(--border); max-width:760px; width:100%; padding:48px; position:relative; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; padding-bottom:20px; border-bottom:0.5px solid var(--border);">
+      <div>
+        <p style="font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--label); font-family:'Inter',sans-serif; margin-bottom:4px;" id="preview-meta"></p>
+        <p style="font-size:13px; color:var(--navy); font-family:'Inter',sans-serif;" id="preview-status"></p>
+      </div>
+      <button onclick="closePreview()" style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); background:none; border:none; font-family:'Inter',sans-serif; cursor:none; transition:color 0.2s;" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--label)'">Cerrar ×</button>
+    </div>
+    <div id="preview-body" class="pub-content"></div>
+  </div>
+</div>
 </body>
 </html>
