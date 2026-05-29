@@ -33,6 +33,13 @@ Redacta el Weekly Signals de Criterial para la semana del {{period}}.
 
 Primero usa web_search para buscar noticias del mercado español de M&A, PE/VC y capital privado de esa semana. Luego redacta el digest en HTML con esta estructura exacta:
 
+CRÍTICO — reglas de formato que no puedes ignorar:
+- El wrapper exterior SIEMPRE es `<div class="pub-content">` y `</div>` al final.
+- Las etiquetas de badge SIEMPRE con un solo guión: `pub-badge-ma`, `pub-badge-pe`, `pub-badge-deuda`, `pub-badge-salida`, `pub-badge-fund`. Nunca doble guión.
+- Las secciones NUNCA usan `<h2>` — siempre `<p class="pub-section-label">`.
+- En pub-vigilar-item, las clases son `pub-vigilar-title` y `pub-vigilar-sub`. No existen `pub-vigilar-headline` ni `pub-vigilar-context`.
+- No añadas clases que no estén en la estructura de ejemplo. Cíñete exactamente a las clases definidas.
+
 <div class="pub-header">
   <p class="pub-period">Weekly Signals · {{period}}</p>
   <h1 class="pub-title">TITULAR EDITORIAL DE LA SEMANA</h1>

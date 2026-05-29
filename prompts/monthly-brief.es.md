@@ -33,6 +33,13 @@ Redacta el Brief Mensual de Criterial para el mes de {{period}}.
 
 Primero usa web_search para investigar el mercado español de M&A, PE/VC y capital privado de ese mes. Luego redacta el brief en HTML con esta estructura exacta:
 
+CRÍTICO — reglas de formato que no puedes ignorar:
+- El wrapper exterior SIEMPRE es `<div class="pub-content">` y `</div>` al final.
+- Las etiquetas de badge SIEMPRE con un solo guión: `pub-badge-ma`, `pub-badge-pe`, `pub-badge-deuda`, `pub-badge-salida`, `pub-badge-fund`. Nunca doble guión.
+- Las secciones NUNCA usan `<h2>` — siempre `<p class="pub-section-label">`.
+- En pub-vigilar-item, las clases son `pub-vigilar-title` y `pub-vigilar-sub`. No existen `pub-vigilar-headline` ni `pub-vigilar-context`.
+- No añadas clases que no estén en la estructura de ejemplo. Cíñete exactamente a las clases definidas.
+
 <div class="pub-header">
   <p class="pub-period">Brief Mensual · {{period}}</p>
   <h1 class="pub-title">TITULAR EDITORIAL DEL MES</h1>

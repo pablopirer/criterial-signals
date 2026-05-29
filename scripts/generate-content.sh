@@ -106,10 +106,10 @@ done
 
 # ── Display variations ─────────────────────────────────────────────────────────
 echo ""
-for i in 1 2 3; do
-  echo -e "${BOLD}${CYAN}─────────────────── Variación $i ───────────────────${NC}"
+for i in "${!VARIATIONS[@]}"; do
+  echo -e "${BOLD}${CYAN}─────────────────── Variación $((i+1)) ───────────────────${NC}"
   echo ""
-  echo "${VARIATIONS[$((i-1))]}"
+  echo "${VARIATIONS[$i]}"
   echo ""
 done
 
