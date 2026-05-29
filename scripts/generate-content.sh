@@ -64,8 +64,8 @@ VARIATIONS=()
 echo -e "${BOLD}Generating 3 variations...${NC}"
 echo ""
 
-for i in 1 2 3; do
-  echo -n "  Variation $i/3... "
+for i in 1; do
+  echo -n "  Variation $i/1... "
 
   PAYLOAD=$(printf '%s' "$USER_PROMPT" | python3 -c "
 import json, sys
@@ -114,18 +114,15 @@ for i in 1 2 3; do
 done
 
 # ── Selection ─────────────────────────────────────────────────────────────────
-echo -e "${YELLOW}¿Cuál guardas como borrador? (1/2/3 o Enter para cancelar):${NC} "
+echo -e "${YELLOW}¿Guardar como borrador? (y/N):${NC} "
 read -r SELECTION
 
-if [[ -z "$SELECTION" || "$SELECTION" == "0" ]]; then
+if [[ "$SELECTION" != "y" && "$SELECTION" != "Y" ]]; then
   echo "Cancelado. No se ha guardado nada."
   exit 0
 fi
 
-if [[ "$SELECTION" != "1" && "$SELECTION" != "2" && "$SELECTION" != "3" ]]; then
-  echo "Opción inválida. Cancelado."
-  exit 1
-fi
+SELECTION="1"
 
 SELECTED_TEXT="${VARIATIONS[$((SELECTION-1))]}"
 
