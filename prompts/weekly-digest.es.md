@@ -27,122 +27,127 @@ Uso de web_search:
 - No inventes hechos. Si no encuentras evidencia específica de esa semana, escribe con precisión cualitativa sin fabricar actores, cifras o operaciones.
 - Cita las fuentes que hayas consultado en la sección pub-sources al final.
 
-Formato de salida:
-- Devuelve ÚNICAMENTE HTML válido usando las clases CSS indicadas en el prompt.
-- Sin markdown, sin bloques de código, sin explicaciones. Solo el HTML.
+Formato de salida obligatorio — HTML semántico:
+- Genera HTML con las clases CSS de Criterial definidas abajo. No generes markdown.
+- No incluyas <!DOCTYPE>, <html>, <head>, <body> ni <style>. Solo el contenido interior.
+- Estructura exacta a seguir:
 
-## User
+<div class="pub-content">
 
-Redacta el Weekly Signals de Criterial para la semana del {{period}}.
-
-Primero usa web_search para buscar noticias del mercado español de M&A, PE/VC y capital privado de esa semana. Luego redacta el digest en HTML con esta estructura exacta:
-
-CRÍTICO — reglas de formato que no puedes ignorar:
-- El wrapper exterior SIEMPRE es `<div class="pub-content">` y `</div>` al final.
-- Las etiquetas de badge SIEMPRE con un solo guión: `pub-badge-ma`, `pub-badge-pe`, `pub-badge-deuda`, `pub-badge-salida`, `pub-badge-fund`. Nunca doble guión.
-- Las secciones NUNCA usan `<h2>` — siempre `<p class="pub-section-label">`.
-- En pub-vigilar-item, las clases son `pub-vigilar-title` y `pub-vigilar-sub`. No existen `pub-vigilar-headline` ni `pub-vigilar-context`.
-- No añadas clases que no estén en la estructura de ejemplo. Cíñete exactamente a las clases definidas.
-- El texto introductorio del modelo ("voy a buscar...", "con base en la información encontrada...") NO debe aparecer en el output. El output empieza directamente con el primer elemento HTML del pub-content.
-- La tabla de operaciones usa la clase `pub-mapa` exactamente como se define en la estructura.
-
-<div class="pub-header">
-  <p class="pub-period">Weekly Signals · {{period}}</p>
-  <h1 class="pub-title">TITULAR EDITORIAL DE LA SEMANA</h1>
-</div>
-
-<div class="pub-section">
-  <p class="pub-section-label">Apertura</p>
-  <div class="pub-apertura">
-    <p>PÁRRAFO DE APERTURA (3-4 frases, lectura editorial del mercado esa semana)</p>
-  </div>
-</div>
-
-<div class="pub-section">
-  <p class="pub-section-label">Señales de la semana</p>
-
-  <div class="pub-signal">
-    <div class="pub-signal-header">
-      <span class="pub-badge pub-badge-ma">M&amp;A</span>
-      <span class="pub-signal-time">[Esta semana]</span>
+  <div class="pub-header-new">
+    <div class="pub-brand-row">
+      <span class="pub-brand-label">Criterial · Weekly Signals</span>
+      <span class="pub-brand-num">Nº [número] · [fecha]</span>
     </div>
-    <div class="pub-signal-body">
-      <p>El hecho verificable observado.</p>
-      <p>El patrón que revela o contexto en que encaja.</p>
-      <p>La implicación accionable: qué significa para empresas, fondos o asesores.</p>
+    <h1 class="pub-title-new">[título editorial]</h1>
+    <p class="pub-period-new">Semana del {{period}}</p>
+  </div>
+
+  <div class="pub-section-new">
+    <p class="pub-sec-label">Apertura</p>
+    <div class="pub-apertura-new"><p>[párrafo de apertura — lectura editorial del mercado esa semana]</p></div>
+  </div>
+
+  <div class="pub-section-new">
+    <p class="pub-sec-label">Señales de la semana</p>
+
+    <div class="pub-signal-new">
+      <div class="pub-signal-head">
+        <span class="pub-badge-new pub-badge-[ma|buyout|growth|salida|fund|deuda|lmm|opa|deeptech]">[Tipo granular]</span>
+        <span class="pub-signal-title">[título breve de la señal]</span>
+        <span class="pub-time-tag">[[Esta semana|Mayo 2026|Contexto]]</span>
+      </div>
+      <div class="pub-signal-body">
+        <p class="pub-signal-fact"><strong>[Nombre empresa/operación]</strong>: [hecho verificable con datos concretos cuando disponibles]</p>
+        <div class="pub-signal-rows">
+          <div class="pub-signal-row">
+            <span class="pub-signal-row-label">Patrón</span>
+            <span class="pub-signal-row-text">[qué revela este hecho en el contexto del mercado]</span>
+          </div>
+          <div class="pub-signal-row">
+            <span class="pub-signal-row-label">Implicación</span>
+            <span class="pub-signal-row-text">[qué significa para fondos, asesores o empresas — usar "Es razonable esperar..." o "El patrón sugiere..."]</span>
+          </div>
+        </div>
+      </div>
     </div>
+    [repetir pub-signal-new para cada señal — mínimo 4, máximo 6]
+
   </div>
 
-  <!-- Añadir 2-4 señales más con las clases correspondientes:
-       pub-badge-ma (M&A), pub-badge-ma (Buyout), pub-badge-pe (Growth Equity),
-       pub-badge-deuda (Deuda Privada / NAV Financing), pub-badge-salida (Salida / OPA),
-       pub-badge-fund (Fundraising)
-       Temporalidad por señal: [Esta semana] / [Mayo 2026] / [Contexto] -->
-
-</div>
-
-**Clasificación temporal obligatoria por señal:**
-Cada señal debe indicar explícitamente su temporalidad con una de estas etiquetas:
-- `[Esta semana]` — operación o noticia confirmada en los últimos 7 días
-- `[Mayo 2026]` — operación o noticia de este mes, no necesariamente esta semana
-- `[Contexto]` — operación o tendencia anterior usada como referencia
-
-No presentes operaciones de semanas o meses anteriores como si fueran de esta semana.
-
-**Tabla de operaciones**
-Genera una tabla HTML con todas las operaciones mencionadas en las señales:
-
-<table class="pub-mapa">
-  <thead>
-    <tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Comprador/Inversor</th><th>Tesis</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>[empresa]</td><td>[tipo]</td><td>[sector]</td><td>[comprador]</td><td>[tesis en 5-8 palabras]</td></tr>
-  </tbody>
-</table>
-
-<div class="pub-section">
-  <p class="pub-section-label">Qué vigilar</p>
-
-  <div class="pub-vigilar-item">
-    <p class="pub-vigilar-title">TITULAR DE LA SITUACIÓN</p>
-    <p class="pub-vigilar-sub">Una frase de contexto.</p>
+  <div class="pub-section-new">
+    <p class="pub-sec-label">Operaciones de la semana</p>
+    <table class="pub-ops-table">
+      <colgroup><col style="width:26%"><col style="width:18%"><col style="width:22%"><col style="width:34%"></colgroup>
+      <thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Tesis</th></tr></thead>
+      <tbody>
+        <tr><td>[empresa]</td><td>[tipo]</td><td>[sector]</td><td>[tesis en 5-8 palabras]</td></tr>
+        [repetir para cada operación]
+      </tbody>
+    </table>
   </div>
 
-  <!-- Añadir 1-2 items más -->
-
-</div>
-
-**Investment read-through**
-3 conclusiones accionables derivadas del conjunto de señales de la semana. Formato:
-
-<div class="pub-section">
-  <p class="pub-section-label">Investment read-through</p>
-  <div class="pub-vigilar-item">
-    <span class="pub-vigilar-num">→</span>
-    <div>
-      <p class="pub-vigilar-title">[categoría: Origination / Financiación / Salidas / Sectorial]</p>
-      <p class="pub-vigilar-sub">[conclusión accionable en 2-3 frases]</p>
+  <div class="pub-section-new">
+    <p class="pub-sec-label">Qué vigilar</p>
+    <div class="pub-vigilar-grid">
+      <div class="pub-vigilar-card">
+        <p class="pub-vigilar-num">01</p>
+        <p class="pub-vigilar-title-new">[titular]</p>
+        <p class="pub-vigilar-sub-new">[contexto en 2-3 frases]</p>
+      </div>
+      [repetir para 3-4 items — usar 02, 03, 04]
     </div>
   </div>
-  [repetir para las 3 conclusiones]
-</div>
 
-<div class="pub-section">
-  <p class="pub-section-label">Dato de contexto</p>
-  <div class="pub-dato">
-    <p>Un solo dato, cifra o referencia comparativa que ancle la semana. 2-3 líneas máximo.</p>
+  <div class="pub-section-new">
+    <p class="pub-sec-label">Investment read-through</p>
+    <div class="pub-readthrough">
+      <div class="pub-readthrough-header">
+        <span class="pub-readthrough-label">3 conclusiones accionables de la semana</span>
+      </div>
+      <div class="pub-readthrough-body">
+        <div class="pub-rt-item">
+          <p class="pub-rt-cat">Origination</p>
+          <p class="pub-rt-text">[conclusión accionable para origination]</p>
+        </div>
+        <div class="pub-rt-item">
+          <p class="pub-rt-cat">Financiación</p>
+          <p class="pub-rt-text">[conclusión accionable para financiación]</p>
+        </div>
+        <div class="pub-rt-item">
+          <p class="pub-rt-cat">Salidas</p>
+          <p class="pub-rt-text">[conclusión accionable para salidas]</p>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <div class="pub-section-new">
+    <p class="pub-sec-label">Dato de contexto</p>
+    <div class="pub-dato-new">
+      <span class="pub-dato-num">[cifra destacada]</span>
+      <p class="pub-dato-text">[explicación del dato y su relevancia para el mercado — 3-4 frases]</p>
+    </div>
+  </div>
+
+  <div class="pub-sources-new">
+    <p class="pub-sec-label">Fuentes</p>
+    <div class="pub-source-row"><span class="pub-source-medio">[medio]</span><span class="pub-source-titulo">[título del artículo o informe — fecha]</span></div>
+    [repetir para cada fuente]
+  </div>
+
+  <div class="pub-footer-new">
+    <span class="pub-footer-text">Criterial Signals · Pro</span>
+    <span class="pub-footer-text">criterialsignals.com</span>
+  </div>
+
 </div>
 
-<div class="pub-sources">
-  <h3>Fuentes</h3>
-  <ul>
-    <li>FUENTE 1</li>
-    <li>FUENTE 2</li>
-  </ul>
-</div>
+CRÍTICO — reglas que no puedes ignorar:
 
-<div class="pub-footer">Criterial Signals · {{period}}</div>
-
-Señales: entre 3 y 5. Items en "Qué vigilar": entre 2 y 3. Longitud total del texto: entre 600 y 800 palabras. La tabla de operaciones y el investment read-through no cuentan en el límite de palabras.
+PRIMERA INSTRUCCIÓN: Tu respuesta empieza DIRECTAMENTE con <div class="pub-content">. Cero texto antes del HTML.
+Clases de badge: pub-badge-new + pub-badge-[tipo] — siempre ambas clases juntas.
+Nunca uses clases antiguas: no pub-signal, no pub-section-label, no pub-vigilar-item, no pub-badge-ma sin pub-badge-new.
+La tabla usa pub-ops-table, no pub-mapa.
+pub-vigilar-grid contiene pub-vigilar-card — nunca pub-vigilar-item.
+Señales: siempre incluye las dos filas (Patrón e Implicación) dentro de pub-signal-rows.
