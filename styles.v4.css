@@ -748,7 +748,7 @@ button.btn-dark {
   margin-bottom: 36px;
 }
 
-.pub-section h2 {
+.pub-section-label {
   font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 600;
@@ -803,11 +803,11 @@ button.btn-dark {
   border-radius: 2px;
 }
 
-.pub-badge--ma      { background: #E8EFF8; color: #1a4a8a; }
-.pub-badge--pe      { background: #EAF2EA; color: #1a5c1a; }
-.pub-badge--deuda   { background: #F5F0E8; color: #7a5c1a; }
-.pub-badge--salida  { background: #F5E8F0; color: #7a1a5c; }
-.pub-badge--fund    { background: #EDE8F5; color: #3c1a7a; }
+.pub-badge-ma      { background: #E8EFF8; color: #1a4a8a; }
+.pub-badge-pe      { background: #EAF2EA; color: #1a5c1a; }
+.pub-badge-deuda   { background: #F5F0E8; color: #7a5c1a; }
+.pub-badge-salida  { background: #F5E8F0; color: #7a1a5c; }
+.pub-badge-fund    { background: #EDE8F5; color: #3c1a7a; }
 
 .pub-signal-body p {
   margin: 0 0 8px 0;
@@ -828,7 +828,7 @@ button.btn-dark {
   border-bottom: none;
 }
 
-.pub-vigilar-headline {
+.pub-vigilar-title {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 600;
@@ -836,7 +836,7 @@ button.btn-dark {
   margin: 0 0 4px 0;
 }
 
-.pub-vigilar-context {
+.pub-vigilar-sub {
   font-size: 16px;
   color: #555;
   margin: 0;
