@@ -704,3 +704,307 @@ button.btn-dark {
   .pricing-price { font-size: 36px; }
   form input, form select, form textarea { font-size: 16px; max-width: 100%; }
 }
+
+/* ── Publication content renderer ─────────────────────────────────────────── */
+
+.pub-content {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.65;
+  color: #1a1a1a;
+}
+
+.pub-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 0.5px solid #C8C4BC;
+}
+
+.pub-title {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #111;
+  margin: 0 0 10px 0;
+}
+
+.pub-period {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 16px 0;
+}
+
+.pub-stats {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #999;
+}
+
+.pub-section {
+  margin-bottom: 36px;
+}
+
+.pub-section h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 14px 0;
+}
+
+.pub-section p {
+  margin: 0 0 12px 0;
+}
+
+.pub-section p:last-child {
+  margin-bottom: 0;
+}
+
+/* Weekly: Apertura */
+.pub-apertura {
+  font-size: 19px;
+  line-height: 1.6;
+  color: #111;
+  border-left: 2px solid #C8C4BC;
+  padding-left: 20px;
+  margin-bottom: 36px;
+}
+
+/* Weekly: Señales */
+.pub-signal {
+  padding: 20px 0;
+  border-bottom: 0.5px solid #E8E4DC;
+}
+
+.pub-signal:last-child {
+  border-bottom: none;
+}
+
+.pub-signal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pub-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.pub-badge--ma      { background: #E8EFF8; color: #1a4a8a; }
+.pub-badge--pe      { background: #EAF2EA; color: #1a5c1a; }
+.pub-badge--deuda   { background: #F5F0E8; color: #7a5c1a; }
+.pub-badge--salida  { background: #F5E8F0; color: #7a1a5c; }
+.pub-badge--fund    { background: #EDE8F5; color: #3c1a7a; }
+
+.pub-signal-body p {
+  margin: 0 0 8px 0;
+  font-size: 17px;
+}
+
+.pub-signal-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Weekly: Qué vigilar */
+.pub-vigilar-item {
+  padding: 14px 0;
+  border-bottom: 0.5px solid #E8E4DC;
+}
+
+.pub-vigilar-item:last-child {
+  border-bottom: none;
+}
+
+.pub-vigilar-headline {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 4px 0;
+}
+
+.pub-vigilar-context {
+  font-size: 16px;
+  color: #555;
+  margin: 0;
+}
+
+/* Weekly: Dato de contexto */
+.pub-dato {
+  background: #F7F5F0;
+  border-left: 3px solid #C8C4BC;
+  padding: 16px 20px;
+  border-radius: 0 4px 4px 0;
+}
+
+.pub-dato p {
+  margin: 0;
+  font-size: 16px;
+  color: #444;
+}
+
+/* Monthly: Sectores grid */
+.pub-sector-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.pub-sector {
+  padding: 20px;
+  background: #F7F5F0;
+  border-radius: 4px;
+}
+
+.pub-sector-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 10px 0;
+}
+
+.pub-sector p {
+  margin: 0;
+  font-size: 17px;
+}
+
+/* Monthly: Mapa de capital */
+.pub-mapa {
+  padding: 20px;
+  border: 0.5px solid #C8C4BC;
+  border-radius: 4px;
+}
+
+.pub-mapa p {
+  margin: 0 0 10px 0;
+  font-size: 17px;
+}
+
+.pub-mapa p:last-child {
+  margin-bottom: 0;
+}
+
+/* Monthly: Operación del mes */
+.pub-operacion {
+  padding: 20px 0;
+}
+
+.pub-operacion-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 6px 0;
+}
+
+.pub-operacion-name {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: #111;
+  margin: 0 0 16px 0;
+}
+
+.pub-deepdive p {
+  margin: 0 0 10px 0;
+  font-size: 17px;
+}
+
+.pub-deepdive p:last-child {
+  margin-bottom: 0;
+}
+
+/* Monthly: Perspectiva */
+.pub-persp-item {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 0.5px solid #E8E4DC;
+  align-items: flex-start;
+}
+
+.pub-persp-item:last-child {
+  border-bottom: none;
+}
+
+.pub-persp-marker {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #C8C4BC;
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.pub-persp-text {
+  font-size: 17px;
+  color: #333;
+  margin: 0;
+}
+
+/* Sources */
+.pub-sources {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 0.5px solid #C8C4BC;
+}
+
+.pub-sources h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin: 0 0 10px 0;
+}
+
+.pub-sources ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pub-sources li {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #999;
+  padding: 3px 0;
+}
+
+.pub-sources a {
+  color: #777;
+  text-decoration: none;
+}
+
+.pub-sources a:hover {
+  color: #333;
+}
+
+/* Footer */
+.pub-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 0.5px solid #C8C4BC;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+}

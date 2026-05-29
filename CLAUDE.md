@@ -38,12 +38,14 @@ Two active business lines:
 ### Content engine status
 Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`) but execution is not scheduled or automated.
 
-### Production snapshot (last documented: 2026-05-19)
-- ~14 leads captured
-- ~4 active Pro subscribers
-- ~9 publications in archive (1 weekly, 8 samples)
+### Production snapshot (last documented: 2026-05-29)
+- 16 leads captured (all status `new`; none contacted or converted)
+- 1 active Pro subscriber (previous count of ~4 was incorrect or reflects cancellations — verify in Stripe before using for commercial claims)
+- 11 publications published (3 weekly + 8 samples); 36 sample drafts accumulated in DB (generated automatically by sample requests, never published)
+- 32 sample requests total: 18 generated successfully, 2 `generation_failed` (users did not receive email), 0 queued
+- `criterial-shared.js` confirmed at `?v=3` in all 10 active HTML files (open item from §7 closed 2026-05-29)
 
-> **These counts reflect the last documented session log and must be verified against Supabase before use in public copy, reporting, or commercial claims.**
+> **These counts are sourced from `scripts/funnel-metrics.sh` run on 2026-05-29. Verify against Supabase before use in public copy, reporting, or commercial claims.**
 
 ---
 
@@ -261,8 +263,8 @@ GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` doe
 ### Active CSS file ambiguity
 The active CSS file is **`styles.v4.css`**. `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
-### `criterial-shared.js` cache versioning — open item
-When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. **Open item:** Day 17 notes indicate the bump to `?v=3` may have been interrupted before all HTML files were updated. Verify the actual `?v=` value in each HTML file before assuming the version is consistent across pages.
+### `criterial-shared.js` cache versioning
+When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=3` — verified consistent across all 10 active HTML files on 2026-05-29.
 
 ### PostgREST/RLS unreliable after JWT key reset
 `auth.uid()` / `auth.email()` in RLS policies do not work reliably after a Supabase JWT key reset. Use Edge Functions for all authenticated data access. `get-publications` is the active path for archive access — not PostgREST/RLS.

@@ -371,7 +371,7 @@
       <p class="pub-modal-type" id="modalType"></p>
       <h2 class="pub-modal-title" id="modalTitle"></h2>
       <p class="pub-modal-date" id="modalDate"></p>
-      <div class="pub-modal-body" id="modalBody"></div>
+      <div class="pub-modal-body pub-content" id="modalBody"></div>
     </div>
   </div>
 
@@ -381,7 +381,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     const SUPABASE_URL = "https://epmltqhtxkmfboaxdois.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
@@ -561,10 +560,9 @@
           const typeLabel = {weekly:'Weekly',monthly:'Brief Mensual',sample:'Muestra'}[pub.type] || pub.type;
           const excerpt = (() => {
             if (!pub.body_markdown) return '';
-            const tokens = marked.lexer(pub.body_markdown);
-            const para = tokens.find(t => t.type === 'paragraph');
-            if (!para) return '';
-            const text = para.text.replace(/[*_`\[\]]/g, '').trim();
+            const div = document.createElement('div');
+            div.innerHTML = pub.body_markdown;
+            const text = (div.textContent || div.innerText || '').trim();
             return text.length > 180 ? text.slice(0, 180) + '...' : text;
           })();
           const safeTitle = (pub.title||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -604,9 +602,7 @@
       document.getElementById('modalTitle').textContent = card.dataset.title;
       document.getElementById('modalDate').textContent = 'Publicado el ' + card.dataset.date;
       const body = card.dataset.body;
-      document.getElementById('modalBody').innerHTML = typeof marked !== 'undefined'
-        ? marked.parse(body)
-        : body.replace(/\n/g, '<br>');
+      document.getElementById('modalBody').innerHTML = body;
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
     }

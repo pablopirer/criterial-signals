@@ -407,7 +407,6 @@
   <div id="pageTransition" class="page-transition"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     const SUPABASE_URL    = "https://epmltqhtxkmfboaxdois.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
@@ -614,7 +613,7 @@
                 onmouseover="this.style.background='#162d57'"
                 onmouseout="this.style.background='var(--navy)'">Guardar como borrador</button>
             </div>
-            <div class="variation-body">${marked.parse(v)}</div>
+            <div class="variation-body pub-content">${v}</div>
           </div>
         `).join("");
       document.getElementById("section-variations").style.display = "";
