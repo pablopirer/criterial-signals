@@ -233,6 +233,7 @@ supabase status
 supabase secrets list
 scripts/funnel-metrics.sh
 scripts/test-e2e.sh
+# GitHub Actions keep-alive workflow: .github/workflows/keep-alive.yml (runs every 5 days, also manual via workflow_dispatch)
 ```
 
 ### Requires explicit approval before running
@@ -293,6 +294,9 @@ Do not use CSS media queries `(hover: none)` or `(pointer: coarse)` to hide the 
 
 ### `.env.local` sensitivity
 Do not read, log, or expose `.env.local`. Secrets are managed via `supabase secrets set`.
+
+### Supabase free tier — auto-pause risk
+The project runs on Supabase free tier during validation. Supabase automatically pauses projects inactive for more than 7 days. The keep-alive mechanism is `.github/workflows/keep-alive.yml`: a scheduled GitHub Actions workflow (cron `0 9 */5 * *`) that pings `get-publications` every 5 days to register activity. If this workflow is disabled or removed, the project will be at risk of being paused again. Validate it is active before any extended pause in deployments.
 
 ---
 
