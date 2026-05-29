@@ -32,6 +32,8 @@ export interface GenerateBriefInput {
   };
   /** Optional model override. Defaults to DEFAULT_MODEL. */
   model?: string;
+  /** Optional max_tokens override. Defaults to 2048 (sample-request). Content generation uses 6000. */
+  maxTokens?: number;
 }
 
 export interface GenerateBriefOutput {
@@ -70,7 +72,7 @@ export async function generateBrief(
 
   const body = {
     model,
-    max_tokens: 2048,
+    max_tokens: input.maxTokens ?? 2048,
     system: input.prompt.system,
     messages: [
       {

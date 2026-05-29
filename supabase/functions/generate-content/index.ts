@@ -123,9 +123,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   try {
     const [v1, v2, v3] = await Promise.all([
-      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod } }),
-      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod } }),
-      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod } }),
+      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod }, maxTokens: 6000 }),
+      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod }, maxTokens: 6000 }),
+      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod }, maxTokens: 6000 }),
     ]);
 
     return jsonResponse({

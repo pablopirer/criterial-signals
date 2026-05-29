@@ -55,7 +55,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
 - Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`.
-- Active CSS: **`styles.v4.css`** — loaded by all HTML pages. `styles.css` remains in the repo but is not loaded by any page.
+- Active CSS: **`styles.v5.css`** — loaded by all HTML pages. `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
 
@@ -85,7 +85,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Anthropic
 - Model: **`claude-sonnet-4-6`**
 - Runtime override: set the `ANTHROPIC_MODEL` environment variable (no redeploy needed).
-- `max_tokens`: 2048 (sample-request Edge Function); 4000 (content generation script and generate-content Edge Function).
+- `max_tokens`: 2048 (sample-request Edge Function); 6000 (content generation script and generate-content Edge Function).
 - Brief output schema for sample-request: `{ titulo, subtitulo, tags, snapshot, signals[], watch[] }` (JSON).
 - Web search habilitado en generación de contenido via tools: `[{type: 'web_search_20250305', max_uses: 5}]`. El modelo busca noticias reales antes de generar el HTML.
 
@@ -112,7 +112,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, archive, encargos,
 │                                  advisory-received, request-received, success, cancel
-├── styles.v4.css               ← active CSS (styles.css present in repo but not loaded)
+├── styles.v5.css               ← active CSS (styles.css present in repo but not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
@@ -133,7 +133,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Publication content system
 - El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
 - El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
-- Las clases `pub-*` están definidas en `styles.v4.css` bajo el bloque `Publication content — Weekly & Monthly`.
+- Las clases `pub-*` están definidas en `styles.v5.css` bajo el bloque `Publication content — Weekly & Monthly`.
 - El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
 - `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
 - `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
@@ -202,7 +202,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### 3.7 Content generation (admin web)
 - **Entry point:** `admin.html` → botón "Generar Weekly" o "Generar Brief Mensual".
 - **Edge Function:** `generate-content`
-- **Services touched:** Anthropic API (claude-sonnet-4-6, web search habilitado, max_tokens=4000), Supabase (`publications` insert).
+- **Services touched:** Anthropic API (claude-sonnet-4-6, web search habilitado, max_tokens=6000), Supabase (`publications` insert).
 - **Flow:** genera 1 variación con web search → muestra en admin → Pablo selecciona → guarda como draft → previsualiza → publica.
 - **Side effects:** nueva publicación en `publications` con status=draft.
 - **Script alternativo:** `scripts/generate-content.sh weekly|monthly` — mismo resultado desde terminal. Fallback validado si la Edge Function falla.
@@ -227,7 +227,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
 14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
-15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v4.css` pub-* classes.
+15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v5.css` pub-* classes.
 
 ---
 
@@ -286,10 +286,10 @@ scripts/publish-draft.sh <id>             # sets publication status=published; i
 ## 7. Known risks and pitfalls
 
 ### GitHub Pages CSS caching
-GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (e.g. `styles.v4.css` → `styles.v5.css`), update all HTML references, then commit and push.
+GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (e.g. `styles.v5.css` → `styles.v6.css`), update all HTML references, then commit and push.
 
 ### Active CSS file ambiguity
-The active CSS file is **`styles.v4.css`**. `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
+The active CSS file is **`styles.v5.css`**. `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
 When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=3` — verified consistent across all 10 active HTML files on 2026-05-29.

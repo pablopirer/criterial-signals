@@ -56,7 +56,7 @@ echo ""
 echo -e "${BOLD}=== Criterial Signals — Content Generator ===${NC}"
 echo -e "  Type:    ${CYAN}$TYPE${NC}"
 echo -e "  Period:  $PERIOD"
-echo -e "  Model:   $MODEL (web_search, max_tokens=4000)"
+echo -e "  Model:   $MODEL (web_search, max_tokens=6000)"
 echo ""
 
 # ── Generate 3 variations ─────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ user = sys.stdin.read()
 system = '''$SYSTEM_PROMPT'''
 body = {
   'model': '$MODEL',
-  'max_tokens': 4000,
+  'max_tokens': 6000,
   'system': system,
   'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 5}],
   'messages': [{'role': 'user', 'content': user}]
