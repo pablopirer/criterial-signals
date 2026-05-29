@@ -204,8 +204,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ## 5. Current roadmap
 
 ### In progress / next
-- **Fix `generate-content.sh` ID-capture bug** — after a successful INSERT, the script reports FAILED and exits without printing the publication ID. Root cause: the Python parser that extracts the ID from `supabase db query --linked ... RETURNING id` output does not match the actual JSON structure. Fix before running another generation cycle. Do not rerun the script until fixed — it calls Anthropic 3× and may create a duplicate draft.
-- **Recurring content cadence** — establish weekly rhythm (`generate-content.sh weekly`) and monthly rhythm (`generate-content.sh monthly`). Manual execution is sufficient for now; no automation required yet. Unblocked once the ID-capture bug is fixed.
+- **Recurring content cadence** — establish weekly rhythm (`generate-content.sh weekly`) and monthly rhythm (`generate-content.sh monthly`). Manual execution is sufficient for now; no automation required yet. The ID-capture bug (original `supabase db query` path) was fixed in commit `7fb732a` (replaced with direct REST API call) and validated 2026-05-29: INSERT returns HTTP 201 with the publication ID correctly. Script is safe to run.
 - **Advisory validation** — get first real Advisory engagement. Validate format and deliverables with a real client.
 
 ### Medium term
