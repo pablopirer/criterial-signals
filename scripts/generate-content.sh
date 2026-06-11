@@ -19,6 +19,8 @@ fi
 : "${SUPABASE_URL:?SUPABASE_URL is not set. Run: source .env.local}"
 : "${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is not set. Run: source .env.local}"
 
+export PYTHONUTF8=1
+
 ANTHROPIC_API="https://api.anthropic.com/v1/messages"
 MODEL="claude-sonnet-4-6"
 BOLD='\033[1m'; CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
@@ -56,7 +58,7 @@ echo ""
 echo -e "${BOLD}=== Criterial Signals — Content Generator ===${NC}"
 echo -e "  Type:    ${CYAN}$TYPE${NC}"
 echo -e "  Period:  $PERIOD"
-echo -e "  Model:   $MODEL (web_search, max_tokens=4000)"
+echo -e "  Model:   $MODEL (web_search, max_tokens=8000)"
 echo ""
 
 # ── Generate 3 variations ─────────────────────────────────────────────────────
@@ -73,7 +75,7 @@ user = sys.stdin.read()
 system = '''$SYSTEM_PROMPT'''
 body = {
   'model': '$MODEL',
-  'max_tokens': 4000,
+  'max_tokens': 8000,
   'system': system,
   'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 5}],
   'messages': [{'role': 'user', 'content': user}]
@@ -273,7 +275,7 @@ import json, sys, urllib.request, urllib.error
 
 body_file, pub_type, title, period_start, period_end, supabase_url, service_key = sys.argv[1:]
 
-with open(body_file) as f:
+with open(body_file, encoding='utf-8') as f:
     body_markdown = f.read()
 
 payload = json.dumps({
@@ -286,7 +288,7 @@ payload = json.dumps({
 }).encode()
 
 req = urllib.request.Request(
-    f'{supabase_url}/rest/v1/publications',
+    f'{supabase_url}publications',
     data=payload,
     headers={
         'apikey': service_key,
