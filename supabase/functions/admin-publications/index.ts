@@ -18,7 +18,7 @@ const ADMIN_EMAIL = "pablopirer@gmail.com";
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers": "content-type, authorization",
-  "access-control-allow-methods": "GET, POST, PATCH, OPTIONS",
+  "access-control-allow-methods": "GET, POST, PATCH, DELETE, OPTIONS",
 };
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -169,6 +169,33 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (error) {
       console.error("Failed to update publication:", error);
       return jsonResponse({ error: "Failed to update publication" }, 500);
+    }
+
+    return jsonResponse({ ok: true }, 200);
+  }
+
+  // ── DELETE: delete publication ─────────────────────────────────────────────
+  if (req.method === "DELETE") {
+    let body: { id?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
+
+    const { id } = body;
+    if (!id) {
+      return jsonResponse({ error: "id is required" }, 400);
+    }
+
+    const { error } = await supabase
+      .from("publications")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Failed to delete publication:", error);
+      return jsonResponse({ error: "Failed to delete publication" }, 500);
     }
 
     return jsonResponse({ ok: true }, 200);

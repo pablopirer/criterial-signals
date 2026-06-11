@@ -187,49 +187,42 @@
     .empty-state-sub { font-size: 13px; color: #DDD; font-weight: 300; }
     .pub-modal {
       display: none; position: fixed; inset: 0;
-      background: rgba(7,16,32,0.75); z-index: 500;
-      padding: 40px 24px; overflow-y: auto;
+      background: #FAFAF8; z-index: 500; overflow-y: auto;
     }
-    .pub-modal.open { display: flex; justify-content: center; align-items: flex-start; }
-    .pub-modal-inner {
-      background: #fff; border: 0.5px solid var(--border);
-      max-width: 720px; width: 100%; padding: 48px;
-      position: relative; margin: auto;
+    .pub-modal.open { display: block; }
+    .pub-modal-topbar {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(250,250,248,0.96); backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 64px; height: 52px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .pub-modal-topbar-brand {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 20px; color: var(--navy); letter-spacing: -0.01em;
     }
     .pub-modal-close {
-      position: absolute; top: 20px; right: 24px;
-      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--label); background: none; border: none;
       font-family: 'Inter', sans-serif; transition: color 0.2s;
     }
     .pub-modal-close:hover { color: var(--navy); }
-    .pub-modal-type {
-      font-size: 9px; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--label); margin-bottom: 16px;
-    }
-    .pub-modal-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 36px; color: var(--navy); font-weight: 400;
-      line-height: 1.15; margin-bottom: 8px;
-    }
-    .pub-modal-date {
-      font-size: 12px; color: #BBB; margin-bottom: 32px;
-      border-bottom: 0.5px solid var(--border); padding-bottom: 24px;
+    .pub-modal-type, .pub-modal-title, .pub-modal-date { display: none; }
+    .pub-modal-inner {
+      max-width: 1100px; width: 100%;
+      margin: 0 auto; padding: 56px 48px 120px;
     }
     .pub-modal-body { font-size: 15px; line-height: 1.85; color: #333; font-weight: 300; }
-    .pub-modal-body h1, .pub-modal-body h2, .pub-modal-body h3 {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-weight: 400; color: var(--navy); margin: 28px 0 10px; font-size: 22px;
-    }
     .pub-modal-body p { margin-bottom: 16px; }
-    .pub-modal-body ul, .pub-modal-body ol { padding-left: 20px; margin-bottom: 16px; }
-    .pub-modal-body li { margin-bottom: 6px; }
     @media (max-width: 900px) {
       .user-bar, .archive-header, .archive-body { padding-left: 32px; padding-right: 32px; }
       .stats-row { grid-template-columns: 1fr 1fr; }
       .pub-grid { grid-template-columns: 1fr; }
       .pub-card-archive { border-right: none; }
       .pub-card-archive:nth-child(3n) { border-right: none; }
+      .pub-modal-topbar { padding: 0 24px; }
+      .pub-modal-inner { padding: 40px 24px 80px; }
     }
   </style>
 </head>
@@ -366,8 +359,11 @@
 
   <!-- MODAL -->
   <div class="pub-modal" id="pubModal">
+    <div class="pub-modal-topbar">
+      <span class="pub-modal-topbar-brand">Criterial.</span>
+      <button class="pub-modal-close" id="modalClose">← Volver al archivo</button>
+    </div>
     <div class="pub-modal-inner">
-      <button class="pub-modal-close" id="modalClose">Cerrar ×</button>
       <p class="pub-modal-type" id="modalType"></p>
       <h2 class="pub-modal-title" id="modalTitle"></h2>
       <p class="pub-modal-date" id="modalDate"></p>
@@ -596,27 +592,26 @@
     });
 
     // Modal
+    function closePubModal() {
+      document.getElementById('pubModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
     function openPubModal(card) {
       const modal = document.getElementById('pubModal');
       document.getElementById('modalType').textContent = card.dataset.type + ' · ' + card.dataset.date;
       document.getElementById('modalTitle').textContent = card.dataset.title;
       document.getElementById('modalDate').textContent = 'Publicado el ' + card.dataset.date;
-      const body = card.dataset.body;
-      document.getElementById('modalBody').innerHTML = body;
+      document.getElementById('modalBody').innerHTML = card.dataset.body;
       modal.classList.add('open');
+      modal.scrollTop = 0;
       document.body.style.overflow = 'hidden';
     }
 
-    document.getElementById('modalClose').addEventListener('click', () => {
-      document.getElementById('pubModal').classList.remove('open');
-      document.body.style.overflow = '';
-    });
+    document.getElementById('modalClose').addEventListener('click', closePubModal);
 
-    document.getElementById('pubModal').addEventListener('click', e => {
-      if (e.target === e.currentTarget) {
-        document.getElementById('pubModal').classList.remove('open');
-        document.body.style.overflow = '';
-      }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePubModal();
     });
   </script>
   <div class="cursor-dot" id="cursorDot"></div>

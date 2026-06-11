@@ -98,7 +98,7 @@ print(''.join(b.get('text','') for b in blocks if b.get('type')=='text').strip()
 
   # ── Convert JSON to HTML ───────────────────────────────────────────────────────
   TEXT=$(echo "$TEXT" | python3 -c "
-import json, sys, html
+import json, sys, html, re as _re
 
 raw = sys.stdin.read().strip()
 if raw.startswith('\`\`\`'):
@@ -113,7 +113,9 @@ except Exception as e:
     sys.exit(0)
 
 def esc(s):
-    return html.escape(str(s)) if s else ''
+    if not s: return ''
+    parts = _re.split(r'(</?strong>)', str(s))
+    return ''.join(html.escape(p) if not p.startswith('<') else p for p in parts)
 
 badge_map = {
     'ma': 'pub-badge-ma', 'buyout': 'pub-badge-buyout',

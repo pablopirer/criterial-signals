@@ -199,6 +199,33 @@
       background: none; color: var(--label); border: 0.5px solid var(--border);
     }
     .btn-card-action.muted:hover { background: #f0ede8; color: var(--navy); border-color: #c8c4be; }
+    .pub-card-menu { position: relative; margin-left: auto; }
+    .pub-card-menu-btn {
+      background: none; border: 0.5px solid transparent;
+      padding: 2px 8px; color: var(--label); font-size: 16px; line-height: 1.2;
+      font-family: monospace; cursor: none; border-radius: 2px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .pub-card:hover .pub-card-menu-btn { border-color: var(--border); }
+    .pub-card-menu-btn:hover { border-color: var(--navy) !important; color: var(--navy); }
+    .pub-card-menu-dropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + 4px);
+      background: #fff; border: 0.5px solid var(--border);
+      min-width: 150px; z-index: 200;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .pub-card-menu-dropdown.open { display: block; }
+    .pub-card-menu-item {
+      display: block; width: 100%; text-align: left;
+      padding: 9px 16px; background: none; border: none;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 12px; color: var(--navy); font-family: 'Inter', sans-serif;
+      cursor: none; transition: background 0.15s;
+    }
+    .pub-card-menu-item:last-child { border-bottom: none; }
+    .pub-card-menu-item:hover { background: #F8F6F2; }
+    .pub-card-menu-item.danger { color: #991B1B; }
+    .pub-card-menu-item.danger:hover { background: #FEF2F2; }
     .pub-empty {
       grid-column: 1/-1; padding: 40px 0; text-align: center;
       font-size: 13px; color: var(--label); font-family: 'Inter', sans-serif;
@@ -527,15 +554,21 @@
           <div class="pub-card-top">
             <span class="badge badge-${p.type}">${typeLabel(p.type)}</span>
             <span class="badge badge-${p.status}">${p.status}</span>
+            <div class="pub-card-menu" id="menu-${p.id}">
+              <button class="pub-card-menu-btn" onclick="event.stopPropagation();toggleCardMenu('${p.id}')">···</button>
+              <div class="pub-card-menu-dropdown" id="dropdown-${p.id}">
+                ${p.status === "draft"
+                  ? `<button class="pub-card-menu-item" onclick="closeCardMenu('${p.id}');updateStatus('${p.id}','published')">Publicar</button>`
+                  : `<button class="pub-card-menu-item" onclick="closeCardMenu('${p.id}');updateStatus('${p.id}','draft')">Despublicar</button>`
+                }
+                <button class="pub-card-menu-item danger" onclick="closeCardMenu('${p.id}');deletePublication('${p.id}')">Eliminar</button>
+              </div>
+            </div>
           </div>
           <div class="pub-card-title">${escapeHtml(p.title)}</div>
           <div class="pub-card-date">${formatPeriod(p.period_start, p.period_end)}</div>
           <div class="pub-card-footer" style="gap:8px;">
             <button class="btn-card-action muted" onclick="previewPublication('${p.id}')">Previsualizar</button>
-            ${p.status === "draft"
-              ? `<button class="btn-card-action" onclick="updateStatus('${p.id}','published')">Publicar</button>`
-              : `<button class="btn-card-action muted" onclick="updateStatus('${p.id}','draft')">Despublicar</button>`
-            }
           </div>
         </div>
       `).join("");
@@ -752,6 +785,45 @@
       return type === "monthly" ? "Brief Mensual" : type === "sample" ? "Muestra" : "Weekly";
     }
 
+    function toggleCardMenu(id) {
+      const dropdown = document.getElementById('dropdown-' + id);
+      document.querySelectorAll('.pub-card-menu-dropdown.open').forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+      });
+      dropdown.classList.toggle('open');
+    }
+
+    function closeCardMenu(id) {
+      document.getElementById('dropdown-' + id)?.classList.remove('open');
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.pub-card-menu')) {
+        document.querySelectorAll('.pub-card-menu-dropdown.open')
+          .forEach(d => d.classList.remove('open'));
+      }
+    });
+
+    async function deletePublication(id) {
+      const pub = _allPubs.find(p => p.id === id);
+      const title = pub ? pub.title : 'esta publicación';
+      if (!confirm(`¿Eliminar "${title}"?\n\nEsta acción es irreversible.`)) return;
+      const res = await fetch(`${EF_BASE}/admin-publications`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${_session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await loadPublications();
+      } else {
+        const json = await res.json().catch(() => ({}));
+        alert(json.error || "Error al eliminar.");
+      }
+    }
+
     function previewPublication(id) {
       const pub = _allPubs.find(p => p.id === id);
       if (!pub) return;
@@ -790,7 +862,7 @@
       </div>
       <button onclick="closePreview()" style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); background:none; border:none; font-family:'Inter',sans-serif; cursor:none; transition:color 0.2s;" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--label)'">Cerrar ×</button>
     </div>
-    <div id="preview-body" class="pub-content" style="max-width:720px; margin:0 auto;"></div>
+    <div id="preview-body" class="pub-content"></div>
   </div>
 </div>
 </body>
