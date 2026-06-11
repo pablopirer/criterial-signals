@@ -187,16 +187,18 @@
     .empty-state-sub { font-size: 13px; color: #DDD; font-weight: 300; }
     .pub-modal {
       display: none; position: fixed; inset: 0;
-      background: #FAFAF8; z-index: 500; overflow-y: auto;
+      background: #FAFAF8; z-index: 500;
+      flex-direction: column;
     }
-    .pub-modal.open { display: block; }
+    .pub-modal.open { display: flex; }
     .pub-modal-topbar {
-      position: sticky; top: 0; z-index: 100;
+      flex-shrink: 0;
       background: #FAFAF8;
       border-bottom: 0.5px solid var(--border);
       padding: 0 64px; height: 52px;
       display: flex; justify-content: space-between; align-items: center;
     }
+    .pub-modal-scroll { flex: 1; overflow-y: auto; }
     .pub-modal-topbar-brand {
       font-family: 'EB Garamond', Georgia, serif;
       font-size: 20px; color: var(--navy); letter-spacing: -0.01em;
@@ -362,11 +364,13 @@
       <span class="pub-modal-topbar-brand">Criterial.</span>
       <button class="pub-modal-close" id="modalClose">← Volver al archivo</button>
     </div>
-    <div class="pub-modal-inner">
-      <p class="pub-modal-type" id="modalType"></p>
-      <h2 class="pub-modal-title" id="modalTitle"></h2>
-      <p class="pub-modal-date" id="modalDate"></p>
-      <div class="pub-modal-body pub-content" id="modalBody"></div>
+    <div class="pub-modal-scroll" id="pubModalScroll">
+      <div class="pub-modal-inner">
+        <p class="pub-modal-type" id="modalType"></p>
+        <h2 class="pub-modal-title" id="modalTitle"></h2>
+        <p class="pub-modal-date" id="modalDate"></p>
+        <div class="pub-modal-body pub-content" id="modalBody"></div>
+      </div>
     </div>
   </div>
 
@@ -603,7 +607,7 @@
       document.getElementById('modalDate').textContent = 'Publicado el ' + card.dataset.date;
       document.getElementById('modalBody').innerHTML = card.dataset.body;
       modal.classList.add('open');
-      modal.scrollTop = 0;
+      document.getElementById('pubModalScroll').scrollTop = 0;
       document.body.style.overflow = 'hidden';
     }
 
