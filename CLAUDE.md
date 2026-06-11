@@ -145,6 +145,15 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - `leads.status` — NOT NULL, default `new`.
 - Always audit live schema before writing functions that insert/upsert data.
 
+### Development environment
+- OS: Windows nativo (Surface Pro)
+- Shell para scripts bash: Git Bash
+- Claude Code: app de desktop de Claude
+- Repo local: `C:\Users\pablo\projects\criterial-signals`
+- Scripts bash (`generate-content.sh`, `publish-draft.sh`, `funnel-metrics.sh`, `test-e2e.sh`) se ejecutan desde Git Bash, no desde PowerShell
+- WSL Ubuntu: desinstalado. No usar como referencia para rutas o comandos.
+- Git configurado con `core.autocrlf false` para evitar conversión de line endings en scripts bash
+
 ---
 
 ## 3. Production flows
@@ -252,6 +261,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 
 ## 6. Operational commands reference
 
+> Los comandos bash se ejecutan desde **Git Bash**. Los comandos `supabase` y `git` pueden ejecutarse desde PowerShell o Git Bash indistintamente.
+
 ### Safe diagnostics (no side effects)
 ```bash
 pwd
@@ -336,6 +347,9 @@ The Anthropic API web search tool consumes significant input tokens per call. At
 
 ### `generate-content` Edge Function error (pending investigation)
 The "Generar Weekly" button in admin.html was giving errors at the end of the 2026-05-29 session. The terminal script (`scripts/generate-content.sh`) is the validated fallback. Investigate the Edge Function before relying on the admin web flow for production generation.
+
+### Windows line endings (CRLF)
+Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al hacer checkout. Resuelto configurando `core.autocrlf false` en el repo local. Si se clona el repo en una máquina nueva en Windows, ejecutar `git config core.autocrlf false` y luego `git checkout HEAD -- scripts/` antes de usar los scripts.
 
 ---
 
@@ -495,6 +509,10 @@ The "Generar Weekly" button in admin.html was giving errors at the end of the 20
 **Known issues at session end:**
 - "Generar Weekly" button in `admin.html` giving errors (Edge Function `generate-content`). Terminal script is validated fallback.
 - Preview modal width may need improvement on desktop.
+
+### Day 19 — Complete (2026-06-11)
+- **Keep-alive reparado:** el workflow `keep-alive.yml` pingaba `get-publications` (Edge Function) en lugar de hacer una query real a la DB. Supabase no registraba actividad de base de datos y pausó el proyecto. Fix: el workflow ahora hace `GET /rest/v1/publications?select=id&limit=1` con headers `apikey` y `Authorization`. Anon key almacenada como secret `SUPABASE_ANON_KEY` en GitHub Actions. Validado con HTTP 200.
+- **Migración de entorno de desarrollo:** WSL Ubuntu eliminado. Stack completo instalado en Windows nativo (Git 2.54, Node.js v26, npm v11, Supabase CLI v2.105, Claude Code v2.1.173). Repo clonado en `C:\Users\pablo\projects\criterial-signals`. Scripts bash ejecutables desde Git Bash. Line endings corregidos con `core.autocrlf false`.
 
 ---
 
