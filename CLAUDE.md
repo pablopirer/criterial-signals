@@ -76,6 +76,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 | `welcome-subscriber` | Triggered by DB Webhook on INSERT to `subscribers` (plan=pro) |
 | `get-publications` | Authenticated access to Pro publications |
 | `generate-content` | Generación de Weekly y Brief Mensual desde admin.html (web search + HTML semántico) |
+| `send-weekly` | Envío de notificación email a suscriptores Pro activos cuando se publica un Weekly o Monthly. Llamado manualmente desde admin.html. |
 | `admin-publications` | CRUD publicaciones y métricas. Acceso restringido a `pablopirer@gmail.com` |
 | `_shared/anthropic.ts` | Shared Anthropic client |
 | `_shared/supabase.ts` | Shared Supabase client |
@@ -242,11 +243,10 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ## 5. Current roadmap
 
 ### In progress / next
-- **Recurring content cadence** — establish weekly rhythm (`generate-content.sh weekly`) and monthly rhythm (`generate-content.sh monthly`). Manual execution is sufficient for now; no automation required yet. The ID-capture bug (original `supabase db query` path) was fixed in commit `7fb732a` (replaced with direct REST API call) and validated 2026-05-29: INSERT returns HTTP 201 with the publication ID correctly. Script is safe to run.
+- **Recurring content cadence** — establish weekly rhythm (`generate-content.sh weekly` or admin.html "Generar Weekly"). Manual execution is sufficient for now; no automation required yet.
 - **Advisory validation** — get first real Advisory engagement. Validate format and deliverables with a real client.
 
 ### Medium term
-- **Email delivery of weekly signal to Pro subscribers** — currently the weekly is only accessible via `archive.html` after login. As the subscriber base grows, pushing the weekly to their inbox reduces friction. Requires a new email template and a send-to-subscribers script or Edge Function. No urgency at current scale.
 - **Company Snapshot** — first on-demand product. Manual first (generate via Anthropic, deliver by email). Once validated, build Edge Function `company-snapshot`. Inputs: company name, context, requester email. Output: snapshot delivered by email + stored in `publications`.
 - **LinkedIn distribution** — publish reduced snapshot format on LinkedIn with CTA to get full version. Lead capture via existing `sample-request` flow. No new infrastructure needed for initial validation.
 - **Conversion optimisation** — review copy and UX on `pricing.html` and `sample.html`; clarify Free vs Pro value gap.
@@ -533,6 +533,13 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 **`scripts/generate-content.sh` Python `esc()` updated:** uses `re.split(r'(</?strong>)', ...)` so `<strong>` tags pass through `html.escape()` intact.
 
 ### Day 21 — Complete (2026-06-13)
+
+**Email delivery de Weekly/Monthly a suscriptores Pro:**
+- Nueva Edge Function `send-weekly`: verifica JWT admin, obtiene suscriptores `plan=pro status=active`, envía email de notificación a cada uno vía Resend, devuelve `{ sent, emails, errors? }`.
+- `_shared/resend.ts`: nueva función `sendPublicationNotification()` con plantilla branded (cabecera CRITERIAL SIGNALS · PRO, título, período, CTA "Leer en el archivo →", instrucción de acceso vía magic link).
+- `admin.html`: botón "Enviar →" en cards published+weekly/monthly. Muestra `confirm()` nativo antes de enviar. Alerta con count de enviados en éxito. El botón no aparece en drafts ni en publicaciones de tipo `sample`.
+- Flujo manual intencional: el admin decide cuándo enviar después de revisar la publicación.
+- Validado end-to-end: email recibido correctamente en Gmail con formato correcto y CTA funcional.
 
 **`generate-content` Edge Function reparada.** Root causes identificados y corregidos:
 1. `_shared/prompts.ts` usaba prompts v1 obsoletos (incluía Real Estate, fuera de scope). Actualizado a prompts v6 (weekly, JSON schema) y v3 (monthly, HTML directo).
