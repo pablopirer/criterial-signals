@@ -22,6 +22,12 @@ const ANTHROPIC_VERSION = "2023-06-01";
  */
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 
+export interface AnthropicTool {
+  type: string;
+  name: string;
+  max_uses?: number;
+}
+
 export interface GenerateBriefInput {
   /** The lead's stated interest_type, used to fill {{interest_type}} in the prompt. */
   interestType: string;
@@ -32,8 +38,10 @@ export interface GenerateBriefInput {
   };
   /** Optional model override. Defaults to DEFAULT_MODEL. */
   model?: string;
-  /** Optional max_tokens override. Defaults to 2048 (sample-request). Content generation uses 6000. */
+  /** Optional max_tokens override. Defaults to 2048 (sample-request). Content generation uses 8000. */
   maxTokens?: number;
+  /** Optional tools to pass to the API (e.g. web_search_20250305). */
+  tools?: AnthropicTool[];
 }
 
 export interface GenerateBriefOutput {
@@ -70,7 +78,7 @@ export async function generateBrief(
 
   const model = input.model ?? Deno.env.get("ANTHROPIC_MODEL") ?? DEFAULT_MODEL;
 
-  const body = {
+  const body: Record<string, unknown> = {
     model,
     max_tokens: input.maxTokens ?? 2048,
     system: input.prompt.system,
@@ -84,6 +92,10 @@ export async function generateBrief(
       },
     ],
   };
+
+  if (input.tools && input.tools.length > 0) {
+    body.tools = input.tools;
+  }
 
   const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
@@ -111,6 +123,8 @@ export async function generateBrief(
   // The Messages API returns a content array of typed blocks. For a plain
   // text completion we expect one block of type "text". Concatenate any
   // text blocks defensively in case the model returns more than one.
+  // When tools like web_search are used, non-text blocks may be present —
+  // they are filtered out here.
   const text = json.content
     .filter((block) => block.type === "text" && typeof block.text === "string")
     .map((block) => block.text as string)

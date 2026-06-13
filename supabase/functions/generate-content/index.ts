@@ -1,17 +1,20 @@
 /**
  * Edge Function: generate-content
  *
- * Generates 3 content variations (weekly or monthly) via Anthropic.
- * Restricted to the admin email. Returns variations for selection in the
- * admin panel — does NOT write to the database.
+ * Generates 1 content variation (weekly or monthly) via Anthropic with web search.
+ * Restricted to the admin email. Returns the variation for selection in the
+ * admin panel — does NOT write to the database (admin.html calls admin-publications
+ * to save after the user selects).
  *
  * Flow:
  *   1. Verify user JWT.
  *   2. Check email is the admin email.
  *   3. Parse type (weekly | monthly) from request body.
  *   4. Compute current period dates and label.
- *   5. Call Anthropic 3× in parallel with the matching prompt.
- *   6. Return { variations, type, title, period_start, period_end }.
+ *   5. Call Anthropic with web search and the matching prompt.
+ *   6. For weekly: convert JSON output to pub-* HTML.
+ *      For monthly: use HTML output directly.
+ *   7. Return { variations: [html], type, title, period_start, period_end }.
  */
 
 import { generateBrief } from "../_shared/anthropic.ts";
@@ -19,6 +22,7 @@ import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { weeklyPrompt, monthlyPrompt } from "../_shared/prompts.ts";
 
 const ADMIN_EMAIL = "pablopirer@gmail.com";
+const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }];
 
 const MONTHS_ES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -68,6 +72,208 @@ function computePeriod(type: "weekly" | "monthly"): {
   }
 }
 
+// ── Weekly JSON → HTML conversion ─────────────────────────────────────────────
+
+interface WeeklySenal {
+  tipo: string;
+  badge_class: string;
+  titulo: string;
+  temporalidad: string;
+  hecho: string;
+  patron: string;
+  implicacion: string;
+}
+
+interface WeeklyJson {
+  numero: number | string;
+  titulo: string;
+  period: string;
+  apertura: string;
+  senales: WeeklySenal[];
+  operaciones: Array<{ nombre: string; tipo: string; sector: string; tesis: string }>;
+  vigilar: Array<{ titulo: string; contexto: string }>;
+  readthrough: { origination: string; financiacion: string; salidas: string };
+  dato: { cifra: string; texto: string };
+  fuentes: Array<{ medio: string; titulo: string }>;
+}
+
+function esc(s: unknown): string {
+  if (s === null || s === undefined) return "";
+  return String(s)
+    .split(/(<\/?strong>)/)
+    .map((part) =>
+      part.startsWith("<")
+        ? part
+        : part
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+    )
+    .join("");
+}
+
+function weeklyJsonToHtml(rawText: string): string {
+  let clean = rawText.trim();
+  // Strip markdown code fences if present despite instructions
+  if (clean.startsWith("```")) {
+    clean = clean
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("```"))
+      .join("\n")
+      .trim();
+  }
+
+  let d: WeeklyJson;
+  try {
+    d = JSON.parse(clean) as WeeklyJson;
+  } catch {
+    // Not valid JSON — return raw text (will display as-is in admin preview)
+    return rawText;
+  }
+
+  const badgeMap: Record<string, string> = {
+    ma: "pub-badge-ma",
+    buyout: "pub-badge-buyout",
+    growth: "pub-badge-growth",
+    salida: "pub-badge-salida",
+    fund: "pub-badge-fund",
+    deuda: "pub-badge-deuda",
+    lmm: "pub-badge-lmm",
+    opa: "pub-badge-opa",
+    deeptech: "pub-badge-deeptech",
+  };
+
+  const parts: string[] = [];
+
+  parts.push('<div class="pub-content">');
+
+  // Header
+  parts.push('<div class="pub-header-new">');
+  parts.push('<div class="pub-brand-row">');
+  parts.push('<span class="pub-brand-label">Criterial · Weekly Signals</span>');
+  parts.push(`<span class="pub-brand-num">Nº ${esc(d.numero)} · ${esc(d.period)}</span>`);
+  parts.push("</div>");
+  parts.push(`<h1 class="pub-title-new">${esc(d.titulo)}</h1>`);
+  parts.push(`<p class="pub-period-new">Semana del ${esc(d.period)}</p>`);
+  parts.push("</div>");
+
+  // Apertura
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Apertura</p>');
+  parts.push(`<div class="pub-apertura-new"><p>${esc(d.apertura)}</p></div>`);
+  parts.push("</div>");
+
+  // Señales
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Señales de la semana</p>');
+  for (const s of (d.senales ?? [])) {
+    const bc = badgeMap[s.badge_class ?? "ma"] ?? "pub-badge-ma";
+    parts.push('<div class="pub-signal-new">');
+    parts.push('<div class="pub-signal-head">');
+    parts.push(`<span class="pub-badge-new ${bc}">${esc(s.tipo)}</span>`);
+    parts.push(`<span class="pub-signal-title">${esc(s.titulo)}</span>`);
+    parts.push(`<span class="pub-time-tag">[${esc(s.temporalidad)}]</span>`);
+    parts.push("</div>");
+    parts.push('<div class="pub-signal-body">');
+    parts.push(`<p class="pub-signal-fact">${esc(s.hecho)}</p>`);
+    parts.push('<div class="pub-signal-rows">');
+    parts.push('<div class="pub-signal-row">');
+    parts.push('<span class="pub-signal-row-label">Patrón</span>');
+    parts.push(`<span class="pub-signal-row-text">${esc(s.patron)}</span>`);
+    parts.push("</div>");
+    parts.push('<div class="pub-signal-row">');
+    parts.push('<span class="pub-signal-row-label">Implicación</span>');
+    parts.push(`<span class="pub-signal-row-text">${esc(s.implicacion)}</span>`);
+    parts.push("</div>");
+    parts.push("</div></div></div>");
+  }
+  parts.push("</div>");
+
+  // Tabla de operaciones
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Operaciones de la semana</p>');
+  parts.push(
+    '<table class="pub-ops-table"><colgroup>' +
+      '<col style="width:26%"><col style="width:18%"><col style="width:22%"><col style="width:34%">' +
+      "</colgroup>",
+  );
+  parts.push(
+    "<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Tesis</th></tr></thead><tbody>",
+  );
+  for (const op of (d.operaciones ?? [])) {
+    parts.push(
+      `<tr><td>${esc(op.nombre)}</td><td>${esc(op.tipo)}</td><td>${esc(op.sector)}</td><td>${esc(op.tesis)}</td></tr>`,
+    );
+  }
+  parts.push("</tbody></table></div>");
+
+  // Qué vigilar
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Qué vigilar</p>');
+  parts.push('<div class="pub-vigilar-grid">');
+  (d.vigilar ?? []).forEach((v, i) => {
+    parts.push('<div class="pub-vigilar-card">');
+    parts.push(`<p class="pub-vigilar-num">${String(i + 1).padStart(2, "0")}</p>`);
+    parts.push(`<p class="pub-vigilar-title-new">${esc(v.titulo)}</p>`);
+    parts.push(`<p class="pub-vigilar-sub-new">${esc(v.contexto)}</p>`);
+    parts.push("</div>");
+  });
+  parts.push("</div></div>");
+
+  // Investment read-through
+  const rt = (d.readthrough ?? {}) as Record<string, string>;
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Investment read-through</p>');
+  parts.push('<div class="pub-readthrough">');
+  parts.push(
+    '<div class="pub-readthrough-header"><span class="pub-readthrough-label">3 conclusiones accionables de la semana</span></div>',
+  );
+  parts.push('<div class="pub-readthrough-body">');
+  for (const [cat, key] of [
+    ["Origination", "origination"],
+    ["Financiación", "financiacion"],
+    ["Salidas", "salidas"],
+  ]) {
+    parts.push('<div class="pub-rt-item">');
+    parts.push(`<p class="pub-rt-cat">${cat}</p>`);
+    parts.push(`<p class="pub-rt-text">${esc(rt[key])}</p>`);
+    parts.push("</div>");
+  }
+  parts.push("</div></div></div>");
+
+  // Dato de contexto
+  const dato = (d.dato ?? {}) as Record<string, string>;
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Dato de contexto</p>');
+  parts.push('<div class="pub-dato-new">');
+  parts.push(`<span class="pub-dato-num">${esc(dato.cifra)}</span>`);
+  parts.push(`<p class="pub-dato-text">${esc(dato.texto)}</p>`);
+  parts.push("</div></div>");
+
+  // Fuentes
+  parts.push('<div class="pub-sources-new">');
+  parts.push('<p class="pub-sec-label">Fuentes</p>');
+  for (const f of (d.fuentes ?? [])) {
+    parts.push('<div class="pub-source-row">');
+    parts.push(`<span class="pub-source-medio">${esc(f.medio)}</span>`);
+    parts.push(`<span class="pub-source-titulo">${esc(f.titulo)}</span>`);
+    parts.push("</div>");
+  }
+  parts.push("</div>");
+
+  // Footer
+  parts.push('<div class="pub-footer-new">');
+  parts.push('<span class="pub-footer-text">Criterial Signals · Pro</span>');
+  parts.push('<span class="pub-footer-text">criterialsignals.com</span>');
+  parts.push("</div>");
+
+  parts.push("</div>");
+  return parts.join("");
+}
+
+// ── HTTP helpers ───────────────────────────────────────────────────────────────
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers": "content-type, authorization",
@@ -80,6 +286,8 @@ function jsonResponse(body: unknown, status: number): Response {
     headers: { "content-type": "application/json", ...CORS_HEADERS },
   });
 }
+
+// ── Main handler ───────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -119,22 +327,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const { periodLabel, title, period_start, period_end } = computePeriod(type);
   const prompt = type === "weekly" ? weeklyPrompt : monthlyPrompt;
-  const userWithPeriod = prompt.user.replace("{{period}}", periodLabel);
+  const userWithPeriod = prompt.user.replace(/\{\{period\}\}/g, periodLabel);
 
   try {
-    const [v1, v2, v3] = await Promise.all([
-      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod }, maxTokens: 6000 }),
-      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod }, maxTokens: 6000 }),
-      generateBrief({ interestType: "", prompt: { system: prompt.system, user: userWithPeriod }, maxTokens: 6000 }),
-    ]);
+    const result = await generateBrief({
+      interestType: "",
+      prompt: { system: prompt.system, user: userWithPeriod },
+      maxTokens: 8000,
+      tools: WEB_SEARCH_TOOLS,
+    });
 
-    return jsonResponse({
-      variations: [v1.text, v2.text, v3.text],
-      type,
-      title,
-      period_start,
-      period_end,
-    }, 200);
+    const html = type === "weekly" ? weeklyJsonToHtml(result.text) : result.text;
+
+    return jsonResponse(
+      { variations: [html], type, title, period_start, period_end },
+      200,
+    );
   } catch (err) {
     console.error("Anthropic generation failed:", err);
     return jsonResponse({ error: "Content generation failed" }, 500);
