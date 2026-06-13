@@ -38,15 +38,14 @@ Two active business lines:
 ### Content engine status
 Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`) but execution is not scheduled or automated.
 
-### Production snapshot (last documented: 2026-05-29)
-- 16 leads captured (all status `new`; none contacted or converted)
-- 1 active Pro subscriber (previous count of ~4 was incorrect or reflects cancellations — verify in Stripe before using for commercial claims)
-- 0 publications published; 0 drafts (reset completo ejecutado 2026-05-29 — el weekly generado en la sesión está pendiente de revisión visual antes de publicar)
-- 32 sample requests total: 18 generated successfully, 2 `generation_failed` (users did not receive email), 0 queued
-- `criterial-shared.js` confirmed at `?v=3` in all 10 active HTML files (open item from §7 closed 2026-05-29)
-- Reset completo de publicaciones ejecutado 2026-05-29. El sistema de contenido ha sido refactorizado — ver §2 y §8.
+### Production snapshot (last documented: 2026-06-13)
+- 16 leads captured (all status `new`; none contacted or converted) — verify against live DB
+- 1 active Pro subscriber — verify in Stripe before using for commercial claims
+- 1 publication published (Weekly Signals nº1, ID `995ddce5-42f8-479f-87f3-717ca198ba97`, published 2026-06-13); 0 drafts
+- 32 sample requests total: 18 generated successfully, 2 `generation_failed` (users did not receive email), 0 queued — verify against live DB
+- `criterial-shared.js` confirmed at `?v=3` in all 10 active HTML files
 
-> **These counts are sourced from `scripts/funnel-metrics.sh` run on 2026-05-29. Verify against Supabase before use in public copy, reporting, or commercial claims.**
+> **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
 ---
 
@@ -507,8 +506,31 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 - `admin-publications` Edge Function updated: `body_markdown` added to GET select response.
 
 **Known issues at session end:**
-- "Generar Weekly" button in `admin.html` giving errors (Edge Function `generate-content`). Terminal script is validated fallback.
-- Preview modal width may need improvement on desktop.
+- "Generar Weekly" button in `admin.html` giving errors (Edge Function `generate-content`). Terminal script (`scripts/generate-content.sh`) is the validated fallback. Not investigated in Day 20.
+
+### Day 20 — Complete (2026-06-13)
+
+**`scripts/generate-content.sh` fixed for Windows (4 fixes):**
+- `export PYTHONUTF8=1` — Python 3.14 on Windows defaults to cp1252; forces UTF-8 for all I/O.
+- `max_tokens` 4000 → 8000 — model output was truncated mid-JSON with 4000.
+- `open(body_file, encoding='utf-8')` — explicit UTF-8 for the temp file write.
+- URL fix: `f'{supabase_url}publications'` — `SUPABASE_URL` already ends in `/rest/v1/`; previous code appended `/rest/v1/publications` again, causing `PGRST125`.
+
+**First real Weekly Signals published:** ID `995ddce5-42f8-479f-87f3-717ca198ba97`, via `scripts/publish-draft.sh`. Web search active, real M&A sources cited. Visible in `archive.html` for Pro subscribers.
+
+**`archive.html` reader redesigned:** full-screen modal (z-index 500, `inset: 0`) replacing narrow 720px overlay. Topbar with "Criterial." brand and "← Volver al archivo" button. Wider content column (max-width 1100px).
+
+**Fix: content scrolling above topbar** — `position: sticky` inside `overflow-y: auto` does not work reliably in Chrome. Fixed by switching to flex-column layout on the modal: topbar is a non-scrolling `flex-shrink: 0` child; `pub-modal-scroll` wrapper (`flex: 1; overflow-y: auto`) contains all scrollable content. `modal.scrollTop` → `pubModalScroll.scrollTop` in JS.
+
+**`styles.v5.css` pub-\* improvements:** larger font sizes (30px title, 16px body), more vertical spacing throughout, `border-left` accent on dato-nuevo, `border-top` on vigilar cards.
+
+**`admin.html` card menu (···):** Publicar / Despublicar / Eliminar dropdown on each publication card. Eliminar sends `DELETE /admin-publications` with a confirm dialog.
+
+**`admin-publications` Edge Function:** DELETE endpoint added and deployed.
+
+**`prompts/weekly-digest.es.md` updated (v6):** `<strong>` tag instruction for key figures and company names (max 2–3 per field).
+
+**`scripts/generate-content.sh` Python `esc()` updated:** uses `re.split(r'(</?strong>)', ...)` so `<strong>` tags pass through `html.escape()` intact.
 
 ### Day 19 — Complete (2026-06-11)
 - **Keep-alive reparado:** el workflow `keep-alive.yml` pingaba `get-publications` (Edge Function) en lugar de hacer una query real a la DB. Supabase no registraba actividad de base de datos y pausó el proyecto. Fix: el workflow ahora hace `GET /rest/v1/publications?select=id&limit=1` con headers `apikey` y `Authorization`. Anon key almacenada como secret `SUPABASE_ANON_KEY` en GitHub Actions. Validado con HTTP 200.
