@@ -17,6 +17,8 @@ export interface SampleRequestPayload {
   company_name?: string;
   website?: string;
   interest_type?: string;
+  /** Optional sector dimension (e.g. "infra_digital"), added in the Sample redesign. */
+  sector?: string;
   notes?: string;
 }
 

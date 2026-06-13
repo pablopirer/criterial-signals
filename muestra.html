@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230D1F3C'/><text x='3' y='26' font-family='Georgia,serif' font-size='22' font-weight='400' fill='white' letter-spacing='-1'>C.</text></svg>" />
+  <title>Tu muestra | Criterial.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.v5.css" />
+  <style>
+    .mu-wrap { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+    .mu-hero { padding: 88px 0 40px; border-bottom: 0.5px solid var(--border); }
+    .mu-ey { font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--label); margin: 0 0 18px; }
+    .mu-title { font-family: 'EB Garamond', Georgia, serif; font-size: 44px; line-height: 1.12; font-weight: 400; color: var(--navy); margin: 0 0 18px; }
+    .mu-tesis { font-size: 17px; line-height: 1.7; color: var(--muted); font-weight: 300; max-width: 580px; margin: 0; }
+    .mu-tags { margin: 22px 0 0; }
+    .mu-tag { display: inline-block; font-size: 11px; padding: 3px 10px; background: #ECE7DE; color: #6f6a60; margin: 0 6px 6px 0; }
+    .mu-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 36px 0; border-bottom: 0.5px solid var(--border); }
+    .mu-stat { background: #fff; border: 0.5px solid var(--border); border-radius: 6px; padding: 14px 15px; }
+    .mu-stat-l { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #a59f93; margin: 0 0 6px; }
+    .mu-stat-v { font-family: 'EB Garamond', Georgia, serif; font-size: 20px; color: var(--navy); margin: 0; }
+    .mu-section-label { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--label); margin: 0 0 14px; }
+    .mu-snapshot { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; line-height: 1.8; color: #33312c; border-left: 1.5px solid var(--navy); padding-left: 22px; margin: 0; }
+    .mu-block { padding: 44px 0; border-bottom: 0.5px solid var(--border); }
+    .mu-signal { padding: 22px 0; border-bottom: 0.5px solid var(--border); }
+    .mu-signal:last-child { border-bottom: none; }
+    .mu-signal-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 8px; }
+    .mu-signal-n { font-size: 11px; letter-spacing: .12em; color: #b6b0a4; }
+    .mu-signal-t { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; font-weight: 400; color: var(--navy); flex: 1; }
+    .mu-mom { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+    .mu-signal-b { font-size: 14.5px; line-height: 1.7; color: #555; margin: 0; }
+    .mu-watch { background: #F8F6F2; border: 0.5px solid var(--border); padding: 24px 26px; }
+    .mu-watch-item { margin-bottom: 18px; }
+    .mu-watch-item:last-child { margin-bottom: 0; }
+    .mu-watch-t { font-family: 'EB Garamond', Georgia, serif; font-size: 16px; color: var(--navy); margin: 0 0 5px; }
+    .mu-watch-b { font-size: 13.5px; line-height: 1.6; color: #666; margin: 0; }
+    .mu-cta { text-align: center; padding: 56px 0 72px; }
+    .mu-cta-text { font-size: 15px; line-height: 1.7; color: var(--muted); max-width: 460px; margin: 0 auto 26px; }
+    .mu-state { padding: 140px 0; text-align: center; color: var(--muted); font-size: 15px; }
+    @media (max-width: 640px) {
+      .mu-wrap { padding: 0 22px; }
+      .mu-hero { padding: 64px 0 32px; }
+      .mu-title { font-size: 32px; }
+      .mu-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header light-header" id="siteHeader">
+    <a href="index.html" class="brand">Criterial.</a>
+    <nav class="nav">
+      <a href="sample.html">Signals</a>
+      <a href="encargos.html">Advisory</a>
+      <a href="about.html">Nosotros</a>
+      <a href="archive.html" class="nav-access">Acceso Pro</a>
+    </nav>
+  </header>
+
+  <main id="mu-root">
+    <div class="mu-state" id="mu-loading">Cargando tu muestra…</div>
+  </main>
+
+  <footer class="site-footer">
+    <span class="footer-brand">Criterial.</span>
+    <span class="footer-right">Inteligencia de mercado para España</span>
+  </footer>
+
+  <script>
+    const GET_SAMPLE_URL = "https://epmltqhtxkmfboaxdois.supabase.co/functions/v1/get-sample";
+    const MOMENTUM = {
+      creciente:   { label: "Creciente",    color: "#1d7a5f" },
+      estable:     { label: "Estable",      color: "#9a958a" },
+      enfriandose: { label: "Enfriándose",  color: "#b06a4e" }
+    };
+
+    function el(tag, cls, text) {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+
+    function showState(msg) {
+      const root = document.getElementById("mu-root");
+      root.innerHTML = "";
+      const w = el("div", "mu-wrap");
+      w.appendChild(el("div", "mu-state", msg));
+      root.appendChild(w);
+    }
+
+    function render(s) {
+      const d = s.body_data;
+      if (!d) {
+        showState("Esta muestra no está disponible en el nuevo formato.");
+        return;
+      }
+      const root = document.getElementById("mu-root");
+      root.innerHTML = "";
+      const wrap = el("div", "mu-wrap");
+
+      // Hero
+      const hero = el("section", "mu-hero reveal");
+      const eyText = d.sector ? `Signals · Muestra · ${d.sector}` : "Signals · Muestra";
+      hero.appendChild(el("p", "mu-ey", eyText));
+      hero.appendChild(el("h1", "mu-title", d.titulo || s.title || "Tu muestra"));
+      if (d.tesis) hero.appendChild(el("p", "mu-tesis", d.tesis));
+      if (Array.isArray(d.tags) && d.tags.length) {
+        const tags = el("div", "mu-tags");
+        d.tags.forEach(t => tags.appendChild(el("span", "mu-tag", t)));
+        hero.appendChild(tags);
+      }
+      wrap.appendChild(hero);
+
+      // Stats
+      if (Array.isArray(d.stats) && d.stats.length) {
+        const stats = el("div", "mu-stats reveal");
+        d.stats.slice(0, 4).forEach(st => {
+          const c = el("div", "mu-stat");
+          c.appendChild(el("p", "mu-stat-l", st.label || ""));
+          c.appendChild(el("p", "mu-stat-v", st.valor || ""));
+          stats.appendChild(c);
+        });
+        wrap.appendChild(stats);
+      }
+
+      // Snapshot
+      if (d.snapshot) {
+        const block = el("section", "mu-block reveal");
+        block.appendChild(el("p", "mu-section-label", "Resumen ejecutivo"));
+        block.appendChild(el("p", "mu-snapshot", d.snapshot));
+        wrap.appendChild(block);
+      }
+
+      // Signals
+      if (Array.isArray(d.signals) && d.signals.length) {
+        const block = el("section", "mu-block reveal");
+        block.appendChild(el("p", "mu-section-label", "Señales del periodo"));
+        d.signals.forEach((sig, i) => {
+          const item = el("div", "mu-signal");
+          const head = el("div", "mu-signal-head");
+          head.appendChild(el("span", "mu-signal-n", String(i + 1).padStart(2, "0")));
+          head.appendChild(el("span", "mu-signal-t", sig.titulo || ""));
+          const mom = MOMENTUM[sig.momentum];
+          if (mom) {
+            const m = el("span", "mu-mom", mom.label);
+            m.style.color = mom.color;
+            head.appendChild(m);
+          }
+          item.appendChild(head);
+          item.appendChild(el("p", "mu-signal-b", sig.cuerpo || ""));
+          block.appendChild(item);
+        });
+        wrap.appendChild(block);
+      }
+
+      // Watch
+      if (Array.isArray(d.watch) && d.watch.length) {
+        const block = el("section", "mu-block reveal");
+        block.appendChild(el("p", "mu-section-label", "Qué vigilar"));
+        const box = el("div", "mu-watch");
+        d.watch.forEach(w => {
+          const it = el("div", "mu-watch-item");
+          it.appendChild(el("p", "mu-watch-t", w.titulo || ""));
+          it.appendChild(el("p", "mu-watch-b", w.cuerpo || ""));
+          box.appendChild(it);
+        });
+        block.appendChild(box);
+        wrap.appendChild(block);
+      }
+
+      // CTA
+      const cta = el("section", "mu-cta reveal");
+      cta.appendChild(el("p", "mu-cta-text", "Esto es una muestra del criterio editorial de Criterial. El plan Pro incluye Signals semanales, el Brief Mensual y el archivo completo de publicaciones."));
+      const btn = el("a", "btn-dark", "Ver plan Pro");
+      btn.href = "pricing.html";
+      cta.appendChild(btn);
+      wrap.appendChild(cta);
+
+      root.appendChild(wrap);
+
+      // The shared scroll-reveal observer only watches elements present at
+      // DOMContentLoaded. Our content is injected after an async fetch, so we
+      // run a local observer over it — with a failsafe that forces everything
+      // visible after a short delay so content can never get stuck hidden.
+      const items = wrap.querySelectorAll(".reveal");
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add("visible"); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.1 });
+        items.forEach(r => io.observe(r));
+        setTimeout(() => items.forEach(r => r.classList.add("visible")), 1200);
+      } else {
+        items.forEach(r => r.classList.add("visible"));
+      }
+    }
+
+    (async function () {
+      const token = new URLSearchParams(location.search).get("token");
+      if (!token) {
+        showState("Falta el identificador de la muestra. Revisa el enlace de tu email.");
+        return;
+      }
+      try {
+        const res = await fetch(`${GET_SAMPLE_URL}?token=${encodeURIComponent(token)}`);
+        if (res.status === 404) {
+          showState("No encontramos esta muestra. Es posible que el enlace haya caducado.");
+          return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        render(data.sample);
+      } catch (err) {
+        showState("No se pudo cargar la muestra. Inténtalo de nuevo en unos minutos.");
+      }
+    })();
+  </script>
+  <script src="criterial-shared.js?v=3"></script>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="page-transition" id="pageTransition"></div>
+</body>
+</html>

@@ -150,6 +150,89 @@ export async function sendBriefEmail(
   }
 }
 
+/**
+ * Sample "envelope" email — the new Sample deliverable lives on the web
+ * (muestra.html). This email is intentionally minimal: brand, the brief's
+ * title and thesis, the topic, and a single CTA to open the interactive
+ * muestra. Supersedes buildBriefHtml/sendBriefEmail, which rendered the full
+ * brief inline (kept above for back-compat but no longer used).
+ */
+export interface SendSampleEnvelopeInput {
+  to: string;
+  recipientName: string;
+  titulo: string;
+  tesis: string;
+  tematica: string;
+  sector?: string;
+  url: string;
+}
+
+function buildSampleEnvelopeHtml(input: SendSampleEnvelopeInput): string {
+  const firstName = input.recipientName ? input.recipientName.split(" ")[0] : "";
+  const greeting = firstName ? `Hola ${firstName},` : "Hola,";
+  const sansFamily =
+    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
+  const tag = (t: string) =>
+    `<span style="font-family:${sansFamily};font-size:11px;padding:3px 10px;background:#F4F0EA;color:#888;margin-right:6px;display:inline-block;">${t}</span>`;
+  const tagsHtml = [input.tematica, input.sector].filter(Boolean).map((t) =>
+    tag(t as string)
+  ).join("");
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Tu muestra interactiva de Criterial. ya está lista.</div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
+  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
+    <div style="font-family:${sansFamily};font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">Criterial. · Signals</div>
+    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">${input.titulo}</div>
+    <div style="font-family:${sansFamily};font-size:12px;color:#999;margin-bottom:16px;">${input.tesis}</div>
+    <div>${tagsHtml}</div>
+  </td></tr>
+  <tr><td style="padding:32px 44px;">
+    <p style="font-family:${sansFamily};font-size:14px;color:#444;margin:0 0 20px;">${greeting}</p>
+    <p style="font-family:${sansFamily};font-size:14px;line-height:1.7;color:#444;margin:0 0 28px;">Hemos preparado tu muestra de Signals. Es una pieza interactiva: ábrela para explorar el análisis, las señales del periodo y el mapa de capital del mercado.</p>
+    <div style="text-align:center;margin:0 0 8px;">
+      <a href="${input.url}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:${sansFamily};font-size:12px;font-weight:500;letter-spacing:.04em;padding:13px 30px;text-decoration:none;">Abrir tu muestra →</a>
+    </div>
+  </td></tr>
+  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="font-family:${sansFamily};font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL.</td>
+      <td align="right"><a href="https://criterialsignals.com" style="font-family:${sansFamily};font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
+    </tr></table>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+export async function sendSampleEnvelope(
+  input: SendSampleEnvelopeInput,
+): Promise<void> {
+  const subject = `Tu muestra sobre ${input.tematica} · Criterial.`;
+  const firstName = input.recipientName ? input.recipientName.split(" ")[0] : "";
+  const greeting = firstName ? `Hola ${firstName},` : "Hola,";
+  const text = [
+    greeting,
+    "",
+    "Hemos preparado tu muestra de Signals. Es una pieza interactiva: ábrela para explorar el análisis, las señales del periodo y el mapa de capital del mercado.",
+    "",
+    input.titulo,
+    input.tesis,
+    "",
+    `Abrir tu muestra: ${input.url}`,
+    "",
+    "Criterial.",
+  ].join("\n");
+
+  await sendEmail({ to: input.to, subject, text, html: buildSampleEnvelopeHtml(input) });
+}
+
 export interface SendEmailInput {
   to: string;
   subject: string;

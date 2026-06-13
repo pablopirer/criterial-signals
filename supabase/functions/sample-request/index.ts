@@ -1,80 +1,119 @@
 /**
  * Edge Function: sample-request
  *
- * Replaces the Make scenario `sample-request-mvp`. Receives a POST from the
- * public sample form, upserts the lead, registers a sample_request, calls
- * Anthropic to generate the brief, and stores the result in publications.
+ * Receives a POST from the public sample form, upserts the lead, registers a
+ * sample_request, calls Anthropic to generate a structured brief, stores it in
+ * publications (as JSON in body_data, plus body_markdown for archive
+ * back-compat), and emails the lead an "envelope" linking to the interactive
+ * muestra web (muestra.html?token=<public_token>).
  *
- * Flow (mirrors the original Make scenario, with idempotency added):
- *   1. Verify the shared-secret header (replaces "public webhook URL").
+ * Flow:
+ *   1. Verify the shared-secret header.
  *   2. Validate the payload.
- *   3. Upsert the lead by lower(email). New rows get source=sample_form,
- *      status=new. Existing rows get their non-empty fields refreshed.
- *   4. Insert a sample_request row with lead_id and topic=interest_type.
- *   5. Call Anthropic to generate the brief.
- *   6. Insert the brief into publications.
- *   7. Return { ok: true, request_id }.
+ *   3. Upsert the lead by lower(email).
+ *   4. Insert a sample_request row.
+ *   5. Call Anthropic to generate the brief JSON.
+ *   6. Parse JSON, persist publication (body_data + body_markdown), capture
+ *      its public_token, link sample_requests.sample_publication_id.
+ *   7. Email the envelope with the muestra URL.
  *
- * Note on the prompt: it lives inline in this file rather than in
- * `/prompts/sample-brief.es.md`. The reason is that Supabase only ships the
- * `supabase/functions/<name>/` directory at deploy time, so files outside
- * that tree (like `/prompts/`) are not available at runtime. We keep the
- * canonical copy of the prompt in `/prompts/sample-brief.es.md` for
- * readability and future tooling, but the source of truth at runtime is
- * the SAMPLE_BRIEF_PROMPT constant below. KEEP THEM IN SYNC.
+ * Note on the prompt: it lives inline (Supabase only ships the function's own
+ * directory at deploy time). The canonical copy is /prompts/sample-brief.es.md
+ * — KEEP THEM IN SYNC.
  */
 
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { generateBrief } from "../_shared/anthropic.ts";
-import { sendBriefEmail, sendEmail } from "../_shared/resend.ts";
+import { sendSampleEnvelope, sendEmail } from "../_shared/resend.ts";
 import type {
   SampleRequestErrorResponse,
   SampleRequestPayload,
   SampleRequestResponse,
 } from "./types.ts";
 
+const SITE_URL = "https://criterialsignals.com";
+const ALERT_EMAIL = "criterialam@gmail.com";
+
+/** interest_type code → human label, aligned with the Sample redesign topics. */
+const TEMATICA_LABELS: Record<string, string> = {
+  m_and_a: "M&A",
+  pe_vc: "Private equity y venture capital",
+  deuda_privada: "Deuda privada",
+  liquidez: "Eventos de liquidez",
+  general: "Mercado privado español",
+};
+
+/** sector code → human label. Optional dimension. */
+const SECTOR_LABELS: Record<string, string> = {
+  infra_digital: "Infraestructura digital",
+  sanidad: "Sanidad privada",
+  industrial: "Industrial y servicios B2B",
+  consumo: "Consumo y marca",
+  energia: "Energía y transición",
+  transversal: "Transversal",
+};
+
+function tematicaLabel(code: string | null | undefined): string {
+  if (!code) return TEMATICA_LABELS.general;
+  return TEMATICA_LABELS[code] ?? code;
+}
+
+function sectorLabel(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return SECTOR_LABELS[code] ?? code;
+}
+
 /**
  * Inline copy of /prompts/sample-brief.es.md.
- * Keep in sync with the canonical .md file in the repo root.
+ * Returns ONLY valid JSON for the structured web brief (no map yet — Phase 2).
  */
 const SAMPLE_BRIEF_PROMPT = {
   system:
-    "Eres el redactor analítico de Criterial Signals, un servicio de inteligencia " +
-    "de mercado especializado en el mercado español. Tu misión es producir briefs " +
-    "de alta calidad para profesionales: inversores, analistas, asesores M&A y directivos.\n\n" +
+    "Eres el redactor analítico de Criterial., una firma independiente de " +
+    "inteligencia del mercado español de capital privado. Produces piezas " +
+    "para profesionales: inversores, analistas, asesores M&A, family offices y directivos.\n\n" +
     "Estilo editorial obligatorio:\n" +
     "- Tono sobrio, analítico y directo. Sin entusiasmo comercial ni lenguaje de marketing.\n" +
     "- Frases completas con densidad informativa real. Nada de bullets vacíos.\n" +
-    "- Cada señal debe tener una tesis clara y un argumento que la sostenga.\n" +
+    "- Cada señal tiene una tesis clara, un argumento que la sostiene y una implicación.\n" +
     "- Usa cifras, referencias temporales y actores concretos cuando los conozcas.\n" +
-    "- Foco exclusivo en el mercado español. No incluir Portugal ni referencias a mercado ibérico.\n\n" +
-    "Devuelve SOLO JSON válido, sin markdown, sin texto adicional:\n" +
+    "- Foco exclusivo en el mercado español. No incluir Portugal ni mercado ibérico. No incluir real estate.\n\n" +
+    "Devuelve SOLO JSON válido, sin markdown, sin texto adicional, con esta forma:\n" +
     "{\n" +
-    "  \"titulo\": \"título directo del brief\",\n" +
-    "  \"subtitulo\": \"una frase que resume la tesis principal\",\n" +
+    "  \"titulo\": \"título directo y específico del brief\",\n" +
+    "  \"tesis\": \"una frase que resume la tesis principal\",\n" +
     "  \"tags\": [\"tag1\", \"tag2\", \"tag3\"],\n" +
     "  \"snapshot\": \"párrafo de 3-4 frases analíticas con dato cuantitativo si es posible\",\n" +
+    "  \"stats\": [\n" +
+    "    { \"label\": \"etiqueta corta\", \"valor\": \"cifra o estado breve\" }\n" +
+    "  ],\n" +
     "  \"signals\": [\n" +
-    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases. Tesis + argumento + implicación.\" },\n" +
-    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases.\" },\n" +
-    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases.\" }\n" +
+    "    { \"titulo\": \"título de la señal\", \"cuerpo\": \"2-3 frases: tesis + argumento + implicación.\", \"momentum\": \"creciente|estable|enfriandose\" }\n" +
     "  ],\n" +
     "  \"watch\": [\n" +
-    "    { \"titulo\": \"actor o evento a vigilar\", \"cuerpo\": \"1-2 frases sobre por qué importa.\" },\n" +
     "    { \"titulo\": \"actor o evento a vigilar\", \"cuerpo\": \"1-2 frases sobre por qué importa.\" }\n" +
     "  ]\n" +
-    "}",
+    "}\n\n" +
+    "Reglas de cantidad: 3-4 elementos en stats, 3-4 en signals, 2-3 en watch. " +
+    "El campo momentum solo admite uno de estos tres valores: creciente, estable, enfriandose.",
   user:
     "Genera un sample brief sobre: {{interest_type}}.\n\n" +
-    "Fecha de referencia: Mayo 2026. Razona desde ese punto temporal. " +
-    "Si usas cifras o referencias a períodos concretos, asegúrate de que " +
-    "son coherentes con mayo de 2026 como presente. Cuando una estimación " +
-    "sea orientativa, indícalo con 'aproximadamente' o 'en torno a'.",
+    "Fecha de referencia: junio de 2026. Razona desde ese punto temporal. " +
+    "Si usas cifras o referencias a períodos concretos, asegúrate de que son " +
+    "coherentes con junio de 2026 como presente. Cuando una estimación sea " +
+    "orientativa, indícalo con 'aproximadamente' o 'en torno a'.",
 };
 
-/**
- * Build a JSON Response with the right CORS headers.
- */
+interface BriefContent {
+  titulo: string;
+  tesis: string;
+  tags: string[];
+  snapshot: string;
+  stats: Array<{ label: string; valor: string }>;
+  signals: Array<{ titulo: string; cuerpo: string; momentum?: string }>;
+  watch: Array<{ titulo: string; cuerpo: string }>;
+}
+
 function jsonResponse(
   body: SampleRequestResponse | SampleRequestErrorResponse,
   status: number,
@@ -91,10 +130,6 @@ function jsonResponse(
   });
 }
 
-/**
- * Validate the incoming payload. Returns the email and a normalised payload
- * if valid, or an error string if invalid.
- */
 function validatePayload(
   payload: unknown,
 ): { email: string; data: SampleRequestPayload } | { error: string } {
@@ -112,17 +147,25 @@ function validatePayload(
     return { error: "Field 'email' is not a valid email address" };
   }
 
-  return {
-    email,
-    data: {
-      ...p,
-      email,
-    },
-  };
+  return { email, data: { ...p, email } };
+}
+
+/** Build the markdown-ish body kept for archive (back-compat) rendering. */
+function buildBodyMarkdown(b: BriefContent): string {
+  return (
+    `## Resumen ejecutivo\n\n${b.snapshot}\n\n` +
+    `## Señales\n\n` +
+    b.signals
+      .map((s, i) =>
+        `**${String(i + 1).padStart(2, "0")}. ${s.titulo}**\n\n${s.cuerpo}`
+      )
+      .join("\n\n") +
+    `\n\n## Qué vigilar\n\n` +
+    b.watch.map((w) => `**${w.titulo}**\n\n${w.cuerpo}`).join("\n\n")
+  );
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  // CORS preflight.
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -137,27 +180,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse(
-      { ok: false, error: "Method not allowed" },
-      405,
-    );
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
   }
 
   // 1. Shared-secret check.
   const expectedSecret = Deno.env.get("SAMPLE_REQUEST_SECRET");
   if (!expectedSecret) {
     console.error("SAMPLE_REQUEST_SECRET is not configured");
-    return jsonResponse(
-      { ok: false, error: "Server misconfigured" },
-      500,
-    );
+    return jsonResponse({ ok: false, error: "Server misconfigured" }, 500);
   }
-  const providedSecret = req.headers.get("x-criterial-signal");
-  if (providedSecret !== expectedSecret) {
-    return jsonResponse(
-      { ok: false, error: "Unauthorized" },
-      401,
-    );
+  if (req.headers.get("x-criterial-signal") !== expectedSecret) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
 
   // 2. Parse and validate.
@@ -165,10 +198,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     payload = await req.json();
   } catch {
-    return jsonResponse(
-      { ok: false, error: "Body is not valid JSON" },
-      400,
-    );
+    return jsonResponse({ ok: false, error: "Body is not valid JSON" }, 400);
   }
 
   const validation = validatePayload(payload);
@@ -176,6 +206,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, error: validation.error }, 400);
   }
   const { email, data } = validation;
+
+  const tematica = tematicaLabel(data.interest_type);
+  const sector = sectorLabel(data.sector);
 
   const supabase = createServiceRoleClient();
 
@@ -193,31 +226,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
         source: "sample_form",
         status: "new",
       },
-      {
-        onConflict: "email",
-        ignoreDuplicates: false,
-      },
+      { onConflict: "email", ignoreDuplicates: false },
     )
     .select("id, email")
     .limit(1);
 
   if (leadError || !leadRows || leadRows.length === 0) {
     console.error("Failed to upsert lead", leadError);
-    return jsonResponse(
-      { ok: false, error: "Failed to register lead" },
-      500,
-    );
+    return jsonResponse({ ok: false, error: "Failed to register lead" }, 500);
   }
   const leadId = leadRows[0].id as string;
 
   // 4. Insert the sample_request.
   const { data: requestRows, error: requestError } = await supabase
     .from("sample_requests")
-    .insert({
-      lead_id: leadId,
-      topic: data.interest_type ?? null,
-      status: "queued",
-    })
+    .insert({ lead_id: leadId, topic: data.interest_type ?? null, status: "queued" })
     .select("id")
     .limit(1);
 
@@ -231,11 +254,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const requestId = requestRows[0].id as string;
 
   // 5. Generate the brief.
+  const interestForPrompt = sector ? `${tematica} · sector: ${sector}` : tematica;
   let briefText: string | null = null;
   try {
     const result = await generateBrief({
-      interestType: data.interest_type ?? "mercado español",
+      interestType: interestForPrompt,
       prompt: SAMPLE_BRIEF_PROMPT,
+      maxTokens: 3000,
     });
     briefText = result.text;
     console.log(
@@ -248,33 +273,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .update({ status: "generation_failed" })
       .eq("id", requestId);
     sendEmail({
-      to: "criterialam@gmail.com",
+      to: ALERT_EMAIL,
       subject: `[Criterial] generation_failed — Anthropic error`,
-      text: `generation_failed\nLead: ${email}\nInterés: ${data.interest_type ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
-      html: `<p>Fallo al generar brief con Anthropic.</p>
-<ul>
-  <li><strong>Lead:</strong> ${email}</li>
-  <li><strong>Interés:</strong> ${data.interest_type ?? "—"}</li>
-  <li><strong>Request ID:</strong> ${requestId}</li>
-  <li><strong>Error:</strong> ${String(err)}</li>
-</ul>`,
+      text: `generation_failed\nLead: ${email}\nTemática: ${tematica}\nSector: ${sector ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
     }).catch(() => {});
   }
 
   // 6. Parse the JSON brief and persist the publication.
   if (briefText) {
-    let briefData: {
-      titulo: string;
-      subtitulo: string;
-      tags: string[];
-      snapshot: string;
-      signals: Array<{ titulo: string; cuerpo: string }>;
-      watch: Array<{ titulo: string; cuerpo: string }>;
-    } | null = null;
-
+    let brief: BriefContent | null = null;
     try {
       const clean = briefText.replace(/```json|```/g, "").trim();
-      briefData = JSON.parse(clean);
+      brief = JSON.parse(clean) as BriefContent;
     } catch (err) {
       console.error("Failed to parse brief JSON", err);
       console.error("Raw briefText was:", briefText);
@@ -283,64 +293,66 @@ Deno.serve(async (req: Request): Promise<Response> => {
         .update({ status: "generation_failed" })
         .eq("id", requestId);
       sendEmail({
-        to: "criterialam@gmail.com",
+        to: ALERT_EMAIL,
         subject: `[Criterial] generation_failed — JSON parse error`,
-        text: `generation_failed (JSON parse)\nLead: ${email}\nInterés: ${data.interest_type ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
+        text: `generation_failed (JSON parse)\nLead: ${email}\nTemática: ${tematica}\nRequest ID: ${requestId}\nError: ${String(err)}`,
         html: `<p>Anthropic respondió pero el JSON no era válido.</p>
-<ul>
-  <li><strong>Lead:</strong> ${email}</li>
-  <li><strong>Interés:</strong> ${data.interest_type ?? "—"}</li>
-  <li><strong>Request ID:</strong> ${requestId}</li>
-  <li><strong>Error:</strong> ${String(err)}</li>
-</ul>
-<p><strong>Raw output:</strong></p>
+<ul><li><strong>Lead:</strong> ${email}</li><li><strong>Temática:</strong> ${tematica}</li><li><strong>Request ID:</strong> ${requestId}</li><li><strong>Error:</strong> ${String(err)}</li></ul>
 <pre style="font-size:12px;background:#f4f4f4;padding:8px">${briefText?.slice(0, 2000)}</pre>`,
       }).catch(() => {});
     }
 
-    if (briefData) {
-      const body_markdown =
-        `## Executive Snapshot\n\n${briefData.snapshot}\n\n` +
-        `## Three Relevant Signals\n\n` +
-        briefData.signals
-          .map((s, i) => `**${String(i + 1).padStart(2, "0")}. ${s.titulo}**\n\n${s.cuerpo}`)
-          .join("\n\n") +
-        `\n\n## What to Watch\n\n` +
-        briefData.watch
-          .map((w) => `**${w.titulo}**\n\n${w.cuerpo}`)
-          .join("\n\n");
+    if (brief) {
+      const bodyData = {
+        version: 1,
+        tematica,
+        sector,
+        ...brief,
+      };
 
-      const title = briefData.titulo;
-
-      const { error: pubError } = await supabase
+      const { data: pubRows, error: pubError } = await supabase
         .from("publications")
         .insert({
           type: "sample",
-          title,
-          body_markdown,
+          title: brief.titulo,
+          body_markdown: buildBodyMarkdown(brief),
+          body_data: bodyData,
           status: "draft",
-        });
+        })
+        .select("id, public_token")
+        .limit(1);
 
-      if (pubError) {
+      if (pubError || !pubRows || pubRows.length === 0) {
         console.error("Failed to insert publication", pubError);
       } else {
+        const publicationId = pubRows[0].id as string;
+        const publicToken = pubRows[0].public_token as string;
+
         await supabase
           .from("sample_requests")
-          .update({ status: "generated" })
+          .update({
+            status: "generated",
+            sample_publication_id: publicationId,
+            sent_at: new Date().toISOString(),
+          })
           .eq("id", requestId);
-      }
 
-      // 7. Send the brief by email.
-      try {
-        await sendBriefEmail({
-          to: email,
-          recipientName: data.full_name ?? "",
-          interestType: data.interest_type ?? "España",
-          briefData: briefData,
-        });
-        console.log(`Brief emailed to ${email}`);
-      } catch (err) {
-        console.error("Resend delivery failed", err);
+        // 7. Email the envelope with the muestra URL.
+        const url = `${SITE_URL}/muestra.html?token=${publicToken}`;
+        try {
+          await sendSampleEnvelope({
+            to: email,
+            recipientName: data.full_name ?? "",
+            titulo: brief.titulo,
+            tesis: brief.tesis,
+            tematica,
+            sector: sector ?? undefined,
+            url,
+          });
+          console.log(`Envelope emailed to ${email} → ${url}`);
+        } catch (err) {
+          console.error("Resend delivery failed", err);
+        }
       }
     }
   }

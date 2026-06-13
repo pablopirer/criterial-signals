@@ -30,7 +30,7 @@
     </header>
 
     <div class="hero-content">
-      <p class="eyebrow">Criterial Signals</p>
+      <p class="eyebrow">Signals</p>
       <h1 class="hero-h1 hero-h1-sm">Solicita una muestra del producto.</h1>
       <p class="hero-sub">Entiende el formato, el nivel de síntesis y el criterio editorial antes de suscribirte.</p>
       <div class="cta-group cta-group-center">
@@ -47,7 +47,7 @@
         <div class="info-grid" style="border-top: none; grid-template-columns: 1fr;">
           <div style="padding: 16px 0; border-bottom: 0.5px solid var(--border);">
             <p class="info-title">Qué te muestra</p>
-            <p class="info-body">El tipo de lectura que produce Criterial Signals: señales relevantes de mercado sintetizadas con criterio editorial.</p>
+            <p class="info-body">El tipo de lectura de Signals: señales relevantes de mercado sintetizadas con criterio editorial.</p>
           </div>
           <div style="padding: 16px 0; border-bottom: 0.5px solid var(--border);">
             <p class="info-title">Qué no es</p>
@@ -73,13 +73,25 @@
           <label for="website">Website</label>
           <input id="website" name="website" type="url" required />
 
-          <label for="interest_type">Interés principal</label>
+          <label for="interest_type">Temática</label>
           <select id="interest_type" name="interest_type" required>
             <option value="">Selecciona una opción</option>
             <option value="m_and_a">M&amp;A</option>
-            <option value="real_estate">Real Estate</option>
-            <option value="capital_markets">Capital Markets</option>
-            <option value="general">Mercado español — visión general</option>
+            <option value="pe_vc">Private equity y venture capital</option>
+            <option value="deuda_privada">Deuda privada</option>
+            <option value="liquidez">Eventos de liquidez (OPAs, salidas a bolsa)</option>
+            <option value="general">Visión general del mercado privado</option>
+          </select>
+
+          <label for="sector">Sector <span style="color:#a59f93;font-weight:400;">(opcional)</span></label>
+          <select id="sector" name="sector">
+            <option value="">Sin preferencia</option>
+            <option value="infra_digital">Infraestructura digital</option>
+            <option value="sanidad">Sanidad privada</option>
+            <option value="industrial">Industrial y servicios B2B</option>
+            <option value="consumo">Consumo y marca</option>
+            <option value="energia">Energía y transición</option>
+            <option value="transversal">Transversal</option>
           </select>
 
           <label for="notes">Notas</label>
@@ -116,6 +128,7 @@
         company_name: document.getElementById("company_name").value,
         website: document.getElementById("website").value,
         interest_type: document.getElementById("interest_type").value,
+        sector: document.getElementById("sector").value,
         notes: document.getElementById("notes").value
       };
 
