@@ -26,7 +26,7 @@
 
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { generateBrief } from "../_shared/anthropic.ts";
-import { sendBriefEmail } from "../_shared/resend.ts";
+import { sendBriefEmail, sendEmail } from "../_shared/resend.ts";
 import type {
   SampleRequestErrorResponse,
   SampleRequestPayload,
@@ -247,6 +247,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .from("sample_requests")
       .update({ status: "generation_failed" })
       .eq("id", requestId);
+    sendEmail({
+      to: "criterialam@gmail.com",
+      subject: `[Criterial] generation_failed — Anthropic error`,
+      text: `generation_failed\nLead: ${email}\nInterés: ${data.interest_type ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
+      html: `<p>Fallo al generar brief con Anthropic.</p>
+<ul>
+  <li><strong>Lead:</strong> ${email}</li>
+  <li><strong>Interés:</strong> ${data.interest_type ?? "—"}</li>
+  <li><strong>Request ID:</strong> ${requestId}</li>
+  <li><strong>Error:</strong> ${String(err)}</li>
+</ul>`,
+    }).catch(() => {});
   }
 
   // 6. Parse the JSON brief and persist the publication.
@@ -270,6 +282,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
         .from("sample_requests")
         .update({ status: "generation_failed" })
         .eq("id", requestId);
+      sendEmail({
+        to: "criterialam@gmail.com",
+        subject: `[Criterial] generation_failed — JSON parse error`,
+        text: `generation_failed (JSON parse)\nLead: ${email}\nInterés: ${data.interest_type ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
+        html: `<p>Anthropic respondió pero el JSON no era válido.</p>
+<ul>
+  <li><strong>Lead:</strong> ${email}</li>
+  <li><strong>Interés:</strong> ${data.interest_type ?? "—"}</li>
+  <li><strong>Request ID:</strong> ${requestId}</li>
+  <li><strong>Error:</strong> ${String(err)}</li>
+</ul>
+<p><strong>Raw output:</strong></p>
+<pre style="font-size:12px;background:#f4f4f4;padding:8px">${briefText?.slice(0, 2000)}</pre>`,
+      }).catch(() => {});
     }
 
     if (briefData) {
