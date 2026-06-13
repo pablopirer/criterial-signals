@@ -569,6 +569,9 @@
           <div class="pub-card-date">${formatPeriod(p.period_start, p.period_end)}</div>
           <div class="pub-card-footer" style="gap:8px;">
             <button class="btn-card-action muted" onclick="previewPublication('${p.id}')">Previsualizar</button>
+            ${p.status === 'published' && (p.type === 'weekly' || p.type === 'monthly')
+              ? `<button class="btn-card-action" onclick="sendToSubscribers('${p.id}')" title="Enviar por email a suscriptores Pro">Enviar →</button>`
+              : ''}
           </div>
         </div>
       `).join("");
@@ -821,6 +824,40 @@
       } else {
         const json = await res.json().catch(() => ({}));
         alert(json.error || "Error al eliminar.");
+      }
+    }
+
+    async function sendToSubscribers(id) {
+      const pub = _allPubs.find(p => p.id === id);
+      const title = pub ? pub.title : 'esta publicación';
+      if (!confirm(`¿Enviar "${title}" por email a todos los suscriptores Pro activos?\n\nEsta acción enviará emails reales.`)) return;
+
+      const btn = event.target;
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch(`${EF_BASE}/send-weekly`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${_session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ publication_id: id })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Error desconocido');
+        if (json.sent === 0) {
+          alert('Sin suscriptores Pro activos para notificar.');
+        } else {
+          alert(`Enviado a ${json.sent} suscriptor${json.sent !== 1 ? 'es' : ''}:\n${json.emails.join('\n')}`);
+        }
+      } catch (err) {
+        alert(`Error al enviar: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
       }
     }
 

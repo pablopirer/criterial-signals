@@ -384,6 +384,98 @@ export async function sendWelcomeEmail(
   }
 }
 
+export interface SendPublicationNotificationInput {
+  to: string;
+  publicationTitle: string;
+  publicationPeriod: string;
+  publicationType: "weekly" | "monthly";
+}
+
+function buildPublicationNotificationHtml(
+  input: SendPublicationNotificationInput,
+): string {
+  const typeIntro = input.publicationType === "weekly"
+    ? "El Weekly Signals de esta semana ya está disponible en tu archivo Pro."
+    : "El Brief Mensual de este mes ya está disponible en tu archivo Pro.";
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
+  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">CRITERIAL SIGNALS · PRO</div>
+    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">${input.publicationTitle}</div>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;">${input.publicationPeriod}</div>
+  </td></tr>
+  <tr><td style="padding:32px 44px;">
+    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;margin:0 0 24px;">Hola,</p>
+    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;margin:0 0 32px;">${typeIntro}</p>
+    <div style="text-align:center;margin:0 0 32px;">
+      <a href="${ARCHIVE_URL}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:500;letter-spacing:.04em;padding:14px 32px;text-decoration:none;">Leer en el archivo →</a>
+    </div>
+    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.65;color:#999;margin:0;">Si no puedes acceder, solicita el enlace de acceso en <a href="${ARCHIVE_URL}" style="color:#0D1F3C;">criterialsignals.com/archive.html</a> usando el email con el que te suscribiste.</p>
+  </td></tr>
+  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL SIGNALS</td>
+      <td align="right"><a href="https://criterialsignals.com" style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
+    </tr></table>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+export async function sendPublicationNotification(
+  input: SendPublicationNotificationInput,
+): Promise<void> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
+
+  const typeLabel = input.publicationType === "weekly" ? "Weekly Signals" : "Brief Mensual";
+  const subject = `${input.publicationTitle} — Criterial Signals`;
+
+  const text = [
+    "Hola,",
+    "",
+    `${typeLabel} de Criterial ya disponible en el archivo Pro.`,
+    "",
+    input.publicationTitle,
+    input.publicationPeriod,
+    "",
+    `Accede en: ${ARCHIVE_URL}`,
+    "",
+    "Criterial Signals",
+  ].join("\n");
+
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      from: FROM_ADDRESS,
+      to: [input.to],
+      subject,
+      text,
+      html: buildPublicationNotificationHtml(input),
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `Resend API returned ${response.status}: ${errorBody.slice(0, 500)}`,
+    );
+  }
+}
+
 export interface SendAdvisoryEmailInput {
   toUser: string;
   toInternal: string;
