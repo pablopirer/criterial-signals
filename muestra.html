@@ -10,44 +10,59 @@
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.v5.css" />
   <style>
+    body { background: #F4F0EA; }
+    .mu-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 250; background: transparent; }
+    .mu-progress i { display: block; height: 3px; width: 0; background: var(--navy); transition: width 0.1s linear; }
     .mu-wrap { max-width: 760px; margin: 0 auto; padding: 0 32px; }
-    .mu-hero { padding: 88px 0 40px; border-bottom: 0.5px solid var(--border); }
-    .mu-ey { font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--label); margin: 0 0 18px; }
-    .mu-title { font-family: 'EB Garamond', Georgia, serif; font-size: 44px; line-height: 1.12; font-weight: 400; color: var(--navy); margin: 0 0 18px; }
-    .mu-tesis { font-size: 17px; line-height: 1.7; color: var(--muted); font-weight: 300; max-width: 580px; margin: 0; }
-    .mu-tags { margin: 22px 0 0; }
-    .mu-tag { display: inline-block; font-size: 11px; padding: 3px 10px; background: #ECE7DE; color: #6f6a60; margin: 0 6px 6px 0; }
-    .mu-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 36px 0; border-bottom: 0.5px solid var(--border); }
-    .mu-stat { background: #fff; border: 0.5px solid var(--border); border-radius: 6px; padding: 14px 15px; }
-    .mu-stat-l { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #a59f93; margin: 0 0 6px; }
-    .mu-stat-v { font-family: 'EB Garamond', Georgia, serif; font-size: 20px; color: var(--navy); margin: 0; }
-    .mu-section-label { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--label); margin: 0 0 14px; }
-    .mu-snapshot { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; line-height: 1.8; color: #33312c; border-left: 1.5px solid var(--navy); padding-left: 22px; margin: 0; }
-    .mu-block { padding: 44px 0; border-bottom: 0.5px solid var(--border); }
-    .mu-signal { padding: 22px 0; border-bottom: 0.5px solid var(--border); }
-    .mu-signal:last-child { border-bottom: none; }
-    .mu-signal-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 8px; }
-    .mu-signal-n { font-size: 11px; letter-spacing: .12em; color: #b6b0a4; }
-    .mu-signal-t { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; font-weight: 400; color: var(--navy); flex: 1; }
-    .mu-mom { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+
+    .mu-hero { padding: 64px 0 36px; }
+    .mu-ey { font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--label); margin: 0 0 18px; }
+    .mu-title { font-family: 'EB Garamond', Georgia, serif; font-size: 46px; line-height: 1.12; font-weight: 400; color: var(--navy); margin: 0 0 18px; }
+    .mu-tesis { font-size: 17px; line-height: 1.7; color: var(--muted); font-weight: 300; max-width: 600px; margin: 0; }
+    .mu-tags { margin: 24px 0 0; }
+    .mu-tag { display: inline-block; font-size: 11px; padding: 4px 11px; background: #ECE7DE; color: #6f6a60; margin: 0 6px 6px 0; border-radius: 2px; }
+
+    .mu-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 8px 0 40px; }
+    .mu-stat { background: #fff; border: 0.5px solid var(--border); border-radius: 7px; padding: 15px 16px; }
+    .mu-stat-l { font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: #a59f93; margin: 0 0 8px; line-height: 1.35; }
+    .mu-stat-v { font-family: 'EB Garamond', Georgia, serif; font-size: 22px; color: var(--navy); margin: 0; }
+
+    .mu-block { padding: 40px 0; border-top: 0.5px solid var(--border); }
+    .mu-section-label { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--label); margin: 0 0 18px; }
+    .mu-snapshot { font-family: 'EB Garamond', Georgia, serif; font-size: 20px; line-height: 1.85; color: #33312c; border-left: 2px solid var(--navy); padding-left: 24px; margin: 0; }
+    .mu-snapshot strong { font-weight: 500; color: var(--navy); }
+
+    .mu-signal { padding: 22px; border: 0.5px solid var(--border); border-radius: 7px; background: #fff; margin-bottom: 12px; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+    .mu-signal:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(13,31,60,0.07); }
+    .mu-signal-head { display: flex; align-items: center; gap: 12px; margin: 0 0 10px; }
+    .mu-signal-n { font-size: 11px; letter-spacing: .1em; color: #c2bcb0; }
+    .mu-signal-t { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; font-weight: 400; color: var(--navy); flex: 1; line-height: 1.3; }
+    .mu-pill { font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
     .mu-signal-b { font-size: 14.5px; line-height: 1.7; color: #555; margin: 0; }
-    .mu-watch { background: #F8F6F2; border: 0.5px solid var(--border); padding: 24px 26px; }
+
+    .mu-watch { background: #F8F6F2; border: 0.5px solid var(--border); border-radius: 7px; padding: 24px 26px; }
     .mu-watch-item { margin-bottom: 18px; }
     .mu-watch-item:last-child { margin-bottom: 0; }
-    .mu-watch-t { font-family: 'EB Garamond', Georgia, serif; font-size: 16px; color: var(--navy); margin: 0 0 5px; }
+    .mu-watch-t { font-family: 'EB Garamond', Georgia, serif; font-size: 17px; color: var(--navy); margin: 0 0 5px; }
     .mu-watch-b { font-size: 13.5px; line-height: 1.6; color: #666; margin: 0; }
-    .mu-cta { text-align: center; padding: 56px 0 72px; }
-    .mu-cta-text { font-size: 15px; line-height: 1.7; color: var(--muted); max-width: 460px; margin: 0 auto 26px; }
-    .mu-state { padding: 140px 0; text-align: center; color: var(--muted); font-size: 15px; }
+
+    .mu-cta { background: var(--navy); color: #fff; text-align: center; padding: 60px 32px; margin-top: 48px; }
+    .mu-cta-text { font-size: 15px; line-height: 1.75; color: #cfd6e0; max-width: 460px; margin: 0 auto 26px; }
+    .mu-cta .btn-light { display: inline-block; background: #fff; color: var(--navy); font-size: 12px; letter-spacing: .04em; padding: 13px 30px; border-radius: 3px; text-decoration: none; }
+
+    .mu-state { padding: 160px 0; text-align: center; color: var(--muted); font-size: 15px; }
+
     @media (max-width: 640px) {
       .mu-wrap { padding: 0 22px; }
-      .mu-hero { padding: 64px 0 32px; }
-      .mu-title { font-size: 32px; }
+      .mu-hero { padding: 48px 0 28px; }
+      .mu-title { font-size: 33px; }
       .mu-stats { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
+
+  <div class="mu-progress"><i id="mu-progress-bar"></i></div>
 
   <header class="site-header light-header" id="siteHeader">
     <a href="index.html" class="brand">Criterial.</a>
@@ -70,10 +85,11 @@
 
   <script>
     const GET_SAMPLE_URL = "https://epmltqhtxkmfboaxdois.supabase.co/functions/v1/get-sample";
+    const MONTHS_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
     const MOMENTUM = {
-      creciente:   { label: "Creciente",    color: "#1d7a5f" },
-      estable:     { label: "Estable",      color: "#9a958a" },
-      enfriandose: { label: "Enfriándose",  color: "#b06a4e" }
+      creciente:   { label: "Creciente",   bg: "#e1efe9", color: "#1d7a5f" },
+      estable:     { label: "Estable",     bg: "#efedea", color: "#9a958a" },
+      enfriandose: { label: "Enfriándose", bg: "#f3e7e1", color: "#b06a4e" }
     };
 
     function el(tag, cls, text) {
@@ -81,6 +97,14 @@
       if (cls) n.className = cls;
       if (text != null) n.textContent = text;
       return n;
+    }
+
+    function periodLabel(s) {
+      const raw = s.created_at;
+      if (!raw) return "Muestra";
+      const dte = new Date(raw);
+      if (isNaN(dte)) return "Muestra";
+      return `${MONTHS_ES[dte.getMonth()]} ${dte.getFullYear()}`;
     }
 
     function showState(msg) {
@@ -103,7 +127,10 @@
 
       // Hero
       const hero = el("section", "mu-hero reveal");
-      const eyText = d.sector ? `Signals · Muestra · ${d.sector}` : "Signals · Muestra";
+      const period = periodLabel(s);
+      const eyText = d.sector
+        ? `Signals · Muestra · ${d.sector} · ${period}`
+        : `Signals · Muestra · ${period}`;
       hero.appendChild(el("p", "mu-ey", eyText));
       hero.appendChild(el("h1", "mu-title", d.titulo || s.title || "Tu muestra"));
       if (d.tesis) hero.appendChild(el("p", "mu-tesis", d.tesis));
@@ -145,7 +172,8 @@
           head.appendChild(el("span", "mu-signal-t", sig.titulo || ""));
           const mom = MOMENTUM[sig.momentum];
           if (mom) {
-            const m = el("span", "mu-mom", mom.label);
+            const m = el("span", "mu-pill", mom.label);
+            m.style.background = mom.bg;
             m.style.color = mom.color;
             head.appendChild(m);
           }
@@ -171,21 +199,23 @@
         wrap.appendChild(block);
       }
 
-      // CTA
-      const cta = el("section", "mu-cta reveal");
-      cta.appendChild(el("p", "mu-cta-text", "Esto es una muestra del criterio editorial de Criterial. El plan Pro incluye Signals semanales, el Brief Mensual y el archivo completo de publicaciones."));
-      const btn = el("a", "btn-dark", "Ver plan Pro");
-      btn.href = "pricing.html";
-      cta.appendChild(btn);
-      wrap.appendChild(cta);
-
       root.appendChild(wrap);
 
+      // CTA — full-width navy band outside the reading column.
+      const cta = el("section", "mu-cta reveal");
+      const inner = el("div");
+      inner.appendChild(el("p", "mu-cta-text", "Esto es una muestra del criterio editorial de Criterial. El plan Pro incluye Signals semanales, el Brief Mensual y el archivo completo de publicaciones."));
+      const btn = el("a", "btn-light", "Ver plan Pro");
+      btn.href = "pricing.html";
+      inner.appendChild(btn);
+      cta.appendChild(inner);
+      root.appendChild(cta);
+
       // The shared scroll-reveal observer only watches elements present at
-      // DOMContentLoaded. Our content is injected after an async fetch, so we
-      // run a local observer over it — with a failsafe that forces everything
-      // visible after a short delay so content can never get stuck hidden.
-      const items = wrap.querySelectorAll(".reveal");
+      // DOMContentLoaded; our content is injected after an async fetch, so we
+      // run a local observer — with a failsafe that forces everything visible
+      // after a short delay so content can never get stuck hidden.
+      const items = root.querySelectorAll(".reveal");
       if ("IntersectionObserver" in window) {
         const io = new IntersectionObserver((entries) => {
           entries.forEach(e => {
@@ -198,6 +228,16 @@
         items.forEach(r => r.classList.add("visible"));
       }
     }
+
+    // Reading progress bar.
+    const progressBar = document.getElementById("mu-progress-bar");
+    function updateProgress() {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      progressBar.style.width = pct + "%";
+    }
+    window.addEventListener("scroll", updateProgress, { passive: true });
 
     (async function () {
       const token = new URLSearchParams(location.search).get("token");
@@ -214,6 +254,7 @@
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         render(data.sample);
+        updateProgress();
       } catch (err) {
         showState("No se pudo cargar la muestra. Inténtalo de nuevo en unos minutos.");
       }
