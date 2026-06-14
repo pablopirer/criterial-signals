@@ -31,6 +31,12 @@ import type {
   SampleRequestResponse,
 } from "./types.ts";
 
+// Supabase Edge runtime global: keeps a background task alive after the HTTP
+// response is returned (and after the client disconnects). Essential here —
+// the form is fire-and-forget and the web-searched generation takes much
+// longer than the request itself.
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 const SITE_URL = "https://criterialsignals.com";
 const ALERT_EMAIL = "criterialam@gmail.com";
 
@@ -196,6 +202,118 @@ function buildBodyMarkdown(b: BriefContent): string {
   );
 }
 
+/**
+ * Heavy work: generate the brief (with web search), persist the publication,
+ * and email the envelope. Runs in the background via EdgeRuntime.waitUntil so
+ * it completes even after the client has disconnected. All failures are caught
+ * and (where relevant) alerted; this never throws.
+ */
+async function generateAndDeliver(opts: {
+  supabase: ReturnType<typeof createServiceRoleClient>;
+  requestId: string;
+  email: string;
+  fullName: string;
+  tematica: string;
+  sector: string | null;
+}): Promise<void> {
+  const { supabase, requestId, email, fullName, tematica, sector } = opts;
+  const interestForPrompt = sector ? `${tematica} · sector: ${sector}` : tematica;
+
+  let briefText: string;
+  try {
+    const result = await generateBrief({
+      interestType: interestForPrompt,
+      prompt: SAMPLE_BRIEF_PROMPT,
+      maxTokens: 6000,
+      tools: WEB_SEARCH_TOOLS,
+    });
+    briefText = result.text;
+    console.log(
+      `Generated brief for request ${requestId}: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out tokens (${result.model})`,
+    );
+  } catch (err) {
+    console.error("Anthropic generation failed", err);
+    await supabase
+      .from("sample_requests")
+      .update({ status: "generation_failed" })
+      .eq("id", requestId);
+    sendEmail({
+      to: ALERT_EMAIL,
+      subject: `[Criterial] generation_failed — Anthropic error`,
+      text: `generation_failed\nLead: ${email}\nTemática: ${tematica}\nSector: ${sector ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
+    }).catch(() => {});
+    return;
+  }
+
+  let brief: BriefContent;
+  try {
+    const clean = briefText.replace(/```json|```/g, "").trim();
+    brief = JSON.parse(clean) as BriefContent;
+  } catch (err) {
+    console.error("Failed to parse brief JSON", err);
+    console.error("Raw briefText was:", briefText);
+    await supabase
+      .from("sample_requests")
+      .update({ status: "generation_failed" })
+      .eq("id", requestId);
+    sendEmail({
+      to: ALERT_EMAIL,
+      subject: `[Criterial] generation_failed — JSON parse error`,
+      text: `generation_failed (JSON parse)\nLead: ${email}\nTemática: ${tematica}\nRequest ID: ${requestId}\nError: ${String(err)}`,
+      html: `<p>Anthropic respondió pero el JSON no era válido.</p>
+<ul><li><strong>Lead:</strong> ${email}</li><li><strong>Temática:</strong> ${tematica}</li><li><strong>Request ID:</strong> ${requestId}</li><li><strong>Error:</strong> ${String(err)}</li></ul>
+<pre style="font-size:12px;background:#f4f4f4;padding:8px">${briefText.slice(0, 2000)}</pre>`,
+    }).catch(() => {});
+    return;
+  }
+
+  const bodyData = { version: 1, tematica, sector, ...brief };
+
+  const { data: pubRows, error: pubError } = await supabase
+    .from("publications")
+    .insert({
+      type: "sample",
+      title: brief.titulo,
+      body_markdown: buildBodyMarkdown(brief),
+      body_data: bodyData,
+      status: "draft",
+    })
+    .select("id, public_token")
+    .limit(1);
+
+  if (pubError || !pubRows || pubRows.length === 0) {
+    console.error("Failed to insert publication", pubError);
+    return;
+  }
+  const publicationId = pubRows[0].id as string;
+  const publicToken = pubRows[0].public_token as string;
+
+  await supabase
+    .from("sample_requests")
+    .update({
+      status: "generated",
+      sample_publication_id: publicationId,
+      sent_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+
+  const url = `${SITE_URL}/muestra.html?token=${publicToken}`;
+  try {
+    await sendSampleEnvelope({
+      to: email,
+      recipientName: fullName,
+      titulo: brief.titulo,
+      tesis: brief.tesis,
+      tematica,
+      sector: sector ?? undefined,
+      url,
+    });
+    console.log(`Envelope emailed to ${email} → ${url}`);
+  } catch (err) {
+    console.error("Resend delivery failed", err);
+  }
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -284,111 +402,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   const requestId = requestRows[0].id as string;
 
-  // 5. Generate the brief.
-  const interestForPrompt = sector ? `${tematica} · sector: ${sector}` : tematica;
-  let briefText: string | null = null;
-  try {
-    const result = await generateBrief({
-      interestType: interestForPrompt,
-      prompt: SAMPLE_BRIEF_PROMPT,
-      maxTokens: 6000,
-      tools: WEB_SEARCH_TOOLS,
-    });
-    briefText = result.text;
-    console.log(
-      `Generated brief for request ${requestId}: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out tokens (${result.model})`,
-    );
-  } catch (err) {
-    console.error("Anthropic generation failed", err);
-    await supabase
-      .from("sample_requests")
-      .update({ status: "generation_failed" })
-      .eq("id", requestId);
-    sendEmail({
-      to: ALERT_EMAIL,
-      subject: `[Criterial] generation_failed — Anthropic error`,
-      text: `generation_failed\nLead: ${email}\nTemática: ${tematica}\nSector: ${sector ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
-    }).catch(() => {});
+  // 5-7. Generate, persist and email in the background. The web-searched
+  // generation takes much longer than the request, and the form is
+  // fire-and-forget (the browser redirects ~800ms after submit), so we MUST
+  // detach this work from the request lifecycle or it gets killed on disconnect.
+  const work = generateAndDeliver({
+    supabase,
+    requestId,
+    email,
+    fullName: data.full_name ?? "",
+    tematica,
+    sector,
+  });
+  if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+    EdgeRuntime.waitUntil(work);
+  } else {
+    work.catch((e) => console.error("background work failed", e));
   }
 
-  // 6. Parse the JSON brief and persist the publication.
-  if (briefText) {
-    let brief: BriefContent | null = null;
-    try {
-      const clean = briefText.replace(/```json|```/g, "").trim();
-      brief = JSON.parse(clean) as BriefContent;
-    } catch (err) {
-      console.error("Failed to parse brief JSON", err);
-      console.error("Raw briefText was:", briefText);
-      await supabase
-        .from("sample_requests")
-        .update({ status: "generation_failed" })
-        .eq("id", requestId);
-      sendEmail({
-        to: ALERT_EMAIL,
-        subject: `[Criterial] generation_failed — JSON parse error`,
-        text: `generation_failed (JSON parse)\nLead: ${email}\nTemática: ${tematica}\nRequest ID: ${requestId}\nError: ${String(err)}`,
-        html: `<p>Anthropic respondió pero el JSON no era válido.</p>
-<ul><li><strong>Lead:</strong> ${email}</li><li><strong>Temática:</strong> ${tematica}</li><li><strong>Request ID:</strong> ${requestId}</li><li><strong>Error:</strong> ${String(err)}</li></ul>
-<pre style="font-size:12px;background:#f4f4f4;padding:8px">${briefText?.slice(0, 2000)}</pre>`,
-      }).catch(() => {});
-    }
-
-    if (brief) {
-      const bodyData = {
-        version: 1,
-        tematica,
-        sector,
-        ...brief,
-      };
-
-      const { data: pubRows, error: pubError } = await supabase
-        .from("publications")
-        .insert({
-          type: "sample",
-          title: brief.titulo,
-          body_markdown: buildBodyMarkdown(brief),
-          body_data: bodyData,
-          status: "draft",
-        })
-        .select("id, public_token")
-        .limit(1);
-
-      if (pubError || !pubRows || pubRows.length === 0) {
-        console.error("Failed to insert publication", pubError);
-      } else {
-        const publicationId = pubRows[0].id as string;
-        const publicToken = pubRows[0].public_token as string;
-
-        await supabase
-          .from("sample_requests")
-          .update({
-            status: "generated",
-            sample_publication_id: publicationId,
-            sent_at: new Date().toISOString(),
-          })
-          .eq("id", requestId);
-
-        // 7. Email the envelope with the muestra URL.
-        const url = `${SITE_URL}/muestra.html?token=${publicToken}`;
-        try {
-          await sendSampleEnvelope({
-            to: email,
-            recipientName: data.full_name ?? "",
-            titulo: brief.titulo,
-            tesis: brief.tesis,
-            tematica,
-            sector: sector ?? undefined,
-            url,
-          });
-          console.log(`Envelope emailed to ${email} → ${url}`);
-        } catch (err) {
-          console.error("Resend delivery failed", err);
-        }
-      }
-    }
-  }
-
-  // 8. Public response.
+  // 8. Respond immediately; generation + email happen in the background.
   return jsonResponse({ ok: true, request_id: requestId }, 200);
 });
