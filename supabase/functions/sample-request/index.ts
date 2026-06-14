@@ -92,10 +92,32 @@ const SAMPLE_BRIEF_PROMPT = {
     "  ],\n" +
     "  \"watch\": [\n" +
     "    { \"titulo\": \"actor o evento a vigilar\", \"cuerpo\": \"1-2 frases sobre por qué importa.\" }\n" +
-    "  ]\n" +
+    "  ],\n" +
+    "  \"mapa\": {\n" +
+    "    \"col_origen_label\": \"Origen del capital\",\n" +
+    "    \"col_destino_label\": \"Destino\",\n" +
+    "    \"nodos\": [\n" +
+    "      { \"id\": \"abrev_unica\", \"col\": \"origen\", \"label\": \"1-2 palabras\", \"momentum\": \"creciente|estable|enfriandose\", \"size\": 2 },\n" +
+    "      { \"id\": \"abrev_unica2\", \"col\": \"destino\", \"label\": \"1-2 palabras\", \"momentum\": \"creciente|estable|enfriandose\", \"size\": 2 }\n" +
+    "    ],\n" +
+    "    \"flujos\": [\n" +
+    "      { \"from\": \"id_origen\", \"to\": \"id_destino\", \"momentum\": \"creciente|estable|enfriandose\", \"peso_reciente\": 3, \"peso_esperado\": 4 }\n" +
+    "    ],\n" +
+    "    \"detalle\": {\n" +
+    "      \"id_del_nodo\": { \"titulo\": \"nombre completo del nodo\", \"cuerpo\": \"1-2 frases con cifras o actores concretos.\", \"chips\": [\"actor o tipo\", \"actor o tipo\"] }\n" +
+    "    }\n" +
+    "  }\n" +
     "}\n\n" +
     "Reglas de cantidad: 3-4 elementos en stats, 3-4 en signals, 2-3 en watch. " +
-    "El campo momentum solo admite uno de estos tres valores: creciente, estable, enfriandose.",
+    "El campo momentum solo admite uno de estos tres valores: creciente, estable, enfriandose.\n\n" +
+    "El 'mapa' es un grafo de flujos de capital coherente con las señales: 4-5 nodos con col='origen' " +
+    "(proveedores o actores de capital) y 4-5 nodos con col='destino' (segmentos o sectores receptores). " +
+    "Cada 'id' es una abreviatura única en snake_case. Los 'flujos' van SIEMPRE de un nodo origen a un nodo " +
+    "destino (from = id de un nodo origen, to = id de un nodo destino); incluye 6-9 flujos relevantes. " +
+    "'size' es 1-3 (volumen relativo del nodo); 'peso_reciente' y 'peso_esperado' son 1-5 (intensidad del " +
+    "flujo ahora y esperada en los próximos meses). 'detalle' tiene una entrada por cada nodo (misma id), " +
+    "con 'chips' de 1-3 actores o tipos de operación concretos. Usa nombres reales (gestoras, fondos, " +
+    "compañías) cuando los conozcas.",
   user:
     "Genera un sample brief sobre: {{interest_type}}.\n\n" +
     "Fecha de referencia: junio de 2026. Razona desde ese punto temporal. " +
@@ -112,6 +134,8 @@ interface BriefContent {
   stats: Array<{ label: string; valor: string }>;
   signals: Array<{ titulo: string; cuerpo: string; momentum?: string }>;
   watch: Array<{ titulo: string; cuerpo: string }>;
+  /** Capital-flow graph (Phase 2). Stored as-is; muestra.html validates it. */
+  mapa?: Record<string, unknown>;
 }
 
 function jsonResponse(
@@ -260,7 +284,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const result = await generateBrief({
       interestType: interestForPrompt,
       prompt: SAMPLE_BRIEF_PROMPT,
-      maxTokens: 3000,
+      maxTokens: 5000,
     });
     briefText = result.text;
     console.log(

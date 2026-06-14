@@ -43,12 +43,34 @@ Devuelve SOLO JSON válido, sin markdown, sin texto adicional, con esta forma:
   ],
   "watch": [
     { "titulo": "actor o evento a vigilar", "cuerpo": "1-2 frases sobre por qué importa." }
-  ]
+  ],
+  "mapa": {
+    "col_origen_label": "Origen del capital",
+    "col_destino_label": "Destino",
+    "nodos": [
+      { "id": "abrev_unica", "col": "origen", "label": "1-2 palabras", "momentum": "creciente|estable|enfriandose", "size": 2 },
+      { "id": "abrev_unica2", "col": "destino", "label": "1-2 palabras", "momentum": "creciente|estable|enfriandose", "size": 2 }
+    ],
+    "flujos": [
+      { "from": "id_origen", "to": "id_destino", "momentum": "creciente|estable|enfriandose", "peso_reciente": 3, "peso_esperado": 4 }
+    ],
+    "detalle": {
+      "id_del_nodo": { "titulo": "nombre completo del nodo", "cuerpo": "1-2 frases con cifras o actores concretos.", "chips": ["actor o tipo", "actor o tipo"] }
+    }
+  }
 }
 ```
 
 Reglas de cantidad: 3-4 elementos en stats, 3-4 en signals, 2-3 en watch.
 El campo momentum solo admite uno de estos tres valores: creciente, estable, enfriandose.
+
+El `mapa` es un grafo de flujos de capital coherente con las señales: 4-5 nodos con col='origen'
+(proveedores o actores de capital) y 4-5 nodos con col='destino' (segmentos o sectores receptores).
+Cada `id` es una abreviatura única en snake_case. Los `flujos` van SIEMPRE de un nodo origen a un nodo
+destino (from = id de un nodo origen, to = id de un nodo destino); incluye 6-9 flujos relevantes.
+`size` es 1-3 (volumen relativo); `peso_reciente` y `peso_esperado` son 1-5 (intensidad del flujo ahora
+y esperada). `detalle` tiene una entrada por cada nodo (misma id), con `chips` de 1-3 actores o tipos de
+operación concretos. Usa nombres reales (gestoras, fondos, compañías) cuando los conozcas.
 
 ## User
 
