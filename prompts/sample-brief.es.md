@@ -8,6 +8,8 @@ source of truth is the inline constant (Supabase only ships the function dir).
 v2 (2026-06-13): Sample redesign. Output is now structured JSON consumed by the
 interactive web brief (muestra.html), not plain text. Brand corrected to
 "Criterial." with "Signals" as the section. Real estate explicitly out of scope.
+v3 (2026-06-14): mapa is now a positioning map (sectors on 2 axes, trajectory),
+not a flow graph; added web search + real `fuentes`. maxTokens raised to 6000.
 
 The loader replaces `{{interest_type}}` with the lead's chosen topic (and,
 when present, the optional sector), e.g. "M&A · sector: Infraestructura digital".
@@ -45,32 +47,34 @@ Devuelve SOLO JSON válido, sin markdown, sin texto adicional, con esta forma:
     { "titulo": "actor o evento a vigilar", "cuerpo": "1-2 frases sobre por qué importa." }
   ],
   "mapa": {
-    "col_origen_label": "Origen del capital",
-    "col_destino_label": "Destino",
+    "tipo": "posicionamiento",
+    "eje_x": "etiqueta del eje horizontal (p.ej. 'Actividad')",
+    "eje_y": "etiqueta del eje vertical (p.ej. 'Valoración' o 'Atractivo')",
+    "cuadrantes": { "tr": "sup-dcha (2-3 palabras)", "br": "inf-dcha", "tl": "sup-izq", "bl": "inf-izq" },
     "nodos": [
-      { "id": "abrev_unica", "col": "origen", "label": "1-2 palabras", "momentum": "creciente|estable|enfriandose", "size": 2 },
-      { "id": "abrev_unica2", "col": "destino", "label": "1-2 palabras", "momentum": "creciente|estable|enfriandose", "size": 2 }
-    ],
-    "flujos": [
-      { "from": "id_origen", "to": "id_destino", "momentum": "creciente|estable|enfriandose", "peso_reciente": 3, "peso_esperado": 4 }
-    ],
-    "detalle": {
-      "id_del_nodo": { "titulo": "nombre completo del nodo", "cuerpo": "1-2 frases con cifras o actores concretos.", "chips": ["actor o tipo", "actor o tipo"] }
-    }
-  }
+      { "id": "abrev_unica", "label": "1-2 palabras", "x": 0.8, "y": 0.7, "x2": 0.85, "y2": 0.75, "size": 2, "momentum": "creciente|estable|enfriandose", "cuerpo": "1-2 frases con cifras o actores concretos.", "chips": ["actor o tipo"], "fuente": "Medio · fecha" }
+    ]
+  },
+  "fuentes": [
+    { "titulo": "titular de la fuente", "medio": "medio o publicación", "fecha": "mes año", "url": "https://..." }
+  ]
 }
 ```
 
-Reglas de cantidad: 3-4 elementos en stats, 3-4 en signals, 2-3 en watch.
-El campo momentum solo admite uno de estos tres valores: creciente, estable, enfriandose.
+Reglas de cantidad: 3-4 en stats, 3-4 en signals, 2-3 en watch, 4-6 nodos en mapa, 3-5 fuentes.
+El campo momentum solo admite: creciente, estable, enfriandose.
 
-El `mapa` es un grafo de flujos de capital coherente con las señales: 4-5 nodos con col='origen'
-(proveedores o actores de capital) y 4-5 nodos con col='destino' (segmentos o sectores receptores).
-Cada `id` es una abreviatura única en snake_case. Los `flujos` van SIEMPRE de un nodo origen a un nodo
-destino (from = id de un nodo origen, to = id de un nodo destino); incluye 6-9 flujos relevantes.
-`size` es 1-3 (volumen relativo); `peso_reciente` y `peso_esperado` son 1-5 (intensidad del flujo ahora
-y esperada). `detalle` tiene una entrada por cada nodo (misma id), con `chips` de 1-3 actores o tipos de
-operación concretos. Usa nombres reales (gestoras, fondos, compañías) cuando los conozcas.
+El `mapa` es un mapa de POSICIONAMIENTO: cada nodo es un sector o segmento situado en dos ejes.
+`x` e `y` van de 0 a 1 (0 = bajo/poco; 1 = alto/mucho) y deben reflejar la posición real con criterio
+analítico. Elige ejes con significado para la temática (p.ej. actividad vs valoración, actividad vs coste,
+madurez vs retorno) y nombra los cuatro cuadrantes de forma intuitiva. `x2` e `y2` (0-1) son la posición
+ESPERADA en los próximos meses (trayectoria). `size` es 1-3 (volumen relativo). `cuerpo` explica la
+posición; `chips` son 1-3 actores reales; `fuente` es una etiqueta breve. Usa nombres reales (gestoras,
+fondos, compañías).
+
+Tienes acceso a búsqueda web: BUSCA noticias y datos recientes y reales del mercado español de capital
+privado antes de redactar, y apóyate en ellos. Las `fuentes` deben ser reales y verificables (medios
+económicos, notas de operaciones), con su URL real cuando exista. NO inventes URLs ni fuentes.
 
 ## User
 

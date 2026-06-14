@@ -34,6 +34,12 @@ import type {
 const SITE_URL = "https://criterialsignals.com";
 const ALERT_EMAIL = "criterialam@gmail.com";
 
+// Server-side web search so the brief, the positioning map and the sources are
+// grounded in real, recent data. Same tool the Weekly/Monthly generation uses.
+const WEB_SEARCH_TOOLS = [
+  { type: "web_search_20250305", name: "web_search", max_uses: 5 },
+];
+
 /** interest_type code → human label, aligned with the Sample redesign topics. */
 const TEMATICA_LABELS: Record<string, string> = {
   m_and_a: "M&A",
@@ -94,30 +100,29 @@ const SAMPLE_BRIEF_PROMPT = {
     "    { \"titulo\": \"actor o evento a vigilar\", \"cuerpo\": \"1-2 frases sobre por qué importa.\" }\n" +
     "  ],\n" +
     "  \"mapa\": {\n" +
-    "    \"col_origen_label\": \"Origen del capital\",\n" +
-    "    \"col_destino_label\": \"Destino\",\n" +
+    "    \"tipo\": \"posicionamiento\",\n" +
+    "    \"eje_x\": \"etiqueta del eje horizontal (p.ej. 'Actividad')\",\n" +
+    "    \"eje_y\": \"etiqueta del eje vertical (p.ej. 'Valoración' o 'Atractivo')\",\n" +
+    "    \"cuadrantes\": { \"tr\": \"sup-dcha (2-3 palabras)\", \"br\": \"inf-dcha\", \"tl\": \"sup-izq\", \"bl\": \"inf-izq\" },\n" +
     "    \"nodos\": [\n" +
-    "      { \"id\": \"abrev_unica\", \"col\": \"origen\", \"label\": \"1-2 palabras\", \"momentum\": \"creciente|estable|enfriandose\", \"size\": 2 },\n" +
-    "      { \"id\": \"abrev_unica2\", \"col\": \"destino\", \"label\": \"1-2 palabras\", \"momentum\": \"creciente|estable|enfriandose\", \"size\": 2 }\n" +
-    "    ],\n" +
-    "    \"flujos\": [\n" +
-    "      { \"from\": \"id_origen\", \"to\": \"id_destino\", \"momentum\": \"creciente|estable|enfriandose\", \"peso_reciente\": 3, \"peso_esperado\": 4 }\n" +
-    "    ],\n" +
-    "    \"detalle\": {\n" +
-    "      \"id_del_nodo\": { \"titulo\": \"nombre completo del nodo\", \"cuerpo\": \"1-2 frases con cifras o actores concretos.\", \"chips\": [\"actor o tipo\", \"actor o tipo\"] }\n" +
-    "    }\n" +
-    "  }\n" +
+    "      { \"id\": \"abrev_unica\", \"label\": \"1-2 palabras\", \"x\": 0.8, \"y\": 0.7, \"x2\": 0.85, \"y2\": 0.75, \"size\": 2, \"momentum\": \"creciente|estable|enfriandose\", \"cuerpo\": \"1-2 frases con cifras o actores concretos.\", \"chips\": [\"actor o tipo\"], \"fuente\": \"Medio · fecha\" }\n" +
+    "    ]\n" +
+    "  },\n" +
+    "  \"fuentes\": [\n" +
+    "    { \"titulo\": \"titular de la fuente\", \"medio\": \"medio o publicación\", \"fecha\": \"mes año\", \"url\": \"https://...\" }\n" +
+    "  ]\n" +
     "}\n\n" +
-    "Reglas de cantidad: 3-4 elementos en stats, 3-4 en signals, 2-3 en watch. " +
-    "El campo momentum solo admite uno de estos tres valores: creciente, estable, enfriandose.\n\n" +
-    "El 'mapa' es un grafo de flujos de capital coherente con las señales: 4-5 nodos con col='origen' " +
-    "(proveedores o actores de capital) y 4-5 nodos con col='destino' (segmentos o sectores receptores). " +
-    "Cada 'id' es una abreviatura única en snake_case. Los 'flujos' van SIEMPRE de un nodo origen a un nodo " +
-    "destino (from = id de un nodo origen, to = id de un nodo destino); incluye 6-9 flujos relevantes. " +
-    "'size' es 1-3 (volumen relativo del nodo); 'peso_reciente' y 'peso_esperado' son 1-5 (intensidad del " +
-    "flujo ahora y esperada en los próximos meses). 'detalle' tiene una entrada por cada nodo (misma id), " +
-    "con 'chips' de 1-3 actores o tipos de operación concretos. Usa nombres reales (gestoras, fondos, " +
-    "compañías) cuando los conozcas.",
+    "Reglas de cantidad: 3-4 en stats, 3-4 en signals, 2-3 en watch, 4-6 nodos en mapa, 3-5 fuentes. " +
+    "El campo momentum solo admite: creciente, estable, enfriandose.\n\n" +
+    "El 'mapa' es un mapa de POSICIONAMIENTO: cada nodo es un sector o segmento situado en dos ejes. " +
+    "'x' e 'y' van de 0 a 1 (0 = bajo/poco; 1 = alto/mucho) y deben reflejar la posición real con criterio analítico. " +
+    "Elige ejes con significado para la temática (p.ej. actividad vs valoración, actividad vs coste, madurez vs retorno) " +
+    "y nombra los cuatro cuadrantes de forma intuitiva. 'x2' e 'y2' (0-1) son la posición ESPERADA en los próximos meses " +
+    "(trayectoria). 'size' es 1-3 (volumen relativo). 'cuerpo' explica la posición; 'chips' son 1-3 actores reales; " +
+    "'fuente' es una etiqueta breve. Usa nombres reales (gestoras, fondos, compañías).\n\n" +
+    "Tienes acceso a búsqueda web: BUSCA noticias y datos recientes y reales del mercado español de capital privado " +
+    "antes de redactar, y apóyate en ellos. Las 'fuentes' deben ser reales y verificables (medios económicos, notas de " +
+    "operaciones), con su URL real cuando exista. NO inventes URLs ni fuentes.",
   user:
     "Genera un sample brief sobre: {{interest_type}}.\n\n" +
     "Fecha de referencia: junio de 2026. Razona desde ese punto temporal. " +
@@ -134,8 +139,10 @@ interface BriefContent {
   stats: Array<{ label: string; valor: string }>;
   signals: Array<{ titulo: string; cuerpo: string; momentum?: string }>;
   watch: Array<{ titulo: string; cuerpo: string }>;
-  /** Capital-flow graph (Phase 2). Stored as-is; muestra.html validates it. */
+  /** Positioning map (Phase 3). Stored as-is; muestra.html validates it. */
   mapa?: Record<string, unknown>;
+  /** Real, web-searched sources. Stored as-is; muestra.html renders them. */
+  fuentes?: unknown[];
 }
 
 function jsonResponse(
@@ -284,7 +291,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const result = await generateBrief({
       interestType: interestForPrompt,
       prompt: SAMPLE_BRIEF_PROMPT,
-      maxTokens: 5000,
+      maxTokens: 6000,
+      tools: WEB_SEARCH_TOOLS,
     });
     briefText = result.text;
     console.log(

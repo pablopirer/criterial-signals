@@ -52,24 +52,31 @@
 
     .mu-state { padding: 160px 0; text-align: center; color: var(--muted); font-size: 15px; }
 
-    .mu-map-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 14px; }
+    .mu-map-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 10px; }
     .mu-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 10.5px; color: #6f6a60; }
-    .mu-sw { display: inline-block; width: 15px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+    .mu-sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 5px; }
     .mu-toggle { display: flex; gap: 6px; }
     .mu-tg { font-size: 10px; letter-spacing: .05em; color: #6f6a60; background: #fff; border: 0.5px solid #C9C3B8; border-radius: 3px; padding: 6px 12px; cursor: pointer; transition: background .18s, color .18s; }
     .mu-tg.on { background: var(--navy); color: #fff; border-color: var(--navy); }
-    .mu-node { cursor: pointer; }
-    .mu-node circle { transition: opacity .18s; }
-    .mu-node:hover circle { opacity: .82; }
-    .mu-nl { font-family: 'Inter', sans-serif; font-size: 9px; }
-    .mu-hdr { font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; fill: #a59f93; font-family: 'Inter', sans-serif; }
-    .mu-detail { background: #fff; border: 0.5px solid var(--border); border-radius: 7px; padding: 16px 18px; min-height: 96px; margin-top: 6px; }
+    .mu-bub { cursor: pointer; transition: transform .6s cubic-bezier(.4,0,.2,1); }
+    .mu-bub circle { transition: opacity .18s; }
+    .mu-bub:hover circle { opacity: .82; }
+    .mu-bl { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: var(--navy); pointer-events: none; }
+    .mu-ax { font-family: 'Inter', sans-serif; font-size: 9px; fill: #a59f93; }
+    .mu-axb { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: #6f6a60; letter-spacing: .04em; }
+    .mu-corner { font-family: 'Inter', sans-serif; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; }
+    .mu-detail { background: #fff; border: 0.5px solid var(--border); border-radius: 7px; padding: 16px 18px; min-height: 104px; margin-top: 8px; }
     .mu-detail-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 7px; }
     .mu-detail-t { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; margin: 0; color: var(--navy); }
     .mu-detail-m { font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
     .mu-detail-b { font-size: 12.5px; line-height: 1.6; color: #555; margin: 0 0 9px; }
     .mu-chip { display: inline-block; font-size: 9.5px; color: #3a4a63; background: #EAEDF2; border-radius: 3px; padding: 2px 8px; margin: 0 5px 5px 0; }
-    .mu-map-note { font-size: 10px; color: #b6b0a4; margin: 10px 0 0; }
+    .mu-src { font-size: 11px; color: #8a857c; margin: 8px 0 0; }
+    .mu-src a { color: var(--navy); text-decoration: none; border-bottom: 0.5px solid #c9c3b8; }
+    .mu-map-note { font-size: 10px; color: #b6b0a4; margin: 12px 0 0; }
+    .mu-fitem { display: flex; gap: 10px; font-size: 12.5px; line-height: 1.55; color: #555; margin-bottom: 10px; }
+    .mu-fn { color: #b6b0a4; font-size: 10px; min-width: 14px; }
+    .mu-fitem a { color: var(--navy); text-decoration: none; border-bottom: 0.5px solid #c9c3b8; }
 
     @media (max-width: 640px) {
       .mu-wrap { padding: 0 22px; }
@@ -137,127 +144,156 @@
       return [words[0], words.slice(1).join(" ")];
     }
 
-    // Build the interactive capital map from body_data.mapa. Returns a DOM
-    // section, or null if the graph is missing/malformed (defensive: the map
-    // is an enhancement — a bad graph must never break the brief).
+    // Build the positioning map from body_data.mapa. Returns a DOM section, or
+    // null if the data is missing/malformed (defensive: the map is an
+    // enhancement — a bad map must never break the brief).
     function renderMap(mapa) {
       if (!mapa || !Array.isArray(mapa.nodos)) return null;
-      const byId = {};
-      mapa.nodos.forEach(n => { if (n && n.id != null) byId[n.id] = n; });
-      const origins = mapa.nodos.filter(n => n && n.col === "origen" && n.id != null);
-      const destinos = mapa.nodos.filter(n => n && n.col === "destino" && n.id != null);
-      if (origins.length < 2 || destinos.length < 2) return null;
-      const flujos = (Array.isArray(mapa.flujos) ? mapa.flujos : [])
-        .filter(f => f && byId[f.from] && byId[f.to] && byId[f.from].col === "origen" && byId[f.to].col === "destino");
-      if (flujos.length < 2) return null;
-      const detalle = (mapa.detalle && typeof mapa.detalle === "object") ? mapa.detalle : {};
+      const nodos = mapa.nodos.filter(n =>
+        n && n.id != null && isFinite(Number(n.x)) && isFinite(Number(n.y)));
+      if (nodos.length < 3) return null;
 
-      const W = 640;
-      const rows = Math.max(origins.length, destinos.length);
-      const H = Math.max(300, 60 + rows * 66);
-      const leftX = 105, rightX = W - 105, midX = W / 2;
-      const topPad = 56, botPad = 38;
-      const usable = H - topPad - botPad;
-      function place(arr, x) {
-        arr.forEach((n, i) => {
-          n._x = x;
-          n._y = topPad + usable * ((i + 0.5) / arr.length);
-          n._r = 17 + clamp(n.size, 1, 3) * 5;
-        });
-      }
-      place(origins, leftX);
-      place(destinos, rightX);
+      const W = 640, H = 400;
+      const left = 80, right = 610, top = 28, bottom = 352;
+      const midX = (left + right) / 2, midY = (top + bottom) / 2;
+      const px = (x) => left + clamp(x, 0, 1) * (right - left);
+      const py = (y) => bottom - clamp(y, 0, 1) * (bottom - top);
+      const ejeX = esc(mapa.eje_x || "Actividad");
+      const ejeY = esc(mapa.eje_y || "Valoración");
 
-      const edgeW = (p) => 2 + clamp(p, 1, 5) * 1.7;
+      nodos.forEach(n => {
+        n._x = px(n.x); n._y = py(n.y);
+        n._x2 = isFinite(Number(n.x2)) ? px(n.x2) : n._x;
+        n._y2 = isFinite(Number(n.y2)) ? py(n.y2) : n._y;
+        n._r = 15 + clamp(n.size, 1, 3) * 7;
+      });
+      const hasTrajectory = nodos.some(n => n._x2 !== n._x || n._y2 !== n._y);
 
-      const edgesSvg = flujos.map((f, i) => {
-        const a = byId[f.from], b = byId[f.to];
-        const col = (MOMENTUM[f.momentum] || MOMENTUM.estable).color;
-        const wr = edgeW(f.peso_reciente), we = edgeW(f.peso_esperado);
-        return `<path id="mf${i}" d="M${a._x},${a._y} C${midX},${a._y} ${midX},${b._y} ${b._x},${b._y}" fill="none" stroke="${col}" stroke-opacity=".5" stroke-linecap="round" stroke-width="${wr}" data-r="${wr}" data-e="${we}"></path>`;
-      }).join("");
-
-      const nodeSvg = (n) => {
+      const bubbleSvg = (n) => {
+        const m = MOMENTUM[n.momentum] || MOMENTUM.estable;
         const lines = labelLines(n.label);
-        const isOrigin = n.col === "origen";
-        const fill = isOrigin ? "#0D1F3C" : "#fff";
-        const stroke = isOrigin ? "none" : ((MOMENTUM[n.momentum] || MOMENTUM.estable).color);
-        const sw = isOrigin ? 0 : 1.6;
-        const tFill = isOrigin ? "#fff" : "#0D1F3C";
-        const tFill2 = isOrigin ? "#cfd6e0" : "#0D1F3C";
-        let text;
-        if (lines.length === 1) {
-          text = `<text class="mu-nl" x="${n._x}" y="${n._y + 3}" text-anchor="middle" fill="${tFill}">${esc(lines[0])}</text>`;
-        } else {
-          text = `<text class="mu-nl" x="${n._x}" y="${n._y - 2}" text-anchor="middle" fill="${tFill}" style="font-weight:500">${esc(lines[0])}</text>` +
-                 `<text class="mu-nl" x="${n._x}" y="${n._y + 9}" text-anchor="middle" fill="${tFill2}">${esc(lines[1])}</text>`;
-        }
-        return `<g class="mu-node" data-k="${esc(n.id)}"><circle cx="${n._x}" cy="${n._y}" r="${n._r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"></circle>${text}</g>`;
+        const text = lines.length === 1
+          ? `<text class="mu-bl" y="3" text-anchor="middle">${esc(lines[0])}</text>`
+          : `<text class="mu-bl" y="-1" text-anchor="middle">${esc(lines[0])}</text><text class="mu-bl" y="11" text-anchor="middle">${esc(lines[1])}</text>`;
+        return `<g class="mu-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.6"></circle>${text}</g>`;
       };
+      const bubbles = nodos.map(bubbleSvg).join("");
 
-      const nodesSvg = origins.concat(destinos).map(nodeSvg).join("");
-      const oLabel = esc(mapa.col_origen_label || "Origen del capital");
-      const dLabel = esc(mapa.col_destino_label || "Destino");
+      const q = (mapa.cuadrantes && typeof mapa.cuadrantes === "object") ? mapa.cuadrantes : {};
+      const corner = (txt, x, y, anchor, color) =>
+        txt ? `<text class="mu-corner" x="${x}" y="${y}" text-anchor="${anchor}" fill="${color}">${esc(txt)}</text>` : "";
+      const corners =
+        corner(q.tr, right - 10, top + 16, "end", "#1d7a5f") +
+        corner(q.br, right - 10, bottom - 8, "end", "#b06a4e") +
+        corner(q.tl, left + 10, top + 16, "start", "#a59f93") +
+        corner(q.bl, left + 10, bottom - 8, "start", "#a59f93");
 
       const svg =
-        `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Mapa de flujos de capital del mercado">` +
-        `<desc>Flujos de capital desde ${oLabel.toLowerCase()} hacia ${dLabel.toLowerCase()}, con ancho proporcional al volumen y color por momentum.</desc>` +
-        `<text class="mu-hdr" x="${leftX}" y="22" text-anchor="middle">${oLabel}</text>` +
-        `<text class="mu-hdr" x="${rightX}" y="22" text-anchor="middle">${dLabel}</text>` +
-        `<g>${edgesSvg}</g>${nodesSvg}</svg>`;
+        `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Mapa de posicionamiento de sectores">` +
+        `<desc>Sectores situados por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}; tamaño por volumen, color por momentum.</desc>` +
+        `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" fill="#fff" stroke="#E2DED8"></rect>` +
+        `<line x1="${midX}" y1="${top}" x2="${midX}" y2="${bottom}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
+        `<line x1="${left}" y1="${midY}" x2="${right}" y2="${midY}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
+        corners +
+        `<text class="mu-axb" x="${midX}" y="${H - 14}" text-anchor="middle">${ejeX} →</text>` +
+        `<text class="mu-ax" x="${left + 2}" y="${bottom + 16}" text-anchor="start">baja</text>` +
+        `<text class="mu-ax" x="${right - 2}" y="${bottom + 16}" text-anchor="end">alta</text>` +
+        `<text class="mu-axb" x="18" y="${midY}" text-anchor="middle" transform="rotate(-90 18 ${midY})">${ejeY} →</text>` +
+        bubbles + `</svg>`;
+
+      const toggleHtml = hasTrajectory
+        ? `<div class="mu-toggle"><button class="mu-tg on" data-mode="r">Posición actual</button><button class="mu-tg" data-mode="e">Trayectoria</button></div>`
+        : "";
 
       const section = el("section", "mu-block reveal");
-      section.appendChild(el("p", "mu-section-label", "Mapa de capital"));
+      section.appendChild(el("p", "mu-section-label", "Mapa de posicionamiento"));
       section.innerHTML +=
         `<div class="mu-map-bar">` +
           `<div class="mu-legend">` +
             `<span><span class="mu-sw" style="background:#1d7a5f"></span>Creciente</span>` +
             `<span><span class="mu-sw" style="background:#9a958a"></span>Estable</span>` +
             `<span><span class="mu-sw" style="background:#b06a4e"></span>Enfriándose</span>` +
-          `</div>` +
-          `<div class="mu-toggle"><button class="mu-tg on" data-mode="r">Reciente</button><button class="mu-tg" data-mode="e">Esperado</button></div>` +
+            `<span style="color:#a59f93">· tamaño = volumen</span>` +
+          `</div>` + toggleHtml +
         `</div>` +
         svg +
         `<div class="mu-detail">` +
           `<div class="mu-detail-h"><p class="mu-detail-t" id="mu-det-t"></p><span class="mu-detail-m" id="mu-det-m"></span></div>` +
           `<p class="mu-detail-b" id="mu-det-b"></p><div id="mu-det-c"></div>` +
+          `<p class="mu-src" id="mu-det-s"></p>` +
         `</div>` +
-        `<p class="mu-map-note">Toca un nodo para explorar · datos generados para tu temática</p>`;
+        `<p class="mu-map-note">Toca un sector para explorar</p>`;
 
-      // Wire interactivity.
+      const byId = {};
+      nodos.forEach(n => { byId[n.id] = n; });
       const detT = section.querySelector("#mu-det-t");
       const detM = section.querySelector("#mu-det-m");
       const detB = section.querySelector("#mu-det-b");
       const detC = section.querySelector("#mu-det-c");
+      const detS = section.querySelector("#mu-det-s");
       function showDetail(id) {
         const n = byId[id];
         if (!n) return;
-        const det = detalle[id] || {};
         const mom = MOMENTUM[n.momentum] || MOMENTUM.estable;
-        detT.textContent = det.titulo || n.label || "";
+        detT.textContent = n.label || "";
         detM.textContent = mom.label;
         detM.style.color = mom.color;
-        detB.textContent = det.cuerpo || "";
-        const chips = Array.isArray(det.chips) ? det.chips.slice(0, 4) : [];
+        detB.textContent = n.cuerpo || "";
+        const chips = Array.isArray(n.chips) ? n.chips.slice(0, 4) : [];
         detC.innerHTML = chips.map(c => `<span class="mu-chip">${esc(c)}</span>`).join("");
+        detS.innerHTML = n.fuente ? `Fuente: ${esc(n.fuente)}` : "";
       }
-      section.querySelectorAll(".mu-node").forEach(g => {
+      section.querySelectorAll(".mu-bub").forEach(g => {
         const id = g.getAttribute("data-k");
         g.addEventListener("mouseenter", () => showDetail(id));
         g.addEventListener("click", () => showDetail(id));
       });
-      const edges = section.querySelectorAll("path[id^=mf]");
+      const bubs = section.querySelectorAll(".mu-bub");
       const btns = section.querySelectorAll(".mu-tg");
       btns.forEach(b => b.addEventListener("click", () => {
         const mode = b.getAttribute("data-mode");
-        edges.forEach(p => p.setAttribute("stroke-width", p.getAttribute(mode === "r" ? "data-r" : "data-e")));
+        bubs.forEach(g => {
+          const x = g.getAttribute(mode === "r" ? "data-rx" : "data-ex");
+          const y = g.getAttribute(mode === "r" ? "data-ry" : "data-ey");
+          g.setAttribute("transform", `translate(${x},${y})`);
+        });
         btns.forEach(x => x.classList.toggle("on", x === b));
       }));
 
-      // Default detail: a growing destination if any, else the first.
-      const def = destinos.find(n => n.momentum === "creciente") || destinos[0];
+      // Default detail: a growing node if any, else the first.
+      const def = nodos.find(n => n.momentum === "creciente") || nodos[0];
       showDetail(def.id);
 
+      return section;
+    }
+
+    // Render the sources list (Phase 3). Returns null if there are none.
+    function renderFuentes(fuentes) {
+      if (!Array.isArray(fuentes)) return null;
+      const items = fuentes.filter(f => f && (f.titulo || f.medio));
+      if (!items.length) return null;
+      const section = el("section", "mu-block reveal");
+      section.appendChild(el("p", "mu-section-label", "Fuentes"));
+      const list = el("div");
+      items.slice(0, 8).forEach((f, i) => {
+        const row = el("div", "mu-fitem");
+        row.appendChild(el("span", "mu-fn", String(i + 1)));
+        const span = el("span");
+        const meta = [f.medio, f.fecha].filter(Boolean).join(", ");
+        const titulo = f.titulo || f.medio || "";
+        const url = (typeof f.url === "string" && /^https?:\/\//.test(f.url)) ? f.url : null;
+        if (url) {
+          const a = el("a", null, titulo);
+          a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+          span.appendChild(a);
+          if (meta) span.appendChild(document.createTextNode(" — " + meta));
+        } else {
+          span.textContent = meta ? `${titulo} — ${meta}` : titulo;
+        }
+        row.appendChild(span);
+        list.appendChild(row);
+      });
+      section.appendChild(list);
       return section;
     }
 
@@ -367,6 +403,14 @@
         });
         block.appendChild(box);
         wrap.appendChild(block);
+      }
+
+      // Sources (Phase 3) — rendered only if present.
+      try {
+        const fuentesSection = renderFuentes(d.fuentes);
+        if (fuentesSection) wrap.appendChild(fuentesSection);
+      } catch (e) {
+        // Never let sources rendering break the brief.
       }
 
       root.appendChild(wrap);
