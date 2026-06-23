@@ -113,20 +113,29 @@ function esc(s: unknown): string {
     .join("");
 }
 
-function weeklyJsonToHtml(rawText: string): string {
-  let clean = rawText.trim();
-  // Strip markdown code fences if present despite instructions
-  if (clean.startsWith("```")) {
-    clean = clean
-      .split("\n")
-      .filter((l) => !l.trim().startsWith("```"))
-      .join("\n")
-      .trim();
+/**
+ * Extract a JSON object from model output. With web search enabled the model
+ * frequently wraps the JSON in conversational prose and/or a ```json fence
+ * (e.g. "Con los datos recopilados, genero ahora el brief...") despite the
+ * prompt asking for JSON only. Naively stripping the fences leaves the prose
+ * and breaks JSON.parse. Prefer a fenced block if present, then bound to the
+ * outermost { ... }.
+ */
+function extractJsonObject(text: string): string {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fenced ? fenced[1] : text;
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  if (start === -1 || end === -1 || end < start) {
+    throw new SyntaxError("No JSON object found in model output");
   }
+  return body.slice(start, end + 1);
+}
 
+function weeklyJsonToHtml(rawText: string): string {
   let d: WeeklyJson;
   try {
-    d = JSON.parse(clean) as WeeklyJson;
+    d = JSON.parse(extractJsonObject(rawText)) as WeeklyJson;
   } catch {
     // Not valid JSON — return raw text (will display as-is in admin preview)
     return rawText;
