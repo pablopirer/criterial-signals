@@ -187,6 +187,25 @@ function validatePayload(
   return { email, data: { ...p, email } };
 }
 
+/**
+ * Extract a JSON object from model output. With web search enabled the model
+ * frequently wraps the JSON in conversational prose and/or a ```json fence
+ * (e.g. "Con los datos recopilados, genero ahora el brief...") despite the
+ * prompt asking for JSON only. Naively stripping the fences leaves the prose
+ * and breaks JSON.parse — the confirmed cause of the generation_failed runs.
+ * Prefer a fenced block if present, then bound to the outermost { ... }.
+ */
+function extractJsonObject(text: string): string {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fenced ? fenced[1] : text;
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  if (start === -1 || end === -1 || end < start) {
+    throw new SyntaxError("No JSON object found in model output");
+  }
+  return body.slice(start, end + 1);
+}
+
 /** Build the markdown-ish body kept for archive (back-compat) rendering. */
 function buildBodyMarkdown(b: BriefContent): string {
   return (
@@ -224,7 +243,7 @@ async function generateAndDeliver(opts: {
     const result = await generateBrief({
       interestType: interestForPrompt,
       prompt: SAMPLE_BRIEF_PROMPT,
-      maxTokens: 6000,
+      maxTokens: 8000,
       tools: WEB_SEARCH_TOOLS,
     });
     briefText = result.text;
@@ -250,8 +269,7 @@ async function generateAndDeliver(opts: {
 
   let brief: BriefContent;
   try {
-    const clean = briefText.replace(/```json|```/g, "").trim();
-    brief = JSON.parse(clean) as BriefContent;
+    brief = JSON.parse(extractJsonObject(briefText)) as BriefContent;
   } catch (err) {
     console.error("Failed to parse brief JSON", err);
     console.error("Raw briefText was:", briefText);
