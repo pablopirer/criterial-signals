@@ -237,11 +237,14 @@ async function generateAndDeliver(opts: {
       .from("sample_requests")
       .update({ status: "generation_failed" })
       .eq("id", requestId);
-    sendEmail({
+    // Must be awaited: this runs inside EdgeRuntime.waitUntil, and an
+    // un-awaited send is killed when the isolate tears down (the reason the
+    // 14-jun generation_failed alerts never arrived).
+    await sendEmail({
       to: ALERT_EMAIL,
       subject: `[Criterial] generation_failed — Anthropic error`,
       text: `generation_failed\nLead: ${email}\nTemática: ${tematica}\nSector: ${sector ?? "—"}\nRequest ID: ${requestId}\nError: ${String(err)}`,
-    }).catch(() => {});
+    }).catch((e) => console.error("Alert email failed", e));
     return;
   }
 
@@ -256,14 +259,15 @@ async function generateAndDeliver(opts: {
       .from("sample_requests")
       .update({ status: "generation_failed" })
       .eq("id", requestId);
-    sendEmail({
+    // Awaited for the same reason as the Anthropic-error alert above.
+    await sendEmail({
       to: ALERT_EMAIL,
       subject: `[Criterial] generation_failed — JSON parse error`,
       text: `generation_failed (JSON parse)\nLead: ${email}\nTemática: ${tematica}\nRequest ID: ${requestId}\nError: ${String(err)}`,
       html: `<p>Anthropic respondió pero el JSON no era válido.</p>
 <ul><li><strong>Lead:</strong> ${email}</li><li><strong>Temática:</strong> ${tematica}</li><li><strong>Request ID:</strong> ${requestId}</li><li><strong>Error:</strong> ${String(err)}</li></ul>
 <pre style="font-size:12px;background:#f4f4f4;padding:8px">${briefText.slice(0, 2000)}</pre>`,
-    }).catch(() => {});
+    }).catch((e) => console.error("Alert email failed", e));
     return;
   }
 
