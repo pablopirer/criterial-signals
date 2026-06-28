@@ -93,4 +93,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── MOBILE NAV (hamburger) ───────────────────
+  const navHeader = document.getElementById('siteHeader');
+  const navMenu = navHeader ? navHeader.querySelector('.nav') : null;
+  if (navHeader && navMenu && !navHeader.querySelector('.nav-toggle')) {
+    const toggle = document.createElement('button');
+    toggle.className = 'nav-toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', 'Abrir menú');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = '<span></span><span></span><span></span>';
+    navHeader.appendChild(toggle);
+    const setNav = (open) => {
+      navHeader.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    toggle.addEventListener('click', () => setNav(!navHeader.classList.contains('nav-open')));
+    navMenu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setNav(false)));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setNav(false); });
+  }
+
 });

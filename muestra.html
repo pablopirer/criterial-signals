@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.v6.css" />
+  <link rel="stylesheet" href="styles.v7.css" />
   <style>
     body { background: #F4F0EA; }
     .mu-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 250; background: transparent; }
@@ -153,8 +153,11 @@
         n && n.id != null && isFinite(Number(n.x)) && isFinite(Number(n.y)));
       if (nodos.length < 3) return null;
 
-      const W = 640, H = 400;
-      const left = 80, right = 610, top = 28, bottom = 352;
+      // On mobile use a taller, near-square viewBox so the plot has more
+      // vertical room and the bubbles don't overlap when scaled to ~346px wide.
+      const mobile = !!(window.matchMedia && window.matchMedia("(max-width: 600px)").matches);
+      const W = mobile ? 430 : 640, H = mobile ? 480 : 400;
+      const left = mobile ? 52 : 80, right = W - (mobile ? 18 : 30), top = 28, bottom = H - (mobile ? 56 : 48);
       const midX = (left + right) / 2, midY = (top + bottom) / 2;
       const px = (x) => left + clamp(x, 0, 1) * (right - left);
       const py = (y) => bottom - clamp(y, 0, 1) * (bottom - top);
@@ -165,7 +168,7 @@
         n._x = px(n.x); n._y = py(n.y);
         n._x2 = isFinite(Number(n.x2)) ? px(n.x2) : n._x;
         n._y2 = isFinite(Number(n.y2)) ? py(n.y2) : n._y;
-        n._r = 15 + clamp(n.size, 1, 3) * 7;
+        n._r = (mobile ? 12 : 15) + clamp(n.size, 1, 3) * (mobile ? 5 : 7);
       });
       const hasTrajectory = nodos.some(n => n._x2 !== n._x || n._y2 !== n._y);
 
@@ -474,7 +477,7 @@
       }
     })();
   </script>
-  <script src="criterial-shared.js?v=3"></script>
+  <script src="criterial-shared.js?v=4"></script>
   <div class="cursor-dot" id="cursorDot"></div>
   <div class="cursor-ring" id="cursorRing"></div>
   <div class="page-transition" id="pageTransition"></div>

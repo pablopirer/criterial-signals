@@ -132,6 +132,9 @@ body {
 .site-header.light-header .nav a.nav-access:hover { border-color: var(--navy); color: var(--navy); }
 .site-header.light-header .nav a.nav-access[aria-current="page"] { border-color: var(--navy); color: var(--navy); }
 
+/* Mobile nav toggle (hamburger) — hidden on desktop, shown ≤600px */
+.nav-toggle { display: none; }
+
 /* HERO WITH IMAGE */
 .hero-wrap {
   position: relative;
@@ -705,6 +708,50 @@ button.btn-dark {
   form input, form select, form textarea { font-size: 16px; max-width: 100%; }
 }
 
+/* ── Mobile nav (hamburger overlay) ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .nav-toggle {
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 5px;
+    width: 34px; height: 34px; padding: 0; border: none; background: none;
+    cursor: pointer; position: relative; z-index: 210;
+  }
+  .nav-toggle span {
+    display: block; width: 24px; height: 1.5px; background: #fff;
+    transition: transform 0.3s ease, opacity 0.2s ease, background 0.3s ease;
+  }
+  .site-header.light-header .nav-toggle span { background: var(--navy); }
+  .site-header.nav-open .nav-toggle span { background: #fff; }
+  .site-header.nav-open .nav-toggle span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .site-header.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+  .site-header.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  .site-header.nav-open .brand { position: relative; z-index: 210; color: #fff; }
+
+  .nav {
+    position: fixed; inset: 0; z-index: 190;
+    flex-direction: column; justify-content: center; align-items: flex-start;
+    gap: 0; padding: 0 36px;
+    background: rgba(6,13,26,0.97); backdrop-filter: blur(20px);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.32s ease, visibility 0.32s ease;
+  }
+  .site-header.nav-open .nav { opacity: 1; visibility: visible; }
+
+  .nav a,
+  .site-header.light-header .nav a {
+    font-size: 15px; letter-spacing: 0.1em; color: rgba(255,255,255,0.82);
+    width: 100%; padding: 17px 0; border-bottom: 0.5px solid rgba(255,255,255,0.1);
+  }
+  .nav a::after { display: none; }
+  .nav a:hover, .nav a[aria-current="page"],
+  .site-header.light-header .nav a:hover, .site-header.light-header .nav a[aria-current="page"] { color: #fff; }
+  .nav a.nav-access,
+  .site-header.light-header .nav a.nav-access {
+    border: none; padding: 17px 0; color: rgba(255,255,255,0.82); letter-spacing: 0.1em;
+  }
+  .nav a.nav-access[aria-current="page"], .nav a.nav-access:hover { color: #fff; }
+}
+
 /* ── Publication content — Weekly & Monthly ───────────────────────────────── */
 
 .pub-content { font-family: 'Inter', sans-serif; color: var(--navy); }
@@ -850,4 +897,18 @@ button.btn-dark {
   .pub-rt-item:last-child { border-bottom: none; }
   .pub-sector-grid { grid-template-columns: 1fr; }
   .pub-stats-bar { grid-template-columns: 1fr 1fr; }
+
+  /* Operations table -> stacked cards on mobile */
+  .pub-ops-table, .pub-ops-table tbody, .pub-ops-table tr, .pub-ops-table td { display: block; width: 100%; }
+  .pub-ops-table { table-layout: auto; }
+  .pub-ops-table thead { display: none; }
+  .pub-ops-table tr { border-bottom: 0.5px solid var(--border); }
+  .pub-ops-table tr:last-child { border-bottom: none; }
+  .pub-ops-table td { border: none; padding: 3px 16px; font-size: 13px; line-height: 1.5; }
+  .pub-ops-table td:first-child { font-size: 14px; font-weight: 500; color: var(--navy); padding-top: 13px; }
+  .pub-ops-table td:last-child { padding-bottom: 14px; }
+  .pub-ops-table td:nth-of-type(2)::before { content: "Tipo — "; }
+  .pub-ops-table td:nth-of-type(3)::before { content: "Sector — "; }
+  .pub-ops-table td:nth-of-type(4)::before { content: "Tesis — "; }
+  .pub-ops-table td:not(:first-child)::before { color: var(--label); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
 }
