@@ -9,7 +9,6 @@
 .env.*.local
 *.env
 !.env.example
-.claude/settings.json
 
 # --- Node.js ---
 node_modules/
@@ -68,3 +67,15 @@ coverage/
 # --- Stripe CLI local config ---
 # Stripe CLI sometimes writes local files. Keep them out.
 .stripe/
+
+# --- AI agent tooling (local only — never commit) ---
+# Claude Code: settings.json / settings.local.json may hold permissions;
+# launch.json is a machine-specific dev server config.
+.claude/settings.json
+.claude/settings.local.json
+.claude/launch.json
+# Codex: config.toml stores secrets (Anthropic + Supabase service_role keys) in
+# plaintext as env vars. Must never be committed. Codex not used in this project.
+.codex/
+# AGENTS.md is a stale Codex-facing mirror of CLAUDE.md. Kept local, not maintained.
+AGENTS.md

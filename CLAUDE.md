@@ -38,12 +38,12 @@ Two active business lines:
 ### Content engine status
 Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`) but execution is not scheduled or automated.
 
-### Production snapshot (last documented: 2026-06-13)
-- 16 leads captured (all status `new`; none contacted or converted) — verify against live DB
+### Production snapshot (last documented: 2026-06-28)
+- 20 leads captured (all status `new`; none contacted or converted; no new lead since 2026-05-18) — verified against live DB 2026-06-28
 - 1 active Pro subscriber — verify in Stripe before using for commercial claims
-- 1 publication published (Weekly Signals nº1, ID `995ddce5-42f8-479f-87f3-717ca198ba97`, published 2026-06-13); 0 drafts
-- 32 sample requests total: 18 generated successfully, 2 `generation_failed` (users did not receive email), 0 queued — verify against live DB
-- `criterial-shared.js` confirmed at `?v=3` in all 10 active HTML files
+- 1 publication published (Weekly Signals nº1, ID `995ddce5-42f8-479f-87f3-717ca198ba97`, published 2026-06-13); 6 drafts pending triage
+- 46 sample requests total: 7 `generation_failed` (users did not receive email; all predate the Day 22 fix), 0 queued — verified against live DB 2026-06-28
+- `criterial-shared.js` confirmed at `?v=3` in all 12 active HTML files (re-verified 2026-06-28)
 
 > **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
@@ -53,7 +53,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
-- Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`.
+- Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22).
 - Active CSS: **`styles.v5.css`** — loaded by all HTML pages. `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
@@ -70,7 +70,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 
 | Function | Role |
 |---|---|
-| `sample-request` | Lead capture, brief generation (Anthropic), email delivery (Resend) |
+| `sample-request` | Lead capture, brief generation (Anthropic + web search), envelope email (Resend) |
+| `get-sample` | Public read-only access to a sample brief by `public_token` (no auth; `verify_jwt: false`). Serves `body_data` to `muestra.html` |
 | `advisory-request` | Advisory form: internal notification + user confirmation |
 | `stripe-webhook` | Stripe event receiver: verifies signature, upserts `subscribers` |
 | `welcome-subscriber` | Triggered by DB Webhook on INSERT to `subscribers` (plan=pro) |
@@ -85,9 +86,9 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Anthropic
 - Model: **`claude-sonnet-4-6`**
 - Runtime override: set the `ANTHROPIC_MODEL` environment variable (no redeploy needed).
-- `max_tokens`: 2048 (sample-request Edge Function); 6000 (content generation script and generate-content Edge Function).
-- Brief output schema for sample-request: `{ titulo, subtitulo, tags, snapshot, signals[], watch[] }` (JSON).
-- Web search habilitado en generación de contenido via tools: `[{type: 'web_search_20250305', max_uses: 5}]`. El modelo busca noticias reales antes de generar el HTML.
+- `max_tokens`: 8000 (sample-request Edge Function — raised in Day 22 for the larger map+sources schema with web search); 8000 (content generation script and generate-content Edge Function).
+- Brief output schema for sample-request: `{ titulo, subtitulo, tags, snapshot, signals[], watch[], mapa, fuentes[] }` (JSON). `mapa` is a quadrant positioning map (`eje_x`/`eje_y`, `cuadrantes`, `nodos` with x/y/size/momentum/etc.); `fuentes[]` are real, web-searched, cited sources. Persisted as `publications.body_data` (jsonb) and rendered by `muestra.html`.
+- Web search habilitado en `generate-content` **y en `sample-request`** (este último desde Day 22) via tools: `[{type: 'web_search_20250305', max_uses: 5}]`. El modelo busca noticias reales antes de generar el contenido. Con web search el modelo suele envolver el JSON en prosa + valla ```json; usar el helper `extractJsonObject` para parsear (ver §7).
 
 ### Resend
 - Sender: `noreply@criterialsignals.com` (domain verified).
@@ -110,19 +111,21 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── README.md
 ├── .gitignore
 ├── CNAME
-├── *.html                      ← index, about, pricing, sample, archive, encargos,
-│                                  advisory-received, request-received, success, cancel
+├── *.html                      ← index, about, pricing, sample, muestra, archive, encargos,
+│                                  advisory-received, request-received, success, cancel, admin
 ├── styles.v5.css               ← active CSS (styles.css present in repo but not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
 │   │   ├── /_shared            ← anthropic.ts, supabase.ts, resend.ts
 │   │   ├── /sample-request     ← index.ts, types.ts
+│   │   ├── /get-sample         ← index.ts (public sample brief by token)
 │   │   ├── /get-publications   ← index.ts
 │   │   ├── /welcome-subscriber ← index.ts
 │   │   ├── /advisory-request   ← index.ts
 │   │   ├── /stripe-webhook     ← index.ts
 │   │   ├── /generate-content   ← index.ts (generación desde admin web)
+│   │   ├── /send-weekly        ← index.ts (notificación Pro de Weekly/Monthly)
 │   │   └── /admin-publications ← index.ts (CRUD publicaciones, métricas)
 │   └── /migrations
 ├── /prompts
@@ -143,6 +146,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - `leads.email` — NOT NULL, unique index on `lower(email)`.
 - `leads.source` — NOT NULL, default `sample_form`.
 - `leads.status` — NOT NULL, default `new`.
+- `publications.public_token` — unguessable handle for public sample access. Added Day 22 (migration `20260613120000_publications_sample_token.sql`).
+- `publications.body_data` — jsonb; structured sample brief content (snapshot, signals, watch, mapa, fuentes). Served by `get-sample`, rendered by `muestra.html`. (`body_markdown` still stores HTML for Weekly/Monthly — see Publication content system.)
 - Always audit live schema before writing functions that insert/upsert data.
 
 ### Development environment
@@ -160,12 +165,14 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 
 ### 3.1 Sample request
 - **Entry point:** `sample.html` form submission.
-- **UX:** form redirects immediately to `request-received.html` (~800ms). The backend call is fire-and-forget — generation and email happen asynchronously.
-- **Edge Function:** `sample-request`
-- **Services touched:** Supabase (`leads`, `sample_requests`, `publications`), Anthropic (JSON brief generation), Resend (HTML email to user).
-- **Side effects:** lead upserted in `leads`; brief stored as draft in `publications`; email sent to user.
+- **UX:** form redirects immediately to `request-received.html` (~800ms). The backend call is fire-and-forget.
+- **Edge Function:** `sample-request` (generation) + `get-sample` (public read of the finished brief).
+- **Deliverable (since Day 22):** the user receives a minimal **envelope email** (`sendSampleEnvelope`) with a CTA linking to an **interactive web brief** at `muestra.html?...token`. The brief is no longer embedded as HTML in the email.
+- **Services touched:** Supabase (`leads`, `sample_requests`, `publications`), Anthropic (JSON brief generation **with web search**), Resend (envelope email to user).
+- **Background generation:** `sample-request` inserts the lead + `sample_request`, responds 200 immediately, then runs generation → persist → email inside `EdgeRuntime.waitUntil` (`generateAndDeliver()`). Required because web search pushed generation to 30–90s, longer than the client stays connected.
+- **Side effects:** lead upserted in `leads`; sample stored in `publications` with `public_token` + `body_data`; envelope email sent to user. `muestra.html` then fetches the brief via `get-sample` using the token.
 - **Request headers:** `sample.html` posts to the Edge Function with `Authorization: Bearer <anon/publishable key>` and `x-criterial-signal: <shared secret>`. These headers must stay aligned between `sample.html`, the Edge Function validation logic, and `scripts/test-e2e.sh`. Do not change one without updating all three.
-- **Caveats:** If Anthropic returns invalid JSON, `status = generation_failed` is logged and no email is sent. Monitor `sample_requests` for `generation_failed` records.
+- **Caveats:** If Anthropic returns unparseable output, `status = generation_failed` is logged, no email is sent, and an internal alert email goes to `criterialam@gmail.com`. With web search the model wraps the JSON in prose — parsing uses the `extractJsonObject` helper (see §7). Monitor `sample_requests` for `generation_failed` records.
 
 ### 3.2 Advisory request
 - **Entry point:** `encargos.html` form submission.
@@ -211,7 +218,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### 3.7 Content generation (admin web)
 - **Entry point:** `admin.html` → botón "Generar Weekly" o "Generar Brief Mensual".
 - **Edge Function:** `generate-content`
-- **Services touched:** Anthropic API (claude-sonnet-4-6, web search habilitado, max_tokens=6000), Supabase (`publications` insert).
+- **Services touched:** Anthropic API (claude-sonnet-4-6, web search habilitado, max_tokens=8000), Supabase (`publications` insert).
 - **Flow:** genera 1 variación con web search → muestra en admin → Pablo selecciona → guarda como draft → previsualiza → publica.
 - **Side effects:** nueva publicación en `publications` con status=draft.
 - **Script alternativo:** `scripts/generate-content.sh weekly|monthly` — mismo resultado desde terminal. Fallback validado si la Edge Function falla.
@@ -302,7 +309,13 @@ GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` doe
 The active CSS file is **`styles.v5.css`**. `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
-When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=3` — verified consistent across all 10 active HTML files on 2026-05-29.
+When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=3` — verified consistent across all 12 active HTML files on 2026-06-28 (the count grew from 10 to 12 with `muestra.html` and `admin.html`).
+
+### Web search wraps JSON output in prose — use `extractJsonObject`
+When Anthropic web search is enabled, the model frequently prefixes conversational prose before the JSON (e.g. "Con los datos recopilados, genero ahora el brief…") and wraps it in a ```json fence. A parser that only strips the fence leaves the prose and `JSON.parse` throws on the first non-JSON char — this was the confirmed root cause of silent `generation_failed` sample requests. The fix is the `extractJsonObject` helper (in `sample-request` and `generate-content`): it prefers a fenced block, then bounds to the outermost `{ … }`. Any new JSON-returning path that uses web search must parse through this helper, never raw `JSON.parse`. The monthly content path is exempt — it emits HTML directly, no JSON.
+
+### Edge Function async work must be awaited inside `EdgeRuntime.waitUntil`
+Fire-and-forget `sendEmail(...)` calls (no `await`) inside `EdgeRuntime.waitUntil` can be torn down with the isolate before the HTTP request reaches Resend — this is why the 14-jun `generation_failed` alert emails never arrived despite the rows being correctly marked. Always `await` outbound calls inside `waitUntil`, and log (do not swallow) errors.
 
 ### PostgREST/RLS unreliable after JWT key reset
 `auth.uid()` / `auth.email()` in RLS policies do not work reliably after a Supabase JWT key reset. Use Edge Functions for all authenticated data access. `get-publications` is the active path for archive access — not PostgREST/RLS.
@@ -550,6 +563,28 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 - `{{period}}` en el prompt ahora se reemplaza con regex `/g` para cubrir todas las ocurrencias (el template del monthly tiene dos).
 - EF desplegada y validada: genera Weekly con web search, fuentes reales, estructura `pub-*` correcta.
 - Ambos paths (EF via admin.html y terminal script) son ahora equivalentes y validados.
+
+### Day 22 — Complete (2026-06-13 → 2026-06-23)
+
+**Rediseño del producto "muestra" (entrega del Sample) en 3 fases.** La entrega pasa de un email con el brief en HTML embebido a un **email-sobre minimalista** que enlaza a un **brief web interactivo** servido en `muestra.html`.
+
+- **Fase 1 — brief web direccionable (commit `4e63724`):**
+  - Migración `20260613120000_publications_sample_token.sql`: añade `publications.public_token` (handle no adivinable) y `body_data` (jsonb).
+  - Nueva Edge Function `get-sample` (pública, `verify_jwt: false`): sirve un sample por token, solo lectura.
+  - `sample-request`: genera `body_data` estructurado, guarda el token y `sample_publication_id`, envía el email-sobre (`sendSampleEnvelope` en `_shared/resend.ts`) con CTA a la muestra.
+  - `sample.html`: nuevos temas (M&A, PE/VC, deuda privada, liquidez, general) + campo sector opcional; eliminados Real Estate / Capital Markets; marca "Signals".
+  - `muestra.html`: diseño editorial (paper canvas, signal cards, momentum pills, reading progress, CTA band).
+- **Fase 2 — mapa de capital interactivo (commit `88cbc40`):** el prompt emite un grafo de flujos de capital (`mapa{nodos, flujos, detalle}`); renderer SVG dinámico en `muestra.html` (flujos origen→destino estilo Sankey, toggle temporal reciente/esperado, panel de detalle). Defensivo: un grafo inválido se omite, nunca rompe el brief. `maxTokens` 3000→5000.
+- **Fase 3 — mapa de posicionamiento + fuentes reales (commit `35ed1b4`):** reemplaza el grafo abstracto por un **mapa de posicionamiento por cuadrantes** (ejes, cuadrantes, burbujas tintadas por momentum y dimensionadas por volumen, trayectoria animada), más intuitivo y de mayor valor. Web search habilitado en `sample-request`; nuevo `fuentes[]` (fuentes reales citadas, links http-only, XSS-safe). `maxTokens` 5000→6000. Renderers validados localmente antes de desplegar.
+
+**Fixes de robustez del Sample (post-rediseño):**
+- **Generación en background (commit `cbc43d4`):** con web search la generación pasó de segundos a 30–90s; como el form es fire-and-forget (el navegador redirige a ~800ms), la función moría al desconectar el cliente y el email no llegaba. Fix: insertar lead + sample_request, responder 200 de inmediato, y correr generación→persistencia→email en `EdgeRuntime.waitUntil` (lógica extraída a `generateAndDeliver()`).
+- **Alerta de `generation_failed` (commits `89c94d4`, `7bb26b0`):** se añadió alerta interna a `criterialam@gmail.com` cuando Anthropic falla o devuelve JSON inválido. Las alertas del 14-jun nunca llegaron porque los envíos eran fire-and-forget dentro de `EdgeRuntime.waitUntil` y el isolate se destruía antes de llegar a Resend. Fix: `await` en ambos envíos + log (no swallow) de errores. Ver §7.
+- **Extracción robusta de JSON (commits `aa25a90`, `6535a75`):** causa raíz confirmada de `generation_failed` — con web search el modelo envuelve el brief en prosa + valla ```json; el parser antiguo solo quitaba las vallas y dejaba la prosa, así que `JSON.parse` fallaba en el primer carácter no-JSON. Nuevo helper `extractJsonObject` (prefiere el bloque con valla, luego acota al `{ … }` más externo). Portado de `sample-request` a `generate-content` (path weekly; monthly emite HTML directo y no aplica). `maxTokens` de sample-request 6000→8000. Ver §7.
+
+**Estado en producción al cierre:** `sample-request` v24, `generate-content` v3, `get-sample` v1 — todas activas. `sample-request` y `generate-content` con `extractJsonObject` y `verify_jwt: true`; `get-sample` con `verify_jwt: false` (acceso público por token). Re-test end-to-end OK. `origin/main` en `6535a75`.
+
+**Entorno / despliegue:** la CLI local de Supabase está bloqueada por Smart App Control (binario sin firmar). Desplegar Edge Functions vía el MCP de Supabase o Management API + Node, **nunca** `supabase functions deploy`. El PAT temporal `deploy-temp` usado para estos despliegues fue **revocado** (confirmado 2026-06-28).
 
 ### Day 19 — Complete (2026-06-11)
 - **Keep-alive reparado:** el workflow `keep-alive.yml` pingaba `get-publications` (Edge Function) en lugar de hacer una query real a la DB. Supabase no registraba actividad de base de datos y pausó el proyecto. Fix: el workflow ahora hace `GET /rest/v1/publications?select=id&limit=1` con headers `apikey` y `Authorization`. Anon key almacenada como secret `SUPABASE_ANON_KEY` en GitHub Actions. Validado con HTTP 200.
