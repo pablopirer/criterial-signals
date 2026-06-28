@@ -778,8 +778,8 @@ button.btn-dark {
 .pub-rt-text { font-size: 13px; line-height: 1.65; color: var(--muted); }
 
 /* Dato de contexto */
-.pub-dato-new { display: flex; gap: 1.25rem; align-items: flex-start; border: 0.5px solid var(--border); padding: 1.25rem 1.5rem; background: #F8F6F2; border-left: 3px solid var(--navy); }
-.pub-dato-num { font-family: 'EB Garamond', Georgia, serif; font-size: 38px; font-weight: 400; color: var(--navy); line-height: 1; min-width: fit-content; }
+.pub-dato-new { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; border: 0.5px solid var(--border); padding: 1.25rem 1.5rem; background: #F8F6F2; border-left: 3px solid var(--navy); }
+.pub-dato-num { font-family: 'EB Garamond', Georgia, serif; font-size: 38px; font-weight: 400; color: var(--navy); line-height: 1; max-width: 100%; overflow-wrap: anywhere; }
 .pub-dato-text { font-size: 13.5px; line-height: 1.7; color: var(--muted); }
 
 /* Monthly extras — Tesis */
