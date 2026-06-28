@@ -38,12 +38,12 @@ Two active business lines:
 ### Content engine status
 Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`) but execution is not scheduled or automated.
 
-### Production snapshot (last documented: 2026-06-28)
+### Production snapshot (last documented: 2026-06-29)
 - 20 leads captured (all status `new`; none contacted or converted; no new lead since 2026-05-18) — verified against live DB 2026-06-28
 - 1 active Pro subscriber — verify in Stripe before using for commercial claims
-- 1 publication published (Weekly Signals nº1, ID `995ddce5-42f8-479f-87f3-717ca198ba97`, published 2026-06-13); 6 drafts pending triage
+- 2 publications published: Weekly Signals nº1 (`995ddce5-42f8-479f-87f3-717ca198ba97`, 2026-06-13) and "Weekly Signals — 28 de junio de 2026" (`f5bbbf6b-345e-4006-b939-6bc4d302098a`, published + sent to Pro 2026-06-28); 5 sample drafts (per-lead, addressable by token — their natural resting state)
 - 46 sample requests total: 7 `generation_failed` (users did not receive email; all predate the Day 22 fix), 0 queued — verified against live DB 2026-06-28
-- `criterial-shared.js` confirmed at `?v=3` in all 12 active HTML files (re-verified 2026-06-28)
+- Active CSS is **`styles.v7.css`** and `criterial-shared.js` is at **`?v=4`** across all 12 active HTML files (both bumped 2026-06-29 for the mobile hamburger nav)
 
 > **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
@@ -54,7 +54,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
 - Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22).
-- Active CSS: **`styles.v6.css`** — loaded by all HTML pages (renamed from `styles.v5.css` in Day 23 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
+- Active CSS: **`styles.v7.css`** — loaded by all HTML pages (renamed from `styles.v6.css` in Day 24 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
 
@@ -113,7 +113,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, muestra, archive, encargos,
 │                                  advisory-received, request-received, success, cancel, admin
-├── styles.v6.css               ← active CSS (styles.css present in repo but not loaded)
+├── styles.v7.css               ← active CSS (styles.css present in repo but not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
@@ -136,7 +136,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Publication content system
 - El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
 - El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
-- Las clases `pub-*` están definidas en `styles.v6.css` bajo el bloque `Publication content — Weekly & Monthly`.
+- Las clases `pub-*` están definidas en `styles.v7.css` bajo el bloque `Publication content — Weekly & Monthly`.
 - El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
 - `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
 - `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
@@ -243,7 +243,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
 14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
-15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v6.css` pub-* classes.
+15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v7.css` pub-* classes.
 
 ---
 
@@ -303,13 +303,13 @@ scripts/publish-draft.sh <id>             # sets publication status=published; i
 ## 7. Known risks and pitfalls
 
 ### GitHub Pages CSS caching
-GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (the active file is now `styles.v6.css`; next bump it to `styles.v7.css`), update all HTML references, then commit and push. This was last done in Day 23 (`styles.v5.css` → `styles.v6.css`).
+GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (the active file is now `styles.v7.css`; next bump it to `styles.v8.css`), update all HTML references, then commit and push. This was last done in Day 24 (`styles.v6.css` → `styles.v7.css`). Note: a plain `sed` over `*.html` normalizes CRLF→LF on the files that use CRLF (currently `admin.html`, `archive.html`, `sample.html`) — restore them with `sed -i 's/$/\r/'` after the bump to keep the diff clean.
 
 ### Active CSS file ambiguity
-The active CSS file is **`styles.v6.css`** (renamed from `styles.v5.css` in Day 23). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
+The active CSS file is **`styles.v7.css`** (renamed from `styles.v6.css` in Day 24). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
-When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=3` — verified consistent across all 12 active HTML files on 2026-06-28 (the count grew from 10 to 12 with `muestra.html` and `admin.html`).
+When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=4` — bumped in Day 24 (mobile hamburger nav) and verified consistent across all 12 active HTML files on 2026-06-29.
 
 ### Web search wraps JSON output in prose — use `extractJsonObject`
 When Anthropic web search is enabled, the model frequently prefixes conversational prose before the JSON (e.g. "Con los datos recopilados, genero ahora el brief…") and wraps it in a ```json fence. A parser that only strips the fence leaves the prose and `JSON.parse` throws on the first non-JSON char — this was the confirmed root cause of silent `generation_failed` sample requests. The fix is the `extractJsonObject` helper (in `sample-request` and `generate-content`): it prefers a fenced block, then bounds to the outermost `{ … }`. Any new JSON-returning path that uses web search must parse through this helper, never raw `JSON.parse`. The monthly content path is exempt — it emits HTML directly, no JSON.
@@ -606,6 +606,25 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 - `generate-content` redesplegado a **v5** (fix de `cifra` + hardening), vía MCP de Supabase (la CLI sigue bloqueada por Smart App Control). `verify_jwt: true`.
 - **CSS renombrado `styles.v5.css` → `styles.v6.css`** (baile anti-caché de §7) + 12 HTML actualizadas; arrastra la guarda `pub-dato`. `criterial-shared.js` sigue en `?v=3`.
 - Commits en `main` (todos pusheados): `462ac06` (Day 22 + gitignore), `ba577bd` (fix prompt + hardening JSON), `39adb07` (rename CSS a v6 + guarda).
+
+### Day 24 — Complete (2026-06-28 → 2026-06-29)
+
+**Primer Weekly real publicado y enviado a Pro (rompe la sequía de contenido):**
+- Generado desde `admin.html` (`generate-content` v5), revisado, guardado como borrador, **publicado** y **enviado a suscriptores Pro** vía `send-weekly`. ID `f5bbbf6b-345e-4006-b939-6bc4d302098a`, "Weekly Signals — 28 de junio de 2026"; dato `+64%` (cifra corta — fix de Day 23 verificado en vivo). Email recibido con CTA al archivo. 2ª publicación viva del MVP. Único Pro activo: `pablopirer@gmail.com` (cuenta de prueba).
+- Conducido por **fetch en segundo plano** con la sesión admin (`generate-content` → `admin-publications` POST/PATCH → `send-weekly`). El render de la variación de ~26KB en el DOM congelaba el tab; los fetch ligeros son estables. Útil para futuras operaciones de admin.
+
+**`sample-request` — paridad de robustez confirmada (sin cambios):** ya usa `extractJsonObject` y, ante JSON inválido, marca `generation_failed`, loguea el output crudo y envía alerta (awaited) a `ALERT_EMAIL`. Equivalente/superior al hardening de `generate-content`.
+
+**Triaje de borradores:** eliminados los 2 Weekly obsoletos (13-jun, 23-jun). Conservados los 5 sample (direccionables por token; draft es su estado natural).
+
+**Auditoría móvil + mejoras (commit `960d43b`):**
+- **Nav hamburguesa:** `criterial-shared.js` inyecta un toggle en el header; `styles.v7.css` lo renderiza como overlay full-screen ≤600px (funciona en header oscuro y en `light-header`). Arregla "Acceso Pro" cortado e inaccesible en móvil. El toggle se inyecta por JS para no duplicar markup en las 12 HTML.
+- **Tabla de operaciones del Weekly (`pub-ops-table`):** en ≤600px pasa a tarjetas apiladas con etiquetas (TIPO/SECTOR/TESIS por `nth-of-type`) en vez de tabla de 4 columnas.
+- **Mapa de posicionamiento de la muestra (`renderMap` en `muestra.html`):** viewBox más alto (430×480) + burbujas menores en móvil para evitar solapamiento (alto renderizado 216→386px).
+- **Copy de scope:** eliminado "real estate"/"capital markets" de `index`, `pricing`, `about`, `archive` → "M&A, private equity y deuda privada".
+- **Despliegue:** CSS renombrado `styles.v6.css` → `styles.v7.css` + `criterial-shared.js` bump `?v=3` → `?v=4` en las 12 HTML (baile anti-caché de §7), preservando CRLF en `admin`/`archive`/`sample`. Verificado en vivo: los assets sirven el código nuevo.
+
+**Estado en producción al cierre:** `sample-request` v24, `generate-content` v5, `get-sample` v1, `send-weekly` v1 — todas activas. CSS activo `styles.v7.css`; `criterial-shared.js` en `?v=4`. `origin/main` en `960d43b` (mobile) + el commit de esta documentación. Working tree limpio.
 
 ### Day 19 — Complete (2026-06-11)
 - **Keep-alive reparado:** el workflow `keep-alive.yml` pingaba `get-publications` (Edge Function) en lugar de hacer una query real a la DB. Supabase no registraba actividad de base de datos y pausó el proyecto. Fix: el workflow ahora hace `GET /rest/v1/publications?select=id&limit=1` con headers `apikey` y `Authorization`. Anon key almacenada como secret `SUPABASE_ANON_KEY` en GitHub Actions. Validado con HTTP 200.
