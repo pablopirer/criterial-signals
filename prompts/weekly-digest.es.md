@@ -63,7 +63,7 @@ Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Si
     "salidas": "string — conclusión accionable para salidas"
   },
   "dato": {
-    "cifra": "string — cifra o dato destacado",
+    "cifra": "string — UNA cifra corta y contundente, máx ~12 caracteres (p.ej. '+64%', '36.219 M€', '688 ops'). NUNCA una frase ni varias cifras encadenadas; el contexto va en 'texto'.",
     "texto": "string — explicación del dato en 3-4 frases"
   },
   "fuentes": [

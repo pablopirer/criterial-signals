@@ -133,13 +133,11 @@ function extractJsonObject(text: string): string {
 }
 
 function weeklyJsonToHtml(rawText: string): string {
-  let d: WeeklyJson;
-  try {
-    d = JSON.parse(extractJsonObject(rawText)) as WeeklyJson;
-  } catch {
-    // Not valid JSON — return raw text (will display as-is in admin preview)
-    return rawText;
-  }
+  // Throws if the model output is not valid JSON. The caller catches this and
+  // returns a clean error so the admin can regenerate — never persisting or
+  // displaying raw JSON, which the model occasionally emits with invalid tokens
+  // (e.g. `"contexto">` instead of `"contexto":`).
+  const d = JSON.parse(extractJsonObject(rawText)) as WeeklyJson;
 
   const badgeMap: Record<string, string> = {
     ma: "pub-badge-ma",
@@ -346,7 +344,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
       tools: WEB_SEARCH_TOOLS,
     });
 
-    const html = type === "weekly" ? weeklyJsonToHtml(result.text) : result.text;
+    let html: string;
+    if (type === "weekly") {
+      try {
+        html = weeklyJsonToHtml(result.text);
+      } catch (parseErr) {
+        console.error("Weekly JSON parse failed:", parseErr);
+        console.error("Raw model output (first 800 chars):", result.text.slice(0, 800));
+        return jsonResponse(
+          {
+            error:
+              "El modelo devolvió contenido no parseable como JSON. Vuelve a generar el Weekly.",
+          },
+          502,
+        );
+      }
+    } else {
+      html = result.text;
+    }
 
     return jsonResponse(
       { variations: [html], type, title, period_start, period_end },
