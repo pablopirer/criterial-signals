@@ -54,7 +54,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
 - Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22).
-- Active CSS: **`styles.v5.css`** — loaded by all HTML pages. `styles.css` remains in the repo but is not loaded by any page.
+- Active CSS: **`styles.v6.css`** — loaded by all HTML pages (renamed from `styles.v5.css` in Day 23 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
 
@@ -113,7 +113,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, muestra, archive, encargos,
 │                                  advisory-received, request-received, success, cancel, admin
-├── styles.v5.css               ← active CSS (styles.css present in repo but not loaded)
+├── styles.v6.css               ← active CSS (styles.css present in repo but not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
@@ -136,7 +136,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Publication content system
 - El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
 - El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
-- Las clases `pub-*` están definidas en `styles.v5.css` bajo el bloque `Publication content — Weekly & Monthly`.
+- Las clases `pub-*` están definidas en `styles.v6.css` bajo el bloque `Publication content — Weekly & Monthly`.
 - El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
 - `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
 - `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
@@ -243,7 +243,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
 14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
-15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v5.css` pub-* classes.
+15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v6.css` pub-* classes.
 
 ---
 
@@ -303,10 +303,10 @@ scripts/publish-draft.sh <id>             # sets publication status=published; i
 ## 7. Known risks and pitfalls
 
 ### GitHub Pages CSS caching
-GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (e.g. `styles.v5.css` → `styles.v6.css`), update all HTML references, then commit and push.
+GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (the active file is now `styles.v6.css`; next bump it to `styles.v7.css`), update all HTML references, then commit and push. This was last done in Day 23 (`styles.v5.css` → `styles.v6.css`).
 
 ### Active CSS file ambiguity
-The active CSS file is **`styles.v5.css`**. `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
+The active CSS file is **`styles.v6.css`** (renamed from `styles.v5.css` in Day 23). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
 When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=3` — verified consistent across all 12 active HTML files on 2026-06-28 (the count grew from 10 to 12 with `muestra.html` and `admin.html`).
@@ -585,6 +585,27 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 **Estado en producción al cierre:** `sample-request` v24, `generate-content` v3, `get-sample` v1 — todas activas. `sample-request` y `generate-content` con `extractJsonObject` y `verify_jwt: true`; `get-sample` con `verify_jwt: false` (acceso público por token). Re-test end-to-end OK. `origin/main` en `6535a75`.
 
 **Entorno / despliegue:** la CLI local de Supabase está bloqueada por Smart App Control (binario sin firmar). Desplegar Edge Functions vía el MCP de Supabase o Management API + Node, **nunca** `supabase functions deploy`. El PAT temporal `deploy-temp` usado para estos despliegues fue **revocado** (confirmado 2026-06-28).
+
+### Day 23 — Complete (2026-06-28)
+
+**Validación end-to-end de los dos flujos de producto (entorno de prueba):**
+- **Solicitar muestra (i):** validado de punta a punta. POST a `sample-request` → generación en background (Anthropic + web search) → `extractJsonObject` → persistencia (`body_data` + `public_token`) → `get-sample` por token → email-sobre entregado (verificado en bandeja) → render correcto en `muestra.html` (identidad visual intacta).
+- **Generar Weekly + ciclo de estado (ii):** validado desde `admin.html` con sesión admin real. Generar (`generate-content` EF + web search) → guardar borrador (`admin-publications` POST) → publicar (PATCH→published) → despublicar (PATCH→draft) → eliminar (DELETE). Los cinco pasos verificados contra la DB.
+
+**Fix "Dato de contexto" (Weekly):**
+- Causa raíz: el schema del prompt definía `dato.cifra` de forma laxa ("cifra o dato destacado") y el modelo metía una frase larga en `<span class="pub-dato-num">` (cifra de display a 38px), rompiendo la maqueta.
+- Prompt acotado en `_shared/prompts.ts` (EF) y `prompts/weekly-digest.es.md` (script): `cifra` = cifra corta (~12 caracteres, p.ej. "+64%"); el contexto va en `texto`.
+- Guarda defensiva CSS en `.pub-dato-new`/`.pub-dato-num` (flex-wrap + overflow-wrap) por si el modelo se desvía.
+- Verificado en producción: la cifra ahora sale corta ("+64%") y renderiza como número grande + texto al lado.
+
+**Hardening de parseo JSON en `generate-content`:**
+- El modelo emite JSON inválido de forma intermitente (visto: `"contexto">…` en vez de `"contexto": "…"`). El fallback anterior devolvía el texto crudo, que `admin.html` pintaba como JSON literal y podía guardarse como publicación rota.
+- Ahora, si `JSON.parse` del Weekly falla, el EF devuelve un **error 502 limpio** ("vuelve a generar") + log del output, en vez de JSON crudo. Ver §7.
+
+**Despliegues y repo:**
+- `generate-content` redesplegado a **v5** (fix de `cifra` + hardening), vía MCP de Supabase (la CLI sigue bloqueada por Smart App Control). `verify_jwt: true`.
+- **CSS renombrado `styles.v5.css` → `styles.v6.css`** (baile anti-caché de §7) + 12 HTML actualizadas; arrastra la guarda `pub-dato`. `criterial-shared.js` sigue en `?v=3`.
+- Commits en `main` (todos pusheados): `462ac06` (Day 22 + gitignore), `ba577bd` (fix prompt + hardening JSON), `39adb07` (rename CSS a v6 + guarda).
 
 ### Day 19 — Complete (2026-06-11)
 - **Keep-alive reparado:** el workflow `keep-alive.yml` pingaba `get-publications` (Edge Function) en lugar de hacer una query real a la DB. Supabase no registraba actividad de base de datos y pausó el proyecto. Fix: el workflow ahora hace `GET /rest/v1/publications?select=id&limit=1` con headers `apikey` y `Authorization`. Anon key almacenada como secret `SUPABASE_ANON_KEY` en GitHub Actions. Validado con HTTP 200.
