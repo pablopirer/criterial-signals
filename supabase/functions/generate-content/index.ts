@@ -89,7 +89,6 @@ interface WeeklySenal {
 }
 
 interface WeeklyJson {
-  numero: number | string;
   titulo: string;
   period: string;
   apertura: string;
@@ -151,7 +150,7 @@ function extractJsonObject(text: string): string {
   return body.slice(start, end + 1);
 }
 
-function weeklyJsonToHtml(rawText: string): string {
+function weeklyJsonToHtml(rawText: string, numero: number): string {
   // Throws if the model output is not valid JSON. The caller catches this and
   // returns a clean error so the admin can regenerate — never persisting or
   // displaying raw JSON, which the model occasionally emits with invalid tokens
@@ -178,7 +177,7 @@ function weeklyJsonToHtml(rawText: string): string {
   parts.push('<div class="pub-header-new">');
   parts.push('<div class="pub-brand-row">');
   parts.push('<span class="pub-brand-label">Criterial · Weekly Signals</span>');
-  parts.push(`<span class="pub-brand-num">Nº ${esc(d.numero)} · ${esc(d.period)}</span>`);
+  parts.push(`<span class="pub-brand-num">Nº ${numero} · ${esc(d.period)}</span>`);
   parts.push("</div>");
   parts.push(`<h1 class="pub-title-new">${esc(d.titulo)}</h1>`);
   parts.push(`<p class="pub-period-new">Semana del ${esc(d.period)}</p>`);
@@ -367,6 +366,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const prompt = type === "weekly" ? weeklyPrompt : monthlyPrompt;
   const userWithPeriod = prompt.user.replace(/\{\{period\}\}/g, periodLabel);
 
+  // Edition number is assigned server-side — the model can't know the sequence
+  // (it used to echo the "1" from the prompt schema, so every Weekly rendered
+  // "Nº 1"). It is the count of already-published weeklies + 1, i.e. the next
+  // edition. Falls back to Nº 1 only if the count query fails.
+  let weeklyNumber = 1;
+  if (type === "weekly") {
+    const { count, error: countErr } = await supabase
+      .from("publications")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "weekly")
+      .eq("status", "published");
+    if (countErr) {
+      console.error("Weekly count failed, defaulting to Nº 1:", countErr);
+    } else {
+      weeklyNumber = (count ?? 0) + 1;
+    }
+  }
+
   try {
     const result = await generateBrief({
       interestType: "",
@@ -381,7 +398,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     let html: string;
     if (type === "weekly") {
       try {
-        html = weeklyJsonToHtml(result.text);
+        html = weeklyJsonToHtml(result.text, weeklyNumber);
       } catch (parseErr) {
         console.error("Weekly JSON parse failed:", parseErr);
         console.error("Raw model output (first 800 chars):", result.text.slice(0, 800));

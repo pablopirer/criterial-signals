@@ -26,7 +26,6 @@ Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Si
 
 \`\`\`json
 {
-  "numero": 1,
   "titulo": "string — título editorial del Weekly",
   "period": "string — período de la semana",
   "apertura": "string — párrafo editorial de 3-5 frases sobre el estado del mercado",
