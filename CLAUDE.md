@@ -53,7 +53,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
-- Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22).
+- Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `signals.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22). `signals.html` is the **public** free-edition reader ("Signals · Edición abierta"), added Day 27 — no login; fetches `get-public-editions`. The public nav "Signals" points to `signals.html` (was `sample.html`).
 - Active CSS: **`styles.v8.css`** — loaded by all HTML pages (renamed from `styles.v7.css` in Day 25 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
@@ -72,6 +72,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 |---|---|
 | `sample-request` | Lead capture, brief generation (Anthropic + web search), envelope email (Resend) |
 | `get-sample` | Public read-only access to a sample brief by `public_token` (no auth; `verify_jwt: false`). Serves `body_data` to `muestra.html` |
+| `get-public-editions` | Public read-only feed of free Signals editions (no auth; `verify_jwt: false`). Returns only `body_public` of `published` rows; never exposes `body_markdown`. Serves `signals.html`. Added Day 27. |
 | `advisory-request` | Advisory form: internal notification + user confirmation |
 | `stripe-webhook` | Stripe event receiver: verifies signature, upserts `subscribers` |
 | `welcome-subscriber` | Triggered by DB Webhook on INSERT to `subscribers` (plan=pro) |
@@ -149,6 +150,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - `leads.status` — NOT NULL, default `new`.
 - `publications.public_token` — unguessable handle for public sample access. Added Day 22 (migration `20260613120000_publications_sample_token.sql`).
 - `publications.body_data` — jsonb; structured sample brief content (snapshot, signals, watch, mapa, fuentes). Served by `get-sample`, rendered by `muestra.html`. (`body_markdown` still stores HTML for Weekly/Monthly — see Publication content system.)
+- `publications.body_public` — text (nullable); the reduced free/"open" HTML projection of a Weekly (apertura + señales[hecho] + mapa), stored on the SAME row as the full `body_markdown` (Pro). Served by `get-public-editions` to `signals.html`; never returned by `get-publications` (Pro archive shows the full `body_markdown`). Only weekly rows carry it. Added Day 27 (migration `20260703120000_publications_body_public.sql`).
 - Always audit live schema before writing functions that insert/upsert data.
 
 ### Development environment
@@ -654,6 +656,28 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 **Backlog (memoria `project_weekly_map_backlog`):** Fase 2 — ② operaciones filtrables/expandibles, ③ barras del "Dato de contexto"; y pendientes menores — `numero` fijo en "Nº 1" (error de contenido), a11y de teclado del mapa. (El solape burbuja↔burbuja de la revisión se resolvió con el relax.)
 
 **Estado en producción al cierre:** `sample-request` v24, **`generate-content` v7**, `get-sample` v1, `send-weekly` v1 — todas activas. Assets nuevos (`styles.v8.css`, `criterial-shared.js?v=5`, hidratación) en la rama de Fase 1 / PR; el mapa queda vivo en el sitio al mergear. El borrador del 3-jul sigue sin publicar (decisión del usuario).
+
+### Day 27 — Complete (2026-07-03)
+
+**Salida al mercado free-first (LinkedIn): estrategia + Fase 1 (edición Free pública) + Fase 0 (posicionamiento).** Sesión de planificación (plan mode) → decisiones de negocio cerradas → build.
+
+**Estrategia (escalera de 3 peldaños):** (1) LinkedIn (posts cortos, alcance), (2) edición Free pública en web (prueba de valor, captura de email), (3) Pro (producto objetivo). Decisiones cerradas: **hueco Free↔Pro por profundidad** (Free = el "qué pasó": apertura + señales + mapa; Pro = el "y qué": patrón/implicación, read-through, fuentes, Brief Mensual); **CM de LinkedIn asistido** (generador de copy, publicación manual — sin API, Fase 2 pendiente); **precio Pro diferido / acceso anticipado** durante la validación (KPI = audiencia, no facturación). Nombre del tier Free: **"Signals"** (el nav apunta al hub público; la edición se llama "Signals · Edición abierta").
+
+**Fase 1 — edición Free pública (derivada del Weekly, una sola generación → dos proyecciones):**
+- **Migración `20260703120000_publications_body_public.sql`:** `publications.body_public` (text, nullable) — proyección reducida en la MISMA fila que `body_markdown` (full/Pro). Aplicada en prod.
+- **`generate-content` (v9):** parsea el JSON una vez y emite `weeklyJsonToHtml` (Pro completa) + `weeklyJsonToPublicHtml` (Free reducida); devuelve `public_html`. Verificado con fixture que la reducida no filtra contenido Pro.
+- **`get-public-editions` (v1, `verify_jwt: false`):** EF pública que sirve solo `body_public` de filas `published`; nunca expone `body_markdown`. Smoke-test OK (`{editions: []}` sin auth).
+- **`admin-publications` (v5) + `admin.html`:** propagan `body_public` al guardar el borrador.
+- **`signals.html`:** lector público (sin login) que lista y renderiza las ediciones abiertas con `hydratePubWidgets` (mapa interactivo + a11y del Day 26) y CTA de upsell a Pro. Verificado en preview: estado vacío sin EF, modal + mapa hidratado (6 burbujas) con edición inyectada.
+- **`scripts/generate-content.sh`:** paridad — produce y guarda `body_public` (builder reducido en heredoc con env; degradación segura → `null` si falla).
+
+**Fase 0 — posicionamiento (copy + nav):**
+- Nav "Signals" repuntado de `sample.html` → `signals.html` en las 12 HTML (CRLF preservado en admin/archive/sample).
+- `pricing.html`: Free → "Signals · Abierto" (ediciones abiertas recurrentes, CTA a `signals.html`); Pro → "Pro · Acceso anticipado" (profundidad: Weekly completo, read-through, Brief Mensual, archivo). Hero CTAs → Leer Signals / Solicitar muestra.
+- `index.html`: CTAs "Explorar Signals" → `signals.html`; etiqueta "Free" → "Abierto".
+- Stripe intacto (test mode, no se toca por código).
+
+**Estado en producción al cierre:** `sample-request` v24, **`generate-content` v9**, `get-sample` v1, `send-weekly` v1, **`admin-publications` v5**, **`get-public-editions` v1** — todas activas. Columna `body_public` en prod. `signals.html` vivo tras el push; se puebla cuando se genera+publica un Weekly con la v9. Pendiente: Fase 2 (generador de posts LinkedIn), Brief Mensual, captura de email inline en signals.html.
 
 ### Day 26 — Complete (2026-07-03)
 
