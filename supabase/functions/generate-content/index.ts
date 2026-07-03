@@ -150,13 +150,7 @@ function extractJsonObject(text: string): string {
   return body.slice(start, end + 1);
 }
 
-function weeklyJsonToHtml(rawText: string, numero: number): string {
-  // Throws if the model output is not valid JSON. The caller catches this and
-  // returns a clean error so the admin can regenerate — never persisting or
-  // displaying raw JSON, which the model occasionally emits with invalid tokens
-  // (e.g. `"contexto">` instead of `"contexto":`).
-  const d = JSON.parse(extractJsonObject(rawText)) as WeeklyJson;
-
+function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
   const badgeMap: Record<string, string> = {
     ma: "pub-badge-ma",
     buyout: "pub-badge-buyout",
@@ -309,6 +303,84 @@ function weeklyJsonToHtml(rawText: string, numero: number): string {
   return parts.join("");
 }
 
+/**
+ * Reduced "open" projection of the same Weekly JSON, for the free public
+ * edition (signals.html). It intentionally shows only the "what happened"
+ * layer — apertura + señales (fact only) + the positioning map — and OMITS the
+ * Pro depth (patrón, implicación, operations table, investment read-through,
+ * dato, fuentes). That omission IS the Free↔Pro value gap. Derived from the
+ * same parsed object as the full version, so the two never diverge.
+ */
+function weeklyJsonToPublicHtml(d: WeeklyJson, numero: number): string {
+  const badgeMap: Record<string, string> = {
+    ma: "pub-badge-ma",
+    buyout: "pub-badge-buyout",
+    growth: "pub-badge-growth",
+    salida: "pub-badge-salida",
+    fund: "pub-badge-fund",
+    deuda: "pub-badge-deuda",
+    lmm: "pub-badge-lmm",
+    opa: "pub-badge-opa",
+    deeptech: "pub-badge-deeptech",
+  };
+
+  const parts: string[] = [];
+  parts.push('<div class="pub-content">');
+
+  // Header
+  parts.push('<div class="pub-header-new">');
+  parts.push('<div class="pub-brand-row">');
+  parts.push('<span class="pub-brand-label">Criterial · Signals</span>');
+  parts.push(`<span class="pub-brand-num">Nº ${numero} · ${esc(d.period)}</span>`);
+  parts.push("</div>");
+  parts.push(`<h1 class="pub-title-new">${esc(d.titulo)}</h1>`);
+  parts.push(`<p class="pub-period-new">Semana del ${esc(d.period)}</p>`);
+  parts.push("</div>");
+
+  // Apertura
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Apertura</p>');
+  parts.push(`<div class="pub-apertura-new"><p>${esc(d.apertura)}</p></div>`);
+  parts.push("</div>");
+
+  // Señales — fact only (no patrón/implicación: that depth is Pro-only)
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Señales de la semana</p>');
+  for (const s of (d.senales ?? [])) {
+    const bc = badgeMap[s.badge_class ?? "ma"] ?? "pub-badge-ma";
+    parts.push('<div class="pub-signal-new">');
+    parts.push('<div class="pub-signal-head">');
+    parts.push(`<span class="pub-badge-new ${bc}">${esc(s.tipo)}</span>`);
+    parts.push(`<span class="pub-signal-title">${esc(s.titulo)}</span>`);
+    parts.push(`<span class="pub-time-tag">[${esc(s.temporalidad)}]</span>`);
+    parts.push("</div>");
+    parts.push('<div class="pub-signal-body">');
+    parts.push(`<p class="pub-signal-fact">${esc(s.hecho)}</p>`);
+    parts.push("</div></div>");
+  }
+  parts.push("</div>");
+
+  // Mapa de posicionamiento (interactive — same base64 placeholder as the full
+  // version; the map is part of the free "what happened" layer).
+  const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
+  if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
+    const encoded = toBase64Utf8(JSON.stringify(d.mapa));
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">Mapa de posicionamiento</p>');
+    parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
+    parts.push("</div>");
+  }
+
+  // Footer
+  parts.push('<div class="pub-footer-new">');
+  parts.push('<span class="pub-footer-text">Criterial Signals · Edición abierta</span>');
+  parts.push('<span class="pub-footer-text">criterialsignals.com</span>');
+  parts.push("</div>");
+
+  parts.push("</div>");
+  return parts.join("");
+}
+
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
 
 const CORS_HEADERS = {
@@ -396,9 +468,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
 
     let html: string;
+    let publicHtml: string | null = null;
     if (type === "weekly") {
+      let parsed: WeeklyJson;
       try {
-        html = weeklyJsonToHtml(result.text, weeklyNumber);
+        parsed = JSON.parse(extractJsonObject(result.text)) as WeeklyJson;
       } catch (parseErr) {
         console.error("Weekly JSON parse failed:", parseErr);
         console.error("Raw model output (first 800 chars):", result.text.slice(0, 800));
@@ -410,12 +484,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
           502,
         );
       }
+      // Two projections of the same generation: full (Pro) + reduced (Free).
+      html = weeklyJsonToHtml(parsed, weeklyNumber);
+      publicHtml = weeklyJsonToPublicHtml(parsed, weeklyNumber);
     } else {
       html = result.text;
     }
 
     return jsonResponse(
-      { variations: [html], type, title, period_start, period_end },
+      { variations: [html], public_html: publicHtml, type, title, period_start, period_end },
       200,
     );
   } catch (err) {
