@@ -43,7 +43,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - 1 active Pro subscriber — verify in Stripe before using for commercial claims
 - 2 publications published: Weekly Signals nº1 (`995ddce5-42f8-479f-87f3-717ca198ba97`, 2026-06-13) and "Weekly Signals — 28 de junio de 2026" (`f5bbbf6b-345e-4006-b939-6bc4d302098a`, published + sent to Pro 2026-06-28); 5 sample drafts (per-lead, addressable by token — their natural resting state)
 - 46 sample requests total: 7 `generation_failed` (users did not receive email; all predate the Day 22 fix), 0 queued — verified against live DB 2026-06-28
-- Active CSS is **`styles.v8.css`** and `criterial-shared.js` is at **`?v=5`** across all 12 active HTML files (both bumped 2026-07-03 for the interactive Weekly positioning map — Day 25)
+- Active CSS is **`styles.v8.css`** and `criterial-shared.js` is at **`?v=6`** across all 12 active HTML files (CSS unchanged since Day 25; JS bumped 2026-07-03 in Day 26 for the map keyboard a11y + muestra renderer parity)
 
 > **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
@@ -310,7 +310,7 @@ GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` doe
 The active CSS file is **`styles.v8.css`** (renamed from `styles.v7.css` in Day 25). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
-When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=5` — bumped in Day 25 (Weekly positioning map renderer `hydratePubWidgets`) and verified consistent across all 12 active HTML files on 2026-07-03. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=5` — bump the query or load with a unique param to force a fresh copy.
+When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=6` — bumped in Day 26 (map keyboard a11y in `buildMap` + `muestra.html renderMap` renderer parity); previously `?v=5` in Day 25. Verified consistent across all 12 active HTML files. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=6` — bump the query or load with a unique param to force a fresh copy.
 
 ### Weekly interactive map — base64 in HTML, hydrated client-side
 The Weekly positioning map (Day 25) travels as a `<div class="pub-map" data-mapa="<base64>">` placeholder inside `body_markdown` (base64 of the `mapa` JSON, UTF-8-safe). Base64 has no quotes/apostrophes, so it survives `archive.html`'s attribute-escaping round-trip (`safeBody` → `data-body` → `innerHTML`) untouched. The renderer `window.hydratePubWidgets(root)` (in `criterial-shared.js`) decodes it and builds the interactive SVG (quadrant labels rendered OUTSIDE the plot frame; bubble centres clamped inside; a light de-overlap relax with anchor pull-back). It is called by `archive.html` `openPubModal` and `admin.html` `previewPublication` after setting innerHTML — scripts inside innerHTML do NOT execute, so hydration must be driven by the host page. A malformed map hides its own section and never breaks the publication. No DB schema change: the data rides in `body_markdown`, not `body_data`.
@@ -654,6 +654,26 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 **Backlog (memoria `project_weekly_map_backlog`):** Fase 2 — ② operaciones filtrables/expandibles, ③ barras del "Dato de contexto"; y pendientes menores — `numero` fijo en "Nº 1" (error de contenido), a11y de teclado del mapa. (El solape burbuja↔burbuja de la revisión se resolvió con el relax.)
 
 **Estado en producción al cierre:** `sample-request` v24, **`generate-content` v7**, `get-sample` v1, `send-weekly` v1 — todas activas. Assets nuevos (`styles.v8.css`, `criterial-shared.js?v=5`, hidratación) en la rama de Fase 1 / PR; el mapa queda vivo en el sitio al mergear. El borrador del 3-jul sigue sin publicar (decisión del usuario).
+
+### Day 26 — Complete (2026-07-03)
+
+**Endurecimiento de Signals de cara al lanzamiento en LinkedIn (auditoría técnica del flujo Signals → punch list priorizado → pasos 1-3).**
+
+**Paso 1 — Nº de edición del Weekly asignado en servidor (bug de contenido):**
+- Causa raíz: el `numero` lo emitía el modelo, que copiaba el `1` literal del ejemplo del schema — todos los Weekly salían "Nº 1" (verificado en los 3 existentes); además el modelo no puede conocer la secuencia.
+- Fix: se calcula en servidor como (Weekly publicados + 1). `generate-content` EF consulta el count antes de construir el HTML; `scripts/generate-content.sh` replica el cálculo vía PostgREST y lo pasa a la conversión por env var. Quitado `"numero"` del schema en ambos prompts (`_shared/prompts.ts` y `prompts/weekly-digest.es.md`). Fallback a Nº 1 si la query falla.
+- `generate-content` desplegada **v8** (verify_jwt true) vía MCP de Supabase.
+- Corrección histórica en DB: el Weekly del 28-jun (`f5bbbf6b…`) pasó de "Nº 1" a "Nº 2" (UPDATE quirúrgico del span). Archivo coherente: 11-jun=Nº 1, 28-jun=Nº 2, próximo=Nº 3.
+
+**Pasos 2+3 — mapa de posicionamiento unificado + a11y de teclado:**
+- **Paso 2 (parity):** el mapa de la muestra (`muestra.html renderMap`, el lead magnet público) usaba el renderer antiguo (etiquetas de cuadrante DENTRO del marco → colisión con burbujas, ticks "baja/alta", sin anti-solape). Portado el renderer bueno del Weekly (`hydratePubWidgets`): etiquetas fuera del marco, centros recortados dentro (`fit`), relax anti-solape, sin ticks redundantes, corner labels con color uniforme.
+- **Paso 3 (a11y):** burbujas focusables (`tabindex=0`, `role=button`, `aria-label`) con foco/Enter/Espacio que abren el detalle, en los **dos** renderers (`renderMap` y `buildMap`); el SVG pasa de `role="img"` a `role="group"` para exponer las burbujas a lectores de pantalla. Foco visible en la muestra (`.mu-bub:focus-visible`); el Weekly usa el outline por defecto (no se renombró el CSS por una sola regla — `styles.v8.css` sin cambios).
+- Cache-bust: `criterial-shared.js` `?v=5` → **`?v=6`** en las 12 HTML (CRLF preservado en `admin`/`archive`/`sample`).
+- **Validado en preview con datos reales** (samples con schema de posicionamiento Fase 3, p.ej. `0b114ddd` 6 nodos): desktop (640×400) y móvil (430×480), 0 solapes, 0 fuera de marco, teclado + toggle de trayectoria OK, en ambos renderers. (Nota: algunas muestras antiguas usan el schema Fase 2 de grafo de flujos sin `x`/`y`; `renderMap` las descarta correctamente y no pinta mapa.)
+
+**Backlog restante (memoria `project_weekly_map_backlog`):** Fase 2 — ② operaciones filtrables/expandibles, ③ barras del "Dato de contexto". Pendiente de negocio: cadencia semanal, formato reducido para LinkedIn, primer encargo Advisory.
+
+**Estado en producción al cierre:** `sample-request` v24, **`generate-content` v8**, `get-sample` v1, `send-weekly` v1. Assets `styles.v8.css` + **`criterial-shared.js?v=6`**. Rama `fix/weekly-edition-number` (3 commits) pendiente de push/merge; el paso 1 ya está activo en prod vía el deploy de la EF, los pasos 2-3 van vivos al mergear + desplegar Pages.
 
 ### Day 19 — Complete (2026-06-11)
 - **Keep-alive reparado:** el workflow `keep-alive.yml` pingaba `get-publications` (Edge Function) en lugar de hacer una query real a la DB. Supabase no registraba actividad de base de datos y pausó el proyecto. Fix: el workflow ahora hace `GET /rest/v1/publications?select=id&limit=1` con headers `apikey` y `Authorization`. Anon key almacenada como secret `SUPABASE_ANON_KEY` en GitHub Actions. Validado con HTTP 200.
