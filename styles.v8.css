@@ -890,6 +890,29 @@ button.btn-dark {
 /* Section spacing */
 .pub-section-new { margin-bottom: 2.25rem; }
 
+/* Positioning map (interactive — hydrated by criterial-shared.js hydratePubWidgets) */
+.pub-map { display: block; max-width: 640px; }
+.pub-map-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 10px; }
+.pub-map-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 10.5px; color: #6f6a60; }
+.pub-map-sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 5px; }
+.pub-map-toggle { display: flex; gap: 6px; }
+.pub-map-tg { font-size: 10px; letter-spacing: 0.05em; color: #6f6a60; background: #fff; border: 0.5px solid #C9C3B8; border-radius: 3px; padding: 6px 12px; cursor: pointer; transition: background 0.18s, color 0.18s; font-family: 'Inter', sans-serif; }
+.pub-map-tg.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.pub-map-bub { cursor: pointer; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); }
+.pub-map-bub circle { transition: opacity 0.18s; }
+.pub-map-bub:hover circle { opacity: 0.82; }
+.pub-map-bl { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: var(--navy); pointer-events: none; }
+.pub-map-axb { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: #6f6a60; letter-spacing: 0.04em; }
+.pub-map-corner { font-family: 'Inter', sans-serif; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; fill: #9a958a; }
+.pub-map-detail { background: #fff; border: 0.5px solid var(--border); border-radius: 7px; padding: 16px 18px; min-height: 104px; margin-top: 8px; }
+.pub-map-detail-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 7px; }
+.pub-map-detail-t { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; margin: 0; color: var(--navy); }
+.pub-map-detail-m { font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.pub-map-detail-b { font-size: 12.5px; line-height: 1.6; color: #555; margin: 0 0 9px; }
+.pub-map-chip { display: inline-block; font-size: 9.5px; color: #3a4a63; background: #EAEDF2; border-radius: 3px; padding: 2px 8px; margin: 0 5px 5px 0; }
+.pub-map-src { font-size: 11px; color: #8a857c; margin: 8px 0 0; }
+.pub-map-note { font-size: 10px; color: #b6b0a4; margin: 12px 0 0; }
+
 @media (max-width: 600px) {
   .pub-vigilar-grid { grid-template-columns: 1fr; }
   .pub-readthrough-body { grid-template-columns: 1fr; }

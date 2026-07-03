@@ -58,7 +58,7 @@ echo ""
 echo -e "${BOLD}=== Criterial Signals — Content Generator ===${NC}"
 echo -e "  Type:    ${CYAN}$TYPE${NC}"
 echo -e "  Period:  $PERIOD"
-echo -e "  Model:   $MODEL (web_search, max_tokens=8000)"
+echo -e "  Model:   $MODEL (web_search, max_tokens=12000)"
 echo ""
 
 # ── Generate 3 variations ─────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ user = sys.stdin.read()
 system = '''$SYSTEM_PROMPT'''
 body = {
   'model': '$MODEL',
-  'max_tokens': 8000,
+  'max_tokens': 12000,
   'system': system,
   'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 5}],
   'messages': [{'role': 'user', 'content': user}]
@@ -98,7 +98,7 @@ print(''.join(b.get('text','') for b in blocks if b.get('type')=='text').strip()
 
   # ── Convert JSON to HTML ───────────────────────────────────────────────────────
   TEXT=$(echo "$TEXT" | python3 -c "
-import json, sys, html, re as _re
+import json, sys, html, re as _re, base64
 
 raw = sys.stdin.read().strip()
 if raw.startswith('\`\`\`'):
@@ -212,6 +212,15 @@ out.append('<div class=\"pub-dato-new\">')
 out.append(f'<span class=\"pub-dato-num\">{esc(dato.get(\"cifra\",\"\"))}</span>')
 out.append(f'<p class=\"pub-dato-text\">{esc(dato.get(\"texto\",\"\"))}</p>')
 out.append('</div></div>')
+
+# Mapa de posicionamiento (interactive — hydrated client-side from base64 data)
+mapa = d.get('mapa')
+if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.get('nodos')) >= 3:
+    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    out.append('<div class=\"pub-section-new\">')
+    out.append('<p class=\"pub-sec-label\">Mapa de posicionamiento</p>')
+    out.append(f'<div class=\"pub-map\" data-mapa=\"{encoded}\"></div>')
+    out.append('</div>')
 
 # Fuentes
 out.append('<div class=\"pub-sources-new\">')

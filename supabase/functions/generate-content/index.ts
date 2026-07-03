@@ -22,7 +22,11 @@ import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { weeklyPrompt, monthlyPrompt } from "../_shared/prompts.ts";
 
 const ADMIN_EMAIL = "pablopirer@gmail.com";
-const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }];
+// max_uses reduced 5->3: the Weekly+map generation runs synchronously (the admin
+// waits), so it's exposed to the Edge Function wall-clock limit. Fewer web
+// searches keep generation under that ceiling (a 5-search run timed out at the
+// gateway → "Error desconocido"). 3 searches still cite real, verifiable sources.
+const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }];
 
 const MONTHS_ES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -94,7 +98,22 @@ interface WeeklyJson {
   vigilar: Array<{ titulo: string; contexto: string }>;
   readthrough: { origination: string; financiacion: string; salidas: string };
   dato: { cifra: string; texto: string };
+  mapa?: Record<string, unknown>;
   fuentes: Array<{ medio: string; titulo: string }>;
+}
+
+/**
+ * UTF-8-safe base64 encode. The mapa JSON contains € and accented chars, which
+ * plain btoa (Latin1-only) cannot handle. The encoded blob rides inside a
+ * data-mapa attribute in the stored HTML and is decoded + rendered client-side
+ * by hydratePubWidgets (criterial-shared.js). Base64 has no quotes/apostrophes,
+ * so it survives archive.html's attribute-escaping round-trip untouched.
+ */
+function toBase64Utf8(s: string): string {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
 }
 
 function esc(s: unknown): string {
@@ -258,6 +277,18 @@ function weeklyJsonToHtml(rawText: string): string {
   parts.push(`<p class="pub-dato-text">${esc(dato.texto)}</p>`);
   parts.push("</div></div>");
 
+  // Mapa de posicionamiento (interactive — hydrated client-side from base64 data).
+  // Defensive: only emit the placeholder when there are enough valid nodes; a bad
+  // map must never break the brief (it simply won't render the section).
+  const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
+  if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
+    const encoded = toBase64Utf8(JSON.stringify(d.mapa));
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">Mapa de posicionamiento</p>');
+    parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
+    parts.push("</div>");
+  }
+
   // Fuentes
   parts.push('<div class="pub-sources-new">');
   parts.push('<p class="pub-sec-label">Fuentes</p>');
@@ -340,7 +371,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const result = await generateBrief({
       interestType: "",
       prompt: { system: prompt.system, user: userWithPeriod },
-      maxTokens: 8000,
+      // 8000 was tuned for the pre-map Weekly, which already ran close to the
+      // limit; adding the mapa block pushed output past 8000 and truncated the
+      // JSON mid-object (→ "no parseable" 502). 12000 gives the map headroom.
+      maxTokens: 12000,
       tools: WEB_SEARCH_TOOLS,
     });
 

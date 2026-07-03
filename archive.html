@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.v7.css" />
+  <link rel="stylesheet" href="styles.v8.css" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -485,7 +485,7 @@
       handleSession(session);
     });
   </script>
-  <script src="criterial-shared.js?v=4"></script>
+  <script src="criterial-shared.js?v=5"></script>
 
   <script>
     // Archive UI enhancements
@@ -606,6 +606,7 @@
       document.getElementById('modalTitle').textContent = card.dataset.title;
       document.getElementById('modalDate').textContent = 'Publicado el ' + card.dataset.date;
       document.getElementById('modalBody').innerHTML = card.dataset.body;
+      if (window.hydratePubWidgets) window.hydratePubWidgets(document.getElementById('modalBody'));
       modal.classList.add('open');
       document.getElementById('pubModalScroll').scrollTop = 0;
       document.body.style.overflow = 'hidden';
