@@ -119,6 +119,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       type?: string;
       title?: string;
       body_markdown?: string;
+      body_public?: string | null;
       period_start?: string;
       period_end?: string;
     };
@@ -128,14 +129,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return jsonResponse({ error: "Invalid JSON body" }, 400);
     }
 
-    const { type, title, body_markdown, period_start, period_end } = body;
+    const { type, title, body_markdown, body_public, period_start, period_end } = body;
     if (!type || !title || !body_markdown || !period_start || !period_end) {
       return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
+    // body_public is the reduced free/public projection (weekly only); nullable.
     const { data, error } = await supabase
       .from("publications")
-      .insert({ type, title, body_markdown, status: "draft", period_start, period_end })
+      .insert({
+        type,
+        title,
+        body_markdown,
+        body_public: body_public ?? null,
+        status: "draft",
+        period_start,
+        period_end,
+      })
       .select("id")
       .single();
 

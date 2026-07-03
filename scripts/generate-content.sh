@@ -88,6 +88,7 @@ echo ""
 
 # ── Generate 3 variations ─────────────────────────────────────────────────────
 VARIATIONS=()
+PUBLIC_VARIATIONS=()   # reduced free/public projection per variation (weekly only)
 echo -e "${BOLD}Generating 3 variations...${NC}"
 echo ""
 
@@ -121,7 +122,11 @@ blocks = data.get('content', [])
 print(''.join(b.get('text','') for b in blocks if b.get('type')=='text').strip())
 " 2>/dev/null)
 
-  # ── Convert JSON to HTML ───────────────────────────────────────────────────────
+  # Keep the raw model output (JSON): the full conversion below overwrites TEXT,
+  # but the reduced public projection needs to re-read the same JSON.
+  RAW_MODEL="$TEXT"
+
+  # ── Convert JSON to HTML (full / Pro) ──────────────────────────────────────────
   TEXT=$(echo "$TEXT" | WEEKLY_NUMBER="$WEEKLY_NUMBER" python3 -c "
 import json, sys, html, re as _re, base64, os
 
@@ -274,7 +279,75 @@ print(''.join(out))
     exit 1
   fi
 
+  # ── Reduced public projection (weekly only) → body_public ─────────────────────
+  # Same JSON as the full version; keeps only apertura + señales(hecho) + mapa.
+  # Omits patrón/implicación, operaciones, read-through, dato, fuentes (Pro depth).
+  # Mirrors weeklyJsonToPublicHtml in generate-content/index.ts. Degrades safely:
+  # any failure leaves PUBLIC_HTML empty → body_public null → the save still works.
+  PUBLIC_HTML=""
+  if [[ "$TYPE" == "weekly" ]]; then
+    PUBLIC_HTML=$(RAW_MODEL="$RAW_MODEL" WEEKLY_NUMBER="$WEEKLY_NUMBER" python3 <<'PYEOF'
+import os, json, html, re as _re, base64
+NUM = os.environ.get('WEEKLY_NUMBER', '').strip()
+raw = os.environ.get('RAW_MODEL', '').strip()
+s2 = raw.find('{'); e2 = raw.rfind('}')
+if s2 != -1 and e2 != -1 and e2 > s2:
+    raw = raw[s2:e2+1]
+try:
+    d = json.loads(raw)
+except Exception:
+    raise SystemExit(0)
+def esc(s):
+    if not s: return ''
+    parts = _re.split(r'(</?strong>)', str(s))
+    return ''.join(html.escape(p) if not p.startswith('<') else p for p in parts)
+badge_map = {'ma':'pub-badge-ma','buyout':'pub-badge-buyout','growth':'pub-badge-growth','salida':'pub-badge-salida','fund':'pub-badge-fund','deuda':'pub-badge-deuda','lmm':'pub-badge-lmm','opa':'pub-badge-opa','deeptech':'pub-badge-deeptech'}
+out = ['<div class="pub-content">']
+out.append('<div class="pub-header-new">')
+out.append('<div class="pub-brand-row">')
+out.append('<span class="pub-brand-label">Criterial · Signals</span>')
+out.append(f'<span class="pub-brand-num">Nº {esc(NUM)} · {esc(d.get("period",""))}</span>')
+out.append('</div>')
+out.append(f'<h1 class="pub-title-new">{esc(d.get("titulo",""))}</h1>')
+out.append(f'<p class="pub-period-new">Semana del {esc(d.get("period",""))}</p>')
+out.append('</div>')
+out.append('<div class="pub-section-new">')
+out.append('<p class="pub-sec-label">Apertura</p>')
+out.append(f'<div class="pub-apertura-new"><p>{esc(d.get("apertura",""))}</p></div>')
+out.append('</div>')
+out.append('<div class="pub-section-new">')
+out.append('<p class="pub-sec-label">Señales de la semana</p>')
+for s in d.get('senales', []):
+    bc = badge_map.get(s.get('badge_class','ma'), 'pub-badge-ma')
+    out.append('<div class="pub-signal-new">')
+    out.append('<div class="pub-signal-head">')
+    out.append(f'<span class="pub-badge-new {bc}">{esc(s.get("tipo",""))}</span>')
+    out.append(f'<span class="pub-signal-title">{esc(s.get("titulo",""))}</span>')
+    out.append(f'<span class="pub-time-tag">[{esc(s.get("temporalidad",""))}]</span>')
+    out.append('</div>')
+    out.append('<div class="pub-signal-body">')
+    out.append(f'<p class="pub-signal-fact">{esc(s.get("hecho",""))}</p>')
+    out.append('</div></div>')
+out.append('</div>')
+mapa = d.get('mapa')
+if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.get('nodos')) >= 3:
+    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    out.append('<div class="pub-section-new">')
+    out.append('<p class="pub-sec-label">Mapa de posicionamiento</p>')
+    out.append(f'<div class="pub-map" data-mapa="{encoded}"></div>')
+    out.append('</div>')
+out.append('<div class="pub-footer-new">')
+out.append('<span class="pub-footer-text">Criterial Signals · Edición abierta</span>')
+out.append('<span class="pub-footer-text">criterialsignals.com</span>')
+out.append('</div>')
+out.append('</div>')
+print(''.join(out))
+PYEOF
+)
+  fi
+
   VARIATIONS+=("$TEXT")
+  PUBLIC_VARIATIONS+=("$PUBLIC_HTML")
   echo "done"
 done
 
@@ -299,6 +372,7 @@ fi
 SELECTION="1"
 
 SELECTED_TEXT="${VARIATIONS[$((SELECTION-1))]}"
+SELECTED_PUBLIC="${PUBLIC_VARIATIONS[$((SELECTION-1))]}"
 
 # ── Save to Supabase as draft (via REST API) ──────────────────────────────────
 echo ""
@@ -306,19 +380,24 @@ echo -n "Guardando borrador en Supabase... "
 
 TMPBODY=$(mktemp)
 printf '%s' "$SELECTED_TEXT" > "$TMPBODY"
+TMPPUBLIC=$(mktemp)
+printf '%s' "$SELECTED_PUBLIC" > "$TMPPUBLIC"
 
-PUB_ID=$(python3 - "$TMPBODY" "$TYPE" "$TITLE" "$PERIOD_START" "$PERIOD_END" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
+PUB_ID=$(python3 - "$TMPBODY" "$TMPPUBLIC" "$TYPE" "$TITLE" "$PERIOD_START" "$PERIOD_END" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
 import json, sys, urllib.request, urllib.error
 
-body_file, pub_type, title, period_start, period_end, supabase_url, service_key = sys.argv[1:]
+body_file, public_file, pub_type, title, period_start, period_end, supabase_url, service_key = sys.argv[1:]
 
 with open(body_file, encoding='utf-8') as f:
     body_markdown = f.read()
+with open(public_file, encoding='utf-8') as f:
+    body_public = f.read()
 
 payload = json.dumps({
     'type': pub_type,
     'title': title,
     'body_markdown': body_markdown,
+    'body_public': body_public if body_public.strip() else None,
     'status': 'draft',
     'period_start': period_start,
     'period_end': period_end
@@ -345,7 +424,7 @@ except urllib.error.HTTPError as e:
 PYEOF
 ) || true
 
-rm -f "$TMPBODY"
+rm -f "$TMPBODY" "$TMPPUBLIC"
 
 if [[ -z "$PUB_ID" ]]; then
   echo "FAILED"
