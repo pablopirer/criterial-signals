@@ -233,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const text = lines.length === 1
         ? `<text class="pub-map-bl" y="3" text-anchor="middle">${esc(lines[0])}</text>`
         : `<text class="pub-map-bl" y="-1" text-anchor="middle">${esc(lines[0])}</text><text class="pub-map-bl" y="11" text-anchor="middle">${esc(lines[1])}</text>`;
-      return `<g class="pub-map-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.6"></circle>${text}</g>`;
+      const al = esc((n.label || "sector") + " — " + m.label);
+      return `<g class="pub-map-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})" tabindex="0" role="button" aria-label="${al}"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.6"></circle>${text}</g>`;
     };
     const bubbles = nodos.map(bubbleSvg).join("");
 
@@ -247,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
       corner(q.br, right, bottomLabelY, "end");
 
     const svg =
-      `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Mapa de posicionamiento de sectores">` +
+      `<svg viewBox="0 0 ${W} ${H}" width="100%" role="group" aria-label="Mapa de posicionamiento de sectores por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}">` +
       `<desc>Sectores situados por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}; tamaño por volumen, color por momentum.</desc>` +
       `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" fill="#fff" stroke="#E2DED8"></rect>` +
       `<line x1="${midX}" y1="${top}" x2="${midX}" y2="${bottom}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
@@ -301,6 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = g.getAttribute("data-k");
       g.addEventListener("mouseenter", () => showDetail(id));
       g.addEventListener("click", () => showDetail(id));
+      g.addEventListener("focus", () => showDetail(id));
+      g.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showDetail(id); }
+      });
     });
     const bubs = container.querySelectorAll(".pub-map-bub");
     const btns = container.querySelectorAll(".pub-map-tg");
