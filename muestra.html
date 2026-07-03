@@ -64,7 +64,9 @@
     .mu-bl { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: var(--navy); pointer-events: none; }
     .mu-ax { font-family: 'Inter', sans-serif; font-size: 9px; fill: #a59f93; }
     .mu-axb { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: #6f6a60; letter-spacing: .04em; }
-    .mu-corner { font-family: 'Inter', sans-serif; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; }
+    .mu-corner { font-family: 'Inter', sans-serif; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; fill: #9a958a; }
+    .mu-bub { outline: none; }
+    .mu-bub:focus-visible circle { stroke-width: 3.5; }
     .mu-detail { background: #fff; border: 0.5px solid var(--border); border-radius: 7px; padding: 16px 18px; min-height: 104px; margin-top: 8px; }
     .mu-detail-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 7px; }
     .mu-detail-t { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; margin: 0; color: var(--navy); }
@@ -153,24 +155,75 @@
         n && n.id != null && isFinite(Number(n.x)) && isFinite(Number(n.y)));
       if (nodos.length < 3) return null;
 
-      // On mobile use a taller, near-square viewBox so the plot has more
-      // vertical room and the bubbles don't overlap when scaled to ~346px wide.
       const mobile = !!(window.matchMedia && window.matchMedia("(max-width: 600px)").matches);
       const W = mobile ? 430 : 640, H = mobile ? 480 : 400;
-      const left = mobile ? 52 : 80, right = W - (mobile ? 18 : 30), top = 28, bottom = H - (mobile ? 56 : 48);
+      // Plot frame. Quadrant labels live OUTSIDE this frame (top/bottom gutters)
+      // and every bubble's CENTRE is clamped so the whole circle stays INSIDE the
+      // frame — a corner label and a bubble can never collide. Mirrors the Weekly
+      // renderer (hydratePubWidgets in criterial-shared.js).
+      const padL = mobile ? 46 : 72, padR = 24, padTop = 24, padBottom = 52;
+      const left = padL, right = W - padR, top = padTop, bottom = H - padBottom;
       const midX = (left + right) / 2, midY = (top + bottom) / 2;
       const px = (x) => left + clamp(x, 0, 1) * (right - left);
       const py = (y) => bottom - clamp(y, 0, 1) * (bottom - top);
+      const fit = (v, r, lo, hi) => Math.max(lo + r, Math.min(hi - r, v));
       const ejeX = esc(mapa.eje_x || "Actividad");
       const ejeY = esc(mapa.eje_y || "Valoración");
+      const topLabelY = top - 10, bottomLabelY = bottom + 18;
 
       nodos.forEach(n => {
-        n._x = px(n.x); n._y = py(n.y);
-        n._x2 = isFinite(Number(n.x2)) ? px(n.x2) : n._x;
-        n._y2 = isFinite(Number(n.y2)) ? py(n.y2) : n._y;
-        n._r = (mobile ? 12 : 15) + clamp(n.size, 1, 3) * (mobile ? 5 : 7);
+        n._r = (mobile ? 12 : 14) + clamp(n.size, 1, 3) * (mobile ? 5 : 6);
       });
-      const hasTrajectory = nodos.some(n => n._x2 !== n._x || n._y2 !== n._y);
+
+      // De-overlap: push apart only the bubbles whose circles collide, with a weak
+      // pull back toward each bubble's true (data) position so displacement stays
+      // small and the map keeps its analytical honesty. Applied independently to
+      // the current and trajectory position sets, both clamped inside the frame.
+      const relax = (pts) => {
+        for (let iter = 0; iter < 80; iter++) {
+          let moved = false;
+          for (let i = 0; i < pts.length; i++) {
+            for (let j = i + 1; j < pts.length; j++) {
+              const a = pts[i], b = pts[j];
+              let dx = b.x - a.x, dy = b.y - a.y;
+              let d = Math.hypot(dx, dy);
+              if (d === 0) { dx = 1; dy = 0; d = 1; }
+              const min = a.r + b.r + 3;
+              if (d < min) {
+                const push = (min - d) / 2;
+                a.x -= (dx / d) * push; a.y -= (dy / d) * push;
+                b.x += (dx / d) * push; b.y += (dy / d) * push;
+                moved = true;
+              }
+            }
+          }
+          for (const p of pts) {
+            p.x += (p.ax - p.x) * 0.03;
+            p.y += (p.ay - p.y) * 0.03;
+            p.x = Math.max(left + p.r, Math.min(right - p.r, p.x));
+            p.y = Math.max(top + p.r, Math.min(bottom - p.r, p.y));
+          }
+          if (!moved) break;
+        }
+        return pts;
+      };
+
+      const cur = relax(nodos.map(n => {
+        const x = fit(px(n.x), n._r, left, right), y = fit(py(n.y), n._r, top, bottom);
+        return { x, y, ax: x, ay: y, r: n._r };
+      }));
+      const tra = relax(nodos.map(n => {
+        const x = fit(isFinite(Number(n.x2)) ? px(n.x2) : px(n.x), n._r, left, right);
+        const y = fit(isFinite(Number(n.y2)) ? py(n.y2) : py(n.y), n._r, top, bottom);
+        return { x, y, ax: x, ay: y, r: n._r };
+      }));
+      nodos.forEach((n, i) => {
+        n._x = cur[i].x; n._y = cur[i].y;
+        n._x2 = tra[i].x; n._y2 = tra[i].y;
+      });
+      const hasTrajectory = nodos.some(n =>
+        (isFinite(Number(n.x2)) && Number(n.x2) !== Number(n.x)) ||
+        (isFinite(Number(n.y2)) && Number(n.y2) !== Number(n.y)));
 
       const bubbleSvg = (n) => {
         const m = MOMENTUM[n.momentum] || MOMENTUM.estable;
@@ -178,34 +231,33 @@
         const text = lines.length === 1
           ? `<text class="mu-bl" y="3" text-anchor="middle">${esc(lines[0])}</text>`
           : `<text class="mu-bl" y="-1" text-anchor="middle">${esc(lines[0])}</text><text class="mu-bl" y="11" text-anchor="middle">${esc(lines[1])}</text>`;
-        return `<g class="mu-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.6"></circle>${text}</g>`;
+        const al = esc((n.label || "sector") + " — " + m.label);
+        return `<g class="mu-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})" tabindex="0" role="button" aria-label="${al}"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.6"></circle>${text}</g>`;
       };
       const bubbles = nodos.map(bubbleSvg).join("");
 
       const q = (mapa.cuadrantes && typeof mapa.cuadrantes === "object") ? mapa.cuadrantes : {};
-      const corner = (txt, x, y, anchor, color) =>
-        txt ? `<text class="mu-corner" x="${x}" y="${y}" text-anchor="${anchor}" fill="${color}">${esc(txt)}</text>` : "";
+      const corner = (txt, x, y, anchor) =>
+        txt ? `<text class="mu-corner" x="${x}" y="${y}" text-anchor="${anchor}">${esc(txt)}</text>` : "";
       const corners =
-        corner(q.tr, right - 10, top + 16, "end", "#1d7a5f") +
-        corner(q.br, right - 10, bottom - 8, "end", "#b06a4e") +
-        corner(q.tl, left + 10, top + 16, "start", "#a59f93") +
-        corner(q.bl, left + 10, bottom - 8, "start", "#a59f93");
+        corner(q.tl, left, topLabelY, "start") +
+        corner(q.tr, right, topLabelY, "end") +
+        corner(q.bl, left, bottomLabelY, "start") +
+        corner(q.br, right, bottomLabelY, "end");
 
       const svg =
-        `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Mapa de posicionamiento de sectores">` +
+        `<svg viewBox="0 0 ${W} ${H}" width="100%" role="group" aria-label="Mapa de posicionamiento de sectores por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}">` +
         `<desc>Sectores situados por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}; tamaño por volumen, color por momentum.</desc>` +
         `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" fill="#fff" stroke="#E2DED8"></rect>` +
         `<line x1="${midX}" y1="${top}" x2="${midX}" y2="${bottom}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
         `<line x1="${left}" y1="${midY}" x2="${right}" y2="${midY}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
         corners +
-        `<text class="mu-axb" x="${midX}" y="${H - 14}" text-anchor="middle">${ejeX} →</text>` +
-        `<text class="mu-ax" x="${left + 2}" y="${bottom + 16}" text-anchor="start">baja</text>` +
-        `<text class="mu-ax" x="${right - 2}" y="${bottom + 16}" text-anchor="end">alta</text>` +
-        `<text class="mu-axb" x="18" y="${midY}" text-anchor="middle" transform="rotate(-90 18 ${midY})">${ejeY} →</text>` +
+        `<text class="mu-axb" x="${midX}" y="${H - 10}" text-anchor="middle">${ejeX} →</text>` +
+        `<text class="mu-axb" x="14" y="${midY}" text-anchor="middle" transform="rotate(-90 14 ${midY})">${ejeY} →</text>` +
         bubbles + `</svg>`;
 
       const toggleHtml = hasTrajectory
-        ? `<div class="mu-toggle"><button class="mu-tg on" data-mode="r">Posición actual</button><button class="mu-tg" data-mode="e">Trayectoria</button></div>`
+        ? `<div class="mu-toggle"><button class="mu-tg on" type="button" data-mode="r">Posición actual</button><button class="mu-tg" type="button" data-mode="e">Trayectoria</button></div>`
         : "";
 
       const section = el("section", "mu-block reveal");
@@ -225,7 +277,7 @@
           `<p class="mu-detail-b" id="mu-det-b"></p><div id="mu-det-c"></div>` +
           `<p class="mu-src" id="mu-det-s"></p>` +
         `</div>` +
-        `<p class="mu-map-note">Toca un sector para explorar</p>`;
+        `<p class="mu-map-note">Pasa el cursor, toca o navega con el teclado un sector` + (hasTrajectory ? " · alterna la trayectoria prevista" : "") + `</p>`;
 
       const byId = {};
       nodos.forEach(n => { byId[n.id] = n; });
@@ -250,6 +302,10 @@
         const id = g.getAttribute("data-k");
         g.addEventListener("mouseenter", () => showDetail(id));
         g.addEventListener("click", () => showDetail(id));
+        g.addEventListener("focus", () => showDetail(id));
+        g.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showDetail(id); }
+        });
       });
       const bubs = section.querySelectorAll(".mu-bub");
       const btns = section.querySelectorAll(".mu-tg");
@@ -477,7 +533,7 @@
       }
     })();
   </script>
-  <script src="criterial-shared.js?v=5"></script>
+  <script src="criterial-shared.js?v=6"></script>
   <div class="cursor-dot" id="cursorDot"></div>
   <div class="cursor-ring" id="cursorRing"></div>
   <div class="page-transition" id="pageTransition"></div>

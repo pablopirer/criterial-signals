@@ -40,6 +40,30 @@ else
   PROMPT_FILE="prompts/monthly-brief.es.md"
 fi
 
+# ── Edition number (weekly) ────────────────────────────────────────────────────
+# Assigned here, not by the model — the model can't know the sequence (it used to
+# echo the "1" from the prompt schema, so every Weekly said "Nº 1"). = count of
+# already-published weeklies + 1. Falls back to 1 if the query fails. Kept in sync
+# with the generate-content Edge Function.
+WEEKLY_NUMBER=""
+if [[ "$TYPE" == "weekly" ]]; then
+  WEEKLY_NUMBER=$(python3 - "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
+import sys, json, urllib.request
+supabase_url, service_key = sys.argv[1:]
+req = urllib.request.Request(
+    f'{supabase_url}publications?type=eq.weekly&status=eq.published&select=id',
+    headers={'apikey': service_key, 'Authorization': f'Bearer {service_key}'}
+)
+try:
+    with urllib.request.urlopen(req) as resp:
+        data = json.loads(resp.read())
+        print(len(data) + 1 if isinstance(data, list) else 1)
+except Exception:
+    print(1)
+PYEOF
+)
+fi
+
 # ── Load prompt ────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -58,6 +82,7 @@ echo ""
 echo -e "${BOLD}=== Criterial Signals — Content Generator ===${NC}"
 echo -e "  Type:    ${CYAN}$TYPE${NC}"
 echo -e "  Period:  $PERIOD"
+[[ "$TYPE" == "weekly" ]] && echo -e "  Nº:      $WEEKLY_NUMBER"
 echo -e "  Model:   $MODEL (web_search, max_tokens=12000)"
 echo ""
 
@@ -97,9 +122,10 @@ print(''.join(b.get('text','') for b in blocks if b.get('type')=='text').strip()
 " 2>/dev/null)
 
   # ── Convert JSON to HTML ───────────────────────────────────────────────────────
-  TEXT=$(echo "$TEXT" | python3 -c "
-import json, sys, html, re as _re, base64
+  TEXT=$(echo "$TEXT" | WEEKLY_NUMBER="$WEEKLY_NUMBER" python3 -c "
+import json, sys, html, re as _re, base64, os
 
+NUM = os.environ.get('WEEKLY_NUMBER', '').strip()
 raw = sys.stdin.read().strip()
 if raw.startswith('\`\`\`'):
     lines = raw.split('\n')
@@ -132,7 +158,7 @@ out.append('<div class=\"pub-content\">')
 out.append('<div class=\"pub-header-new\">')
 out.append('<div class=\"pub-brand-row\">')
 out.append('<span class=\"pub-brand-label\">Criterial · Weekly Signals</span>')
-out.append(f'<span class=\"pub-brand-num\">Nº {esc(d.get(\"numero\",\"\"))} · {esc(d.get(\"period\",\"\"))}</span>')
+out.append(f'<span class=\"pub-brand-num\">Nº {esc(NUM)} · {esc(d.get(\"period\",\"\"))}</span>')
 out.append('</div>')
 out.append(f'<h1 class=\"pub-title-new\">{esc(d.get(\"titulo\",\"\"))}</h1>')
 out.append(f'<p class=\"pub-period-new\">Semana del {esc(d.get(\"period\",\"\"))}</p>')
