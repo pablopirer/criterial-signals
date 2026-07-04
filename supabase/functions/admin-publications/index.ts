@@ -28,6 +28,53 @@ function jsonResponse(body: unknown, status: number): Response {
   });
 }
 
+/**
+ * Auto-notify Pro subscribers when a weekly/monthly becomes published.
+ * Reuses the existing send-weekly Edge Function (forwarding the admin JWT) so
+ * the email logic lives in exactly one place — this is never a second copy of
+ * the template. Idempotent: only sends when notified_at is null, then stamps it,
+ * so re-publishing never re-emails. Failures are logged, not fatal (publishing
+ * already succeeded); notified_at stays null so a later publish can retry. The
+ * manual "Enviar →" button (send-weekly) still works as a re-send.
+ */
+async function notifyOnPublish(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  publicationId: string,
+  authHeader: string,
+): Promise<void> {
+  try {
+    const { data: pub } = await supabase
+      .from("publications")
+      .select("id, type, status, notified_at")
+      .eq("id", publicationId)
+      .single();
+    if (!pub || pub.status !== "published") return;
+    if (pub.type !== "weekly" && pub.type !== "monthly") return;
+    if (pub.notified_at) return; // already notified — idempotent
+
+    const base = Deno.env.get("SUPABASE_URL");
+    const res = await fetch(`${base}/functions/v1/send-weekly`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: authHeader },
+      body: JSON.stringify({ publication_id: publicationId }),
+    });
+    if (!res.ok) {
+      console.error(
+        "auto-notify: send-weekly failed",
+        res.status,
+        (await res.text()).slice(0, 300),
+      );
+      return;
+    }
+    await supabase
+      .from("publications")
+      .update({ notified_at: new Date().toISOString() })
+      .eq("id", publicationId);
+  } catch (err) {
+    console.error("auto-notify error:", err);
+  }
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -179,6 +226,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (error) {
       console.error("Failed to update publication:", error);
       return jsonResponse({ error: "Failed to update publication" }, 500);
+    }
+
+    // On publish, notify Pro subscribers automatically (idempotent). Runs in the
+    // background so the admin's "Publicar" click returns immediately; falls back
+    // to inline await if the background runtime isn't available.
+    if (status === "published") {
+      const p = notifyOnPublish(supabase, id!, authHeader);
+      const rt = (globalThis as {
+        EdgeRuntime?: { waitUntil(pr: Promise<unknown>): void };
+      }).EdgeRuntime;
+      if (rt) rt.waitUntil(p);
+      else await p;
     }
 
     return jsonResponse({ ok: true }, 200);
