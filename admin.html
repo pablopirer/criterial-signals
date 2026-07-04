@@ -561,6 +561,9 @@
                   ? `<button class="pub-card-menu-item" onclick="closeCardMenu('${p.id}');updateStatus('${p.id}','published')">Publicar</button>`
                   : `<button class="pub-card-menu-item" onclick="closeCardMenu('${p.id}');updateStatus('${p.id}','draft')">Despublicar</button>`
                 }
+                ${(p.type === 'weekly' || p.type === 'monthly')
+                  ? `<button class="pub-card-menu-item" onclick="closeCardMenu('${p.id}');generateLinkedin('${p.id}')">Posts LinkedIn</button>`
+                  : ''}
                 <button class="pub-card-menu-item danger" onclick="closeCardMenu('${p.id}');deletePublication('${p.id}')">Eliminar</button>
               </div>
             </div>
@@ -862,6 +865,98 @@
       }
     }
 
+    // ── LinkedIn posts ───────────────────────────────────────────────────
+    const _ANGULO_LABELS = {
+      senal: "Señal de la semana", recap: "Recap del Weekly",
+      tematico: "Análisis temático", opinion: "Opinión"
+    };
+
+    async function generateLinkedin(id) {
+      const modal  = document.getElementById("linkedin-modal");
+      const bodyEl = document.getElementById("linkedin-body");
+      const pub    = _allPubs.find(p => p.id === id);
+      document.getElementById("linkedin-meta").textContent = pub ? pub.title : "";
+      bodyEl.innerHTML =
+        '<p style="color:var(--label);font-family:\'Inter\',sans-serif;">Generando posts... (puede tardar ~20 seg)</p>';
+      modal.style.display = "block";
+      document.body.style.overflow = "hidden";
+
+      try {
+        const res = await fetch(`${EF_BASE}/generate-linkedin`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${_session.access_token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ publication_id: id })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Error desconocido");
+        renderLinkedin(json.posts);
+      } catch (err) {
+        bodyEl.innerHTML =
+          `<p style="color:#b23;font-family:'Inter',sans-serif;">Error: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    function renderLinkedin(posts) {
+      const bodyEl = document.getElementById("linkedin-body");
+      if (!Array.isArray(posts) || !posts.length) {
+        bodyEl.innerHTML = '<p style="color:var(--label)">No se generaron posts.</p>';
+        return;
+      }
+      bodyEl.innerHTML = posts.map((p, i) => {
+        const label = _ANGULO_LABELS[p.angulo] || p.angulo || `Post ${i + 1}`;
+        return `
+          <div class="li-post">
+            <div class="li-post-head">
+              <span class="li-angle">${escapeHtml(label)}</span>
+              ${p.titulo_interno ? `<span class="li-internal">${escapeHtml(p.titulo_interno)}</span>` : ""}
+            </div>
+            <div class="li-block">
+              <div class="li-block-head">
+                <span class="li-block-label">Cuerpo del post</span>
+                <button class="li-copy" data-copy="li-body-${i}">Copiar</button>
+              </div>
+              <pre class="li-text" id="li-body-${i}">${escapeHtml(p.cuerpo || "")}</pre>
+            </div>
+            <div class="li-block">
+              <div class="li-block-head">
+                <span class="li-block-label">Primer comentario (enlace)</span>
+                <button class="li-copy" data-copy="li-comment-${i}">Copiar</button>
+              </div>
+              <pre class="li-text" id="li-comment-${i}">${escapeHtml(p.primer_comentario || "")}</pre>
+            </div>
+          </div>`;
+      }).join("");
+      bodyEl.querySelectorAll(".li-copy").forEach(btn => {
+        btn.addEventListener("click", () => copyLinkedin(btn));
+      });
+    }
+
+    async function copyLinkedin(btn) {
+      const el = document.getElementById(btn.dataset.copy);
+      if (!el) return;
+      try {
+        await navigator.clipboard.writeText(el.textContent);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        try { document.execCommand("copy"); } catch { /* ignore */ }
+        sel.removeAllRanges();
+      }
+      const original = btn.textContent;
+      btn.textContent = "Copiado ✓";
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    }
+
+    function closeLinkedin() {
+      document.getElementById("linkedin-modal").style.display = "none";
+      document.body.style.overflow = "";
+    }
+
     function previewPublication(id) {
       const pub = _allPubs.find(p => p.id === id);
       if (!pub) return;
@@ -887,6 +982,10 @@
     document.getElementById('preview-modal').addEventListener('click', function(e) {
       if (e.target === this) closePreview();
     });
+
+    document.getElementById('linkedin-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeLinkedin();
+    });
   </script>
   <!-- cache-bust: 20260529 -->
   <script src="criterial-shared.js?v=6"></script>
@@ -902,6 +1001,32 @@
       <button onclick="closePreview()" style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); background:none; border:none; font-family:'Inter',sans-serif; cursor:none; transition:color 0.2s;" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--label)'">Cerrar ×</button>
     </div>
     <div id="preview-body" class="pub-content"></div>
+  </div>
+</div>
+
+<!-- LINKEDIN POSTS MODAL -->
+<style>
+  #linkedin-modal .li-post { border:0.5px solid var(--border); padding:20px 22px; margin-bottom:20px; background:#FBFAF8; }
+  #linkedin-modal .li-post-head { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  #linkedin-modal .li-angle { font-family:'Inter',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--navy); }
+  #linkedin-modal .li-internal { font-family:'Inter',sans-serif; font-size:12px; color:var(--label); }
+  #linkedin-modal .li-block { margin-top:12px; }
+  #linkedin-modal .li-block-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  #linkedin-modal .li-block-label { font-family:'Inter',sans-serif; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); }
+  #linkedin-modal .li-copy { font-family:'Inter',sans-serif; font-size:11px; letter-spacing:0.04em; color:#fff; background:var(--navy); border:none; padding:5px 12px; cursor:none; }
+  #linkedin-modal .li-copy:hover { background:#162d57; }
+  #linkedin-modal .li-text { font-family:'Inter',sans-serif; font-size:13px; line-height:1.55; color:#1a1a1a; white-space:pre-wrap; word-wrap:break-word; margin:0; background:#fff; border:0.5px solid var(--border); padding:12px 14px; }
+</style>
+<div id="linkedin-modal" style="display:none; position:fixed; inset:0; background:rgba(7,16,32,0.75); z-index:600; padding:40px 24px; overflow-y:auto;">
+  <div style="background:#fff; border:0.5px solid var(--border); max-width:760px; width:100%; padding:40px 44px; position:relative; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; padding-bottom:20px; border-bottom:0.5px solid var(--border);">
+      <div>
+        <p style="font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--label); font-family:'Inter',sans-serif; margin-bottom:4px;">Posts LinkedIn · Página de empresa</p>
+        <p style="font-size:13px; color:var(--navy); font-family:'Inter',sans-serif;" id="linkedin-meta"></p>
+      </div>
+      <button onclick="closeLinkedin()" style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); background:none; border:none; font-family:'Inter',sans-serif; cursor:none; transition:color 0.2s;" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--label)'">Cerrar ×</button>
+    </div>
+    <div id="linkedin-body"></div>
   </div>
 </div>
 </body>
