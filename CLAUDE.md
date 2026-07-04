@@ -677,7 +677,9 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 - `index.html`: CTAs "Explorar Signals" → `signals.html`; etiqueta "Free" → "Abierto".
 - Stripe intacto (test mode, no se toca por código).
 
-**Estado en producción al cierre:** `sample-request` v24, **`generate-content` v9**, `get-sample` v1, `send-weekly` v1, **`admin-publications` v5**, **`get-public-editions` v1** — todas activas. Columna `body_public` en prod. `signals.html` vivo tras el push; se puebla cuando se genera+publica un Weekly con la v9. Pendiente: Fase 2 (generador de posts LinkedIn), Brief Mensual, captura de email inline en signals.html.
+**Auto-notificación a Pro al publicar (2026-07-04):** publicar ya no requiere pulsar "Enviar →". `admin-publications` PATCH (status→published) dispara la notificación automáticamente **reusando la EF `send-weekly`** (le reenvía el JWT admin de la petición) — sin duplicar la plantilla, `send-weekly` sin tocar. Idempotente vía nueva columna `publications.notified_at` (migración `20260704120000_publications_notified_at.sql`): solo envía si es null y la estampa tras el envío, así re-publicar no re-emite. Corre en background (`EdgeRuntime.waitUntil`, con fallback a await inline). Solo weekly/monthly. El botón manual "Enviar →" sigue como re-envío. Nota: publicar por SQL directo (fuera de admin-publications) no dispara la auto-notificación.
+
+**Estado en producción al cierre:** `sample-request` v24, **`generate-content` v9**, `get-sample` v1, `send-weekly` v1, **`admin-publications` v6**, **`get-public-editions` v1** — todas activas. Columnas `body_public` y `notified_at` en prod. Editions publicadas: Nº 1-4 (11-jun, 28-jun, 3-jul, 4-jul); el 4-jul es el primero con edición abierta (`body_public`) — vivo en `signals.html`. Pendiente: Fase 2 (generador de posts LinkedIn), Brief Mensual, captura de email inline en signals.html.
 
 ### Day 26 — Complete (2026-07-03)
 
