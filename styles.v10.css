@@ -956,7 +956,71 @@ button.btn-dark {
 .pub-cat-title { font-size: 13.5px; font-weight: 500; color: var(--navy); margin: 0 0 3px; }
 .pub-cat-context { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin: 0; }
 
+/* ── Brief Mensual v5 — "El Informe" (editorial report identity, distinct from the
+      Weekly's pub-*-new card dashboard). Reads long-form; scans nothing. ─────── */
+.mb-report { max-width: 760px; margin: 0 auto; }
+.mb-masthead { border-bottom: 1.5px solid var(--navy); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+.mb-brand-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; }
+.mb-kicker { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--label); font-weight: 500; }
+.mb-num { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--label); }
+.mb-title { font-family: 'EB Garamond', Georgia, serif; font-size: 40px; font-weight: 400; color: var(--navy); line-height: 1.12; margin: 0 0 0.75rem; }
+.mb-dek { font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 19px; line-height: 1.5; color: var(--muted); margin: 0; max-width: 42em; }
+.mb-summary { background: #F8F6F2; border-left: 3px solid var(--navy); padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; }
+.mb-summary-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--label); font-weight: 500; margin: 0 0 0.75rem; }
+.mb-summary-list { margin: 0; padding: 0; list-style: none; }
+.mb-summary-list li { font-family: 'EB Garamond', Georgia, serif; font-size: 16px; line-height: 1.6; color: var(--navy); padding: 0.35rem 0 0.35rem 1.1rem; position: relative; }
+.mb-summary-list li::before { content: '—'; position: absolute; left: 0; color: var(--label); }
+.mb-section { margin-bottom: 2.75rem; }
+.mb-sec-head { display: flex; align-items: baseline; gap: 0.75rem; border-bottom: 0.5px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 1.25rem; }
+.mb-sec-num { font-family: 'EB Garamond', Georgia, serif; font-size: 15px; color: #BBB; font-weight: 400; }
+.mb-sec-title { font-family: 'EB Garamond', Georgia, serif; font-size: 25px; font-weight: 400; color: var(--navy); margin: 0; line-height: 1.1; }
+.mb-sec-lede { font-size: 13px; line-height: 1.6; color: var(--muted); margin: -0.5rem 0 1.25rem; }
+.mb-prose { max-width: 64ch; }
+.mb-prose p { font-family: 'EB Garamond', Georgia, serif; font-size: 17px; line-height: 1.8; color: #2b2b2b; margin: 0 0 1.1rem; }
+.mb-prose p:last-child { margin-bottom: 0; }
+.mb-stats { display: flex; flex-wrap: wrap; gap: 1.5rem 2.5rem; padding: 1.25rem 0 1.5rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.5rem; }
+.mb-stat { display: flex; flex-direction: column; gap: 3px; }
+.mb-stat-val { font-family: 'EB Garamond', Georgia, serif; font-size: 30px; font-weight: 400; color: var(--navy); line-height: 1; }
+.mb-stat-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
+.mb-stat-src { font-size: 10px; color: #b6b0a4; font-style: italic; }
+.mb-data-caption { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--label); font-weight: 500; margin: 0 0 0.9rem; }
+.mb-data-note { font-size: 11.5px; line-height: 1.6; color: #9a958a; font-style: italic; margin: 1rem 0 0; }
+.mb-ops { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mb-ops th { text-align: left; font-family: 'Inter', sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--label); font-weight: 500; padding: 0 0.75rem 0.5rem; border-bottom: 0.5px solid var(--navy); }
+.mb-ops td { padding: 0.7rem 0.75rem; border-bottom: 0.5px solid var(--border); color: var(--muted); vertical-align: top; line-height: 1.45; }
+.mb-ops td:first-child { color: var(--navy); font-weight: 500; }
+.mb-ops tr:last-child td { border-bottom: none; }
+.mb-sector { margin-bottom: 1.75rem; }
+.mb-sector:last-child { margin-bottom: 0; }
+.mb-sector-name { font-family: 'EB Garamond', Georgia, serif; font-size: 19px; font-weight: 500; color: var(--navy); margin: 0 0 0.5rem; }
+.mb-op { border: 0.5px solid var(--border); background: #fff; padding: 1.5rem; }
+.mb-op-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.mb-op-name { font-family: 'EB Garamond', Georgia, serif; font-size: 22px; color: var(--navy); line-height: 1.2; }
+.mb-op-sector { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
+.mb-op-data { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+.mb-op-cell { background: #F8F6F2; padding: 0.7rem 0.9rem; display: flex; flex-direction: column; gap: 4px; }
+.mb-op-cell-label { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
+.mb-op-cell-val { font-size: 14px; font-weight: 500; color: var(--navy); line-height: 1.25; }
+.mb-persp-item { padding: 0.9rem 0; border-bottom: 0.5px solid var(--border); }
+.mb-persp-item:last-child { border-bottom: none; }
+.mb-persp-title { font-family: 'EB Garamond', Georgia, serif; font-size: 17px; color: var(--navy); margin: 0 0 0.35rem; }
+.mb-persp-text { font-size: 13.5px; line-height: 1.7; color: var(--muted); margin: 0; }
+.mb-sources { border-top: 0.5px solid var(--border); padding-top: 1.25rem; margin-top: 2.5rem; }
+.mb-sources-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--label); font-weight: 500; margin: 0 0 0.75rem; }
+.mb-source-row { display: flex; gap: 10px; padding: 0.3rem 0; align-items: baseline; }
+.mb-source-medio { font-size: 11px; font-weight: 500; color: var(--navy); min-width: 150px; flex-shrink: 0; }
+.mb-source-titulo { font-size: 11px; color: var(--label); line-height: 1.4; font-style: italic; }
+.mb-footer { display: flex; justify-content: space-between; padding-top: 1.25rem; margin-top: 1.5rem; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--label); }
+
 @media (max-width: 600px) {
+  .mb-title { font-size: 30px; }
+  .mb-dek { font-size: 17px; }
+  .mb-sec-title { font-size: 21px; }
+  .mb-prose p { font-size: 16px; }
+  .mb-stats { gap: 1rem 1.5rem; }
+  .mb-op-data { grid-template-columns: 1fr 1fr; }
+  .mb-ops { font-size: 11.5px; }
+  .mb-ops th, .mb-ops td { padding-left: 0.4rem; padding-right: 0.4rem; }
   .pub-msec-grid { grid-template-columns: 1fr; }
   .pub-op-data { grid-template-columns: 1fr 1fr; }
   .pub-cat-item { flex-direction: column; gap: 0.25rem; }
