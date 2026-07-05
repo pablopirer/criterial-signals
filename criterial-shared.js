@@ -324,22 +324,58 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
+  // "El mes en cifras" (Monthly Brief): horizontal bars scaled to the largest
+  // figure. Each metric is focusable and exposes its source. Defensive: fewer
+  // than 2 valid figures → caller hides the section. Same base64 + hydration
+  // plumbing as buildMap, so it renders wherever a publication body is injected.
+  function buildMetrics(container, cifras) {
+    if (!Array.isArray(cifras)) return false;
+    const items = cifras.filter(c => c && c.label != null && isFinite(Number(c.n)));
+    if (items.length < 2) return false;
+    const max = Math.max.apply(null, items.map(c => Math.abs(Number(c.n)))) || 1;
+    const rows = items.map(c => {
+      const pct = Math.max(4, Math.round(Math.abs(Number(c.n)) / max * 100));
+      const val = esc(c.valor != null ? c.valor : c.n);
+      const src = c.fuente ? `<span class="pub-metric-src">${esc(c.fuente)}</span>` : "";
+      const al = `${esc(c.label)}: ${val}${c.fuente ? ` (${esc(c.fuente)})` : ""}`;
+      return `<div class="pub-metric" tabindex="0" role="group" aria-label="${al}">` +
+        `<div class="pub-metric-top"><span class="pub-metric-label">${esc(c.label)}</span>` +
+        `<span class="pub-metric-val">${val}</span></div>` +
+        `<div class="pub-metric-track"><div class="pub-metric-fill" style="width:${pct}%"></div></div>` +
+        src +
+      `</div>`;
+    }).join("");
+    container.innerHTML = `<div class="pub-metrics-inner">${rows}</div>`;
+    return true;
+  }
+
   window.hydratePubWidgets = function (root) {
     if (!root || !root.querySelectorAll) return;
+    const hideSectionOf = (el) => {
+      const sec = el.closest(".pub-section-new") || el;
+      sec.style.display = "none";
+    };
     root.querySelectorAll(".pub-map[data-mapa]").forEach(el => {
       if (el.dataset.hydrated) return;
-      const hideSection = () => {
-        const sec = el.closest(".pub-section-new") || el;
-        sec.style.display = "none";
-      };
       const json = fromB64Utf8(el.getAttribute("data-mapa"));
-      if (!json) { hideSection(); return; }
+      if (!json) { hideSectionOf(el); return; }
       let mapa;
-      try { mapa = JSON.parse(json); } catch (e) { hideSection(); return; }
+      try { mapa = JSON.parse(json); } catch (e) { hideSectionOf(el); return; }
       try {
         if (buildMap(el, mapa)) { el.dataset.hydrated = "1"; }
-        else { hideSection(); }
-      } catch (e) { hideSection(); }
+        else { hideSectionOf(el); }
+      } catch (e) { hideSectionOf(el); }
+    });
+    root.querySelectorAll(".pub-metrics[data-metrics]").forEach(el => {
+      if (el.dataset.hydrated) return;
+      const json = fromB64Utf8(el.getAttribute("data-metrics"));
+      if (!json) { hideSectionOf(el); return; }
+      let cifras;
+      try { cifras = JSON.parse(json); } catch (e) { hideSectionOf(el); return; }
+      try {
+        if (buildMetrics(el, cifras)) { el.dataset.hydrated = "1"; }
+        else { hideSectionOf(el); }
+      } catch (e) { hideSectionOf(el); }
     });
   };
 })();

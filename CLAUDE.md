@@ -43,7 +43,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - 1 active Pro subscriber — verify in Stripe before using for commercial claims
 - 2 publications published: Weekly Signals nº1 (`995ddce5-42f8-479f-87f3-717ca198ba97`, 2026-06-13) and "Weekly Signals — 28 de junio de 2026" (`f5bbbf6b-345e-4006-b939-6bc4d302098a`, published + sent to Pro 2026-06-28); 5 sample drafts (per-lead, addressable by token — their natural resting state)
 - 46 sample requests total: 7 `generation_failed` (users did not receive email; all predate the Day 22 fix), 0 queued — verified against live DB 2026-06-28
-- Active CSS is **`styles.v8.css`** and `criterial-shared.js` is at **`?v=6`** across all 12 active HTML files (CSS unchanged since Day 25; JS bumped 2026-07-03 in Day 26 for the map keyboard a11y + muestra renderer parity)
+- Active CSS is **`styles.v9.css`** and `criterial-shared.js` is at **`?v=7`** across all active HTML files (both bumped in Day 29 for the Monthly Brief redesign: new `pub-metrics`/`pub-msec`/`pub-op`/`pub-cat` classes + the `buildMetrics` widget renderer)
 
 > **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
@@ -54,7 +54,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
 - Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `signals.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22). `signals.html` is the **public** free-edition reader ("Signals · Edición abierta"), added Day 27 — no login; fetches `get-public-editions`. The public nav "Signals" points to `signals.html` (was `sample.html`).
-- Active CSS: **`styles.v8.css`** — loaded by all HTML pages (renamed from `styles.v7.css` in Day 25 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
+- Active CSS: **`styles.v9.css`** — loaded by all HTML pages (renamed from `styles.v8.css` in Day 29 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
 
@@ -93,6 +93,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - `max_tokens`: 8000 (sample-request Edge Function — raised in Day 22 for the larger map+sources schema with web search); 12000 (content generation script and generate-content Edge Function — raised from 8000 in Day 25: the Weekly already ran near the limit and the added `mapa` block truncated the JSON at 8000).
 - Brief output schema for sample-request: `{ titulo, subtitulo, tags, snapshot, signals[], watch[], mapa, fuentes[] }` (JSON). `mapa` is a quadrant positioning map (`eje_x`/`eje_y`, `cuadrantes`, `nodos` with x/y/size/momentum/etc.); `fuentes[]` are real, web-searched, cited sources. Persisted as `publications.body_data` (jsonb) and rendered by `muestra.html`.
 - Web search habilitado en `generate-content` **y en `sample-request`** (este último desde Day 22) via tools: `[{type: 'web_search_20250305', max_uses: N}]`. `sample-request` usa `max_uses: 5`; `generate-content` se bajó a **`max_uses: 3`** en Day 25 (la generación síncrona del Weekly se pasaba del límite wall-clock del Edge Function con 5 → gateway "Error desconocido"). El modelo busca noticias reales antes de generar el contenido. Con web search el modelo suele envolver el JSON en prosa + valla ```json; usar el helper `extractJsonObject` para parsear (ver §7).
+- **Brief Mensual = JSON (Day 29):** desde v4, el Monthly emite **JSON** (como el Weekly), no HTML directo. Schema: `{ titulo, period, tesis, cifras[], sectores[], mapa, operacion, catalizadores[], fuentes[] }`. `generate-content` lo parsea con `extractJsonObject` (502 limpio si falla) y lo convierte con `monthlyJsonToHtml`. Elementos premium propios del Monthly: **"El mes en cifras"** (`cifras[]` → widget de barras `<div class="pub-metrics" data-metrics="<base64>">`, hidratado por `buildMetrics` en `criterial-shared.js`; guarda anti-invención: solo cifras con `n` numérico Y `fuente` real, ≥2 o se omite), **mapa de capital** (reusa el mapa del Weekly), **operación del mes** con mini-tabla de datos, y **catalizadores** (calendario forward). Es solo-Pro (`public_html: null`, sin `body_public`). El Nº de edición se asigna en servidor (count publicados de ese tipo + 1). Paridad en `scripts/generate-content.sh`.
 - **Mapa de posicionamiento del Weekly (Day 25):** el schema del Weekly incluye un bloque `mapa` (idéntico al de la muestra: `eje_x`/`eje_y`, `cuadrantes`, `nodos[]` con x/y/x2/y2/size/momentum/label/cuerpo/chips/fuente). `generate-content` (y el script) lo emiten como `<div class="pub-map" data-mapa="<base64 UTF-8>">` incrustado en el HTML. El mapa NO se guarda en `body_data` — viaja dentro de `body_markdown`. Se renderiza client-side con `window.hydratePubWidgets(root)` en `criterial-shared.js`, llamado por `archive.html` (lector Pro) y `admin.html` (preview) tras inyectar el cuerpo. Ver §7.
 
 ### Resend
@@ -118,7 +119,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, muestra, archive, encargos,
 │                                  advisory-received, request-received, success, cancel, admin
-├── styles.v8.css               ← active CSS (styles.css present in repo but not loaded)
+├── styles.v9.css               ← active CSS (styles.css present in repo but not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
@@ -141,7 +142,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Publication content system
 - El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
 - El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
-- Las clases `pub-*` están definidas en `styles.v8.css` bajo el bloque `Publication content — Weekly & Monthly`. Las clases `pub-map-*` (mapa de posicionamiento interactivo) están en el mismo archivo.
+- Las clases `pub-*` están definidas en `styles.v9.css` bajo el bloque `Publication content — Weekly & Monthly`. Las clases `pub-map-*` (mapa de posicionamiento) y `pub-metrics-*`/`pub-msec-*`/`pub-op-*`/`pub-cat-*` (widgets del Brief Mensual v4) están en el mismo archivo.
 - El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
 - `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
 - `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
@@ -251,7 +252,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
 14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
-15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v8.css` pub-* classes.
+15. **`pub-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v9.css` pub-* classes.
 
 ---
 
@@ -314,10 +315,10 @@ scripts/publish-draft.sh <id>             # sets publication status=published; i
 GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (the active file is now `styles.v8.css`; next bump it to `styles.v9.css`), update all HTML references, then commit and push. This was last done in Day 25 (`styles.v7.css` → `styles.v8.css`). Note: a plain `sed` over `*.html` normalizes CRLF→LF on the files that use CRLF (currently `admin.html`, `archive.html`, `sample.html`) — restore them with `sed -i 's/$/\r/'` after the bump to keep the diff clean.
 
 ### Active CSS file ambiguity
-The active CSS file is **`styles.v8.css`** (renamed from `styles.v7.css` in Day 25). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
+The active CSS file is **`styles.v9.css`** (renamed from `styles.v8.css` in Day 29). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
-When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=6` — bumped in Day 26 (map keyboard a11y in `buildMap` + `muestra.html renderMap` renderer parity); previously `?v=5` in Day 25. Verified consistent across all 12 active HTML files. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=6` — bump the query or load with a unique param to force a fresh copy.
+When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=7` — bumped in Day 29 (`buildMetrics` widget for the Monthly Brief "El mes en cifras" bars); previously `?v=6` in Day 26. Verified consistent across all active HTML files. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=7` AND `styles.v9.css` — bump the query (or load with a unique param) to force a fresh copy; a stale CSS is why the metrics track/fill can appear unstyled locally.
 
 ### Weekly interactive map — base64 in HTML, hydrated client-side
 The Weekly positioning map (Day 25) travels as a `<div class="pub-map" data-mapa="<base64>">` placeholder inside `body_markdown` (base64 of the `mapa` JSON, UTF-8-safe). Base64 has no quotes/apostrophes, so it survives `archive.html`'s attribute-escaping round-trip (`safeBody` → `data-body` → `innerHTML`) untouched. The renderer `window.hydratePubWidgets(root)` (in `criterial-shared.js`) decodes it and builds the interactive SVG (quadrant labels rendered OUTSIDE the plot frame; bubble centres clamped inside; a light de-overlap relax with anchor pull-back). It is called by `archive.html` `openPubModal` and `admin.html` `previewPublication` after setting innerHTML — scripts inside innerHTML do NOT execute, so hydration must be driven by the host page. A malformed map hides its own section and never breaks the publication. No DB schema change: the data rides in `body_markdown`, not `body_data`.
@@ -661,6 +662,17 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 **Backlog (memoria `project_weekly_map_backlog`):** Fase 2 — ② operaciones filtrables/expandibles, ③ barras del "Dato de contexto"; y pendientes menores — `numero` fijo en "Nº 1" (error de contenido), a11y de teclado del mapa. (El solape burbuja↔burbuja de la revisión se resolvió con el relax.)
 
 **Estado en producción al cierre:** `sample-request` v24, **`generate-content` v7**, `get-sample` v1, `send-weekly` v1 — todas activas. Assets nuevos (`styles.v8.css`, `criterial-shared.js?v=5`, hidratación) en la rama de Fase 1 / PR; el mapa queda vivo en el sitio al mergear. El borrador del 3-jul sigue sin publicar (decisión del usuario).
+
+### Day 29 — En progreso (2026-07-05)
+
+**Rediseño del Brief Mensual como entregable premium de Pro (el pilar que justifica el precio).** Diagnóstico: el Monthly era MÁS débil que el Weekly (HTML plano del modelo, sin parsing seguro ni elementos interactivos, nunca producido). Se reposiciona a mayor altura ("La lectura del mes": síntesis con tesis + prospectiva, no radar de eventos) y se le da superficie premium propia. Decisión del usuario: todos los elementos + build completo. Sigue siendo solo-Pro.
+
+- **Prompt → JSON:** `monthlyPrompt` (`_shared/prompts.ts`) y `prompts/monthly-brief.es.md` v4 reescritos de HTML-directo a JSON. Schema con `tesis`, `cifras[]` (cada una con `fuente` obligatoria — guarda anti-invención), `sectores[]`, `mapa` (idéntico al Weekly), `operacion` (con `datos[]`), `catalizadores[]`, `fuentes[]`.
+- **`generate-content`:** nuevo `monthlyJsonToHtml`; el monthly ahora se parsea con `extractJsonObject` (502 limpio si falla) en vez de `result.text` crudo; Nº de edición server-side para AMBOS tipos (`editionNumber`, count de ese tipo + 1); `computePeriod` monthly → título "Brief Mensual — …". `public_html: null` (solo Pro).
+- **Widget nuevo "El mes en cifras":** `<div class="pub-metrics" data-metrics="<base64>">` hidratado por `buildMetrics` en `criterial-shared.js` (barras escaladas al máximo, fuente por barra, focusable/a11y, defensivo <2 → oculta sección). Mismo patrón base64 que el mapa.
+- **CSS:** `styles.v8.css` → **`styles.v9.css`** + clases `pub-metrics-*`, `pub-msec-*` (sectores), `pub-op-*` (operación + mini-tabla), `pub-cat-*` (catalizadores). Assets bumpeados `?v=6` → **`?v=7`** en las 13 HTML (baile anti-caché §7), CRLF preservado en `admin`/`archive`/`sample`.
+- **Script:** `scripts/generate-content.sh` ramifica por tipo; conversor monthly en Python (paridad con la EF), validado en local con fixture (6 secciones, filtro anti-invención descarta cifras sin fuente, Nº correcto).
+- **Validación local (Opción C):** renderers (barras + mapa) y conversor validados con fixtures en preview e inspect (0 fuera de marco, responsive OK). **Pendiente:** desplegar la EF `generate-content`, mergear+push del frontend, y generar/publicar el primer Brief Mensual real (acciones de producción, requieren aprobación).
 
 ### Day 28 — Complete (2026-07-05)
 

@@ -36,22 +36,20 @@ else
   PERIOD="$(LC_TIME=es_ES.UTF-8 date '+%B de %Y' 2>/dev/null || date '+%B %Y')"
   PERIOD_START="$(date '+%Y-%m-01')"
   PERIOD_END="$(date '+%Y-%m-%d')"
-  TITLE="Monthly Brief — $(date '+%B %Y')"
+  TITLE="Brief Mensual — $(date '+%B %Y')"
   PROMPT_FILE="prompts/monthly-brief.es.md"
 fi
 
-# ── Edition number (weekly) ────────────────────────────────────────────────────
+# ── Edition number ─────────────────────────────────────────────────────────────
 # Assigned here, not by the model — the model can't know the sequence (it used to
-# echo the "1" from the prompt schema, so every Weekly said "Nº 1"). = count of
-# already-published weeklies + 1. Falls back to 1 if the query fails. Kept in sync
-# with the generate-content Edge Function.
-WEEKLY_NUMBER=""
-if [[ "$TYPE" == "weekly" ]]; then
-  WEEKLY_NUMBER=$(python3 - "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
+# echo the "1" from the prompt schema, so every edition said "Nº 1"). = count of
+# already-published rows of THIS type + 1. Falls back to 1 if the query fails.
+# Kept in sync with the generate-content Edge Function.
+EDITION_NUMBER=$(python3 - "$TYPE" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
 import sys, json, urllib.request
-supabase_url, service_key = sys.argv[1:]
+pub_type, supabase_url, service_key = sys.argv[1:]
 req = urllib.request.Request(
-    f'{supabase_url}publications?type=eq.weekly&status=eq.published&select=id',
+    f'{supabase_url}publications?type=eq.{pub_type}&status=eq.published&select=id',
     headers={'apikey': service_key, 'Authorization': f'Bearer {service_key}'}
 )
 try:
@@ -62,7 +60,6 @@ except Exception:
     print(1)
 PYEOF
 )
-fi
 
 # ── Load prompt ────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -82,7 +79,7 @@ echo ""
 echo -e "${BOLD}=== Criterial Signals — Content Generator ===${NC}"
 echo -e "  Type:    ${CYAN}$TYPE${NC}"
 echo -e "  Period:  $PERIOD"
-[[ "$TYPE" == "weekly" ]] && echo -e "  Nº:      $WEEKLY_NUMBER"
+echo -e "  Nº:      $EDITION_NUMBER"
 echo -e "  Model:   $MODEL (web_search, max_tokens=12000)"
 echo ""
 
@@ -127,10 +124,11 @@ print(''.join(b.get('text','') for b in blocks if b.get('type')=='text').strip()
   RAW_MODEL="$TEXT"
 
   # ── Convert JSON to HTML (full / Pro) ──────────────────────────────────────────
-  TEXT=$(echo "$TEXT" | WEEKLY_NUMBER="$WEEKLY_NUMBER" python3 -c "
+  if [[ "$TYPE" == "weekly" ]]; then
+  TEXT=$(echo "$TEXT" | EDITION_NUMBER="$EDITION_NUMBER" python3 -c "
 import json, sys, html, re as _re, base64, os
 
-NUM = os.environ.get('WEEKLY_NUMBER', '').strip()
+NUM = os.environ.get('EDITION_NUMBER', '').strip()
 raw = sys.stdin.read().strip()
 if raw.startswith('\`\`\`'):
     lines = raw.split('\n')
@@ -272,6 +270,145 @@ out.append('</div>')
 out.append('</div>')
 print(''.join(out))
 " 2>/dev/null || echo "$TEXT")
+  else
+  # ── Monthly JSON → HTML (mirrors monthlyJsonToHtml in generate-content) ─────────
+  TEXT=$(RAW_MODEL="$RAW_MODEL" EDITION_NUMBER="$EDITION_NUMBER" python3 <<'PYEOF'
+import os, json, html, re as _re, base64
+NUM = os.environ.get('EDITION_NUMBER', '').strip()
+raw = os.environ.get('RAW_MODEL', '').strip()
+if raw.startswith('```'):
+    raw = '\n'.join(l for l in raw.split('\n') if not l.strip().startswith('```')).strip()
+s2 = raw.find('{'); e2 = raw.rfind('}')
+if s2 != -1 and e2 != -1 and e2 > s2:
+    raw = raw[s2:e2+1]
+try:
+    d = json.loads(raw)
+except Exception:
+    print(os.environ.get('RAW_MODEL', ''))
+    raise SystemExit(0)
+
+def esc(s):
+    if not s: return ''
+    parts = _re.split(r'(</?strong>)', str(s))
+    return ''.join(html.escape(p) if not p.startswith('<') else p for p in parts)
+
+MOM = {'creciente': 'Creciente', 'estable': 'Estable', 'enfriandose': 'Enfriándose'}
+out = ['<div class="pub-content">']
+
+# Header
+out.append('<div class="pub-header-new">')
+out.append('<div class="pub-brand-row">')
+out.append('<span class="pub-brand-label">Criterial · Brief Mensual</span>')
+out.append(f'<span class="pub-brand-num">Nº {esc(NUM)} · {esc(d.get("period",""))}</span>')
+out.append('</div>')
+out.append(f'<h1 class="pub-title-new">{esc(d.get("titulo",""))}</h1>')
+out.append(f'<p class="pub-period-new">Brief Mensual · {esc(d.get("period",""))}</p>')
+out.append('</div>')
+
+# Tesis del mes
+out.append('<div class="pub-section-new">')
+out.append('<p class="pub-sec-label">Tesis del mes</p>')
+out.append(f'<div class="pub-apertura-new"><p>{esc(d.get("tesis",""))}</p></div>')
+out.append('</div>')
+
+# El mes en cifras (bars — hydrated). Only figures with numeric n AND a source.
+cifras = [c for c in d.get('cifras', []) if isinstance(c, dict) and str(c.get('n','')).strip() != '' and c.get('fuente')]
+def _isnum(x):
+    try: float(x); return True
+    except Exception: return False
+cifras = [c for c in cifras if _isnum(c.get('n'))]
+if len(cifras) >= 2:
+    encoded = base64.b64encode(json.dumps(cifras, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    out.append('<div class="pub-section-new">')
+    out.append('<p class="pub-sec-label">El mes en cifras</p>')
+    out.append(f'<div class="pub-metrics" data-metrics="{encoded}"></div>')
+    out.append('</div>')
+
+# Sectores en movimiento
+out.append('<div class="pub-section-new">')
+out.append('<p class="pub-sec-label">Sectores en movimiento</p>')
+out.append('<div class="pub-msec-grid">')
+for s in d.get('sectores', []):
+    mom = str(s.get('momentum','')).lower()
+    momcls = f' pub-msec-mom-{mom}' if mom in MOM else ''
+    out.append('<div class="pub-msec-card">')
+    out.append('<div class="pub-msec-head">')
+    out.append(f'<span class="pub-msec-name">{esc(s.get("nombre",""))}</span>')
+    if mom in MOM:
+        out.append(f'<span class="pub-msec-mom{momcls}">{MOM[mom]}</span>')
+    out.append('</div>')
+    out.append(f'<p class="pub-msec-body">{esc(s.get("cuerpo",""))}</p>')
+    out.append('</div>')
+out.append('</div></div>')
+
+# Mapa de capital (interactive positioning map)
+mapa = d.get('mapa')
+if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.get('nodos')) >= 3:
+    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    out.append('<div class="pub-section-new">')
+    out.append('<p class="pub-sec-label">Mapa de capital</p>')
+    out.append(f'<div class="pub-map" data-mapa="{encoded}"></div>')
+    out.append('</div>')
+
+# Operación del mes
+op = d.get('operacion')
+if isinstance(op, dict) and op.get('nombre'):
+    out.append('<div class="pub-section-new">')
+    out.append('<p class="pub-sec-label">Operación del mes</p>')
+    out.append('<div class="pub-op">')
+    out.append('<div class="pub-op-head">')
+    out.append(f'<span class="pub-op-name">{esc(op.get("nombre",""))}</span>')
+    if op.get('sector'):
+        out.append(f'<span class="pub-op-sector">{esc(op.get("sector",""))}</span>')
+    out.append('</div>')
+    datos = [x for x in op.get('datos', []) if isinstance(x, dict) and x.get('label') and x.get('valor')]
+    if datos:
+        out.append('<div class="pub-op-data">')
+        for x in datos:
+            out.append('<div class="pub-op-cell">')
+            out.append(f'<span class="pub-op-cell-label">{esc(x.get("label",""))}</span>')
+            out.append(f'<span class="pub-op-cell-val">{esc(x.get("valor",""))}</span>')
+            out.append('</div>')
+        out.append('</div>')
+    out.append(f'<p class="pub-op-analysis">{esc(op.get("analisis",""))}</p>')
+    out.append('</div></div>')
+
+# Catalizadores
+cats = [c for c in d.get('catalizadores', []) if isinstance(c, dict) and c.get('titulo')]
+if cats:
+    out.append('<div class="pub-section-new">')
+    out.append('<p class="pub-sec-label">Catalizadores</p>')
+    out.append('<div class="pub-cat-list">')
+    for c in cats:
+        out.append('<div class="pub-cat-item">')
+        out.append(f'<span class="pub-cat-date">{esc(c.get("fecha",""))}</span>')
+        out.append('<div class="pub-cat-body">')
+        out.append(f'<p class="pub-cat-title">{esc(c.get("titulo",""))}</p>')
+        out.append(f'<p class="pub-cat-context">{esc(c.get("contexto",""))}</p>')
+        out.append('</div></div>')
+    out.append('</div></div>')
+
+# Fuentes
+out.append('<div class="pub-sources-new">')
+out.append('<p class="pub-sec-label">Fuentes</p>')
+for f in d.get('fuentes', []):
+    out.append('<div class="pub-source-row">')
+    out.append(f'<span class="pub-source-medio">{esc(f.get("medio",""))}</span>')
+    out.append(f'<span class="pub-source-titulo">{esc(f.get("titulo",""))}</span>')
+    out.append('</div>')
+out.append('</div>')
+
+# Footer
+out.append('<div class="pub-footer-new">')
+out.append('<span class="pub-footer-text">Criterial Signals · Pro</span>')
+out.append('<span class="pub-footer-text">criterialsignals.com</span>')
+out.append('</div>')
+
+out.append('</div>')
+print(''.join(out))
+PYEOF
+)
+  fi
 
   if [[ -z "$TEXT" ]]; then
     echo "FAILED"
@@ -286,9 +423,9 @@ print(''.join(out))
   # any failure leaves PUBLIC_HTML empty → body_public null → the save still works.
   PUBLIC_HTML=""
   if [[ "$TYPE" == "weekly" ]]; then
-    PUBLIC_HTML=$(RAW_MODEL="$RAW_MODEL" WEEKLY_NUMBER="$WEEKLY_NUMBER" python3 <<'PYEOF'
+    PUBLIC_HTML=$(RAW_MODEL="$RAW_MODEL" EDITION_NUMBER="$EDITION_NUMBER" python3 <<'PYEOF'
 import os, json, html, re as _re, base64
-NUM = os.environ.get('WEEKLY_NUMBER', '').strip()
+NUM = os.environ.get('EDITION_NUMBER', '').strip()
 raw = os.environ.get('RAW_MODEL', '').strip()
 s2 = raw.find('{'); e2 = raw.rfind('}')
 if s2 != -1 and e2 != -1 and e2 > s2:

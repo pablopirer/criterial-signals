@@ -69,7 +69,7 @@ function computePeriod(type: "weekly" | "monthly"): {
   } else {
     return {
       periodLabel: `${month} de ${year}`,
-      title: `Monthly Brief — ${month} ${year}`,
+      title: `Brief Mensual — ${month} ${year}`,
       period_start: `${year}-${pad(now.getMonth() + 1)}-01`,
       period_end: fmtDate(now),
     };
@@ -381,6 +381,157 @@ function weeklyJsonToPublicHtml(d: WeeklyJson, numero: number): string {
   return parts.join("");
 }
 
+// ── Monthly JSON → HTML conversion ────────────────────────────────────────────
+
+interface MonthlyJson {
+  titulo: string;
+  period: string;
+  tesis: string;
+  cifras?: Array<{ label: string; valor: string; n?: number; fuente?: string }>;
+  sectores?: Array<{ nombre: string; cuerpo: string; momentum?: string }>;
+  mapa?: Record<string, unknown>;
+  operacion?: {
+    nombre: string;
+    sector?: string;
+    datos?: Array<{ label: string; valor: string }>;
+    analisis: string;
+  };
+  catalizadores?: Array<{ fecha: string; titulo: string; contexto: string }>;
+  fuentes?: Array<{ medio: string; titulo: string }>;
+}
+
+const MOMENTUM_LABEL: Record<string, string> = {
+  creciente: "Creciente",
+  estable: "Estable",
+  enfriandose: "Enfriándose",
+};
+
+function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
+  const parts: string[] = [];
+  parts.push('<div class="pub-content">');
+
+  // Header
+  parts.push('<div class="pub-header-new">');
+  parts.push('<div class="pub-brand-row">');
+  parts.push('<span class="pub-brand-label">Criterial · Brief Mensual</span>');
+  parts.push(`<span class="pub-brand-num">Nº ${numero} · ${esc(d.period)}</span>`);
+  parts.push("</div>");
+  parts.push(`<h1 class="pub-title-new">${esc(d.titulo)}</h1>`);
+  parts.push(`<p class="pub-period-new">Brief Mensual · ${esc(d.period)}</p>`);
+  parts.push("</div>");
+
+  // Tesis del mes
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Tesis del mes</p>');
+  parts.push(`<div class="pub-apertura-new"><p>${esc(d.tesis)}</p></div>`);
+  parts.push("</div>");
+
+  // El mes en cifras (interactive bars — hydrated client-side from base64).
+  // Defensive: only emit when there are >=2 figures with a numeric value AND a
+  // source (the anti-fabrication guard); otherwise the panel is omitted.
+  const cifras = (d.cifras ?? []).filter(
+    (c) => c && isFinite(Number(c.n)) && c.fuente,
+  );
+  if (cifras.length >= 2) {
+    const encoded = toBase64Utf8(JSON.stringify(cifras));
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">El mes en cifras</p>');
+    parts.push(`<div class="pub-metrics" data-metrics="${encoded}"></div>`);
+    parts.push("</div>");
+  }
+
+  // Sectores en movimiento
+  parts.push('<div class="pub-section-new">');
+  parts.push('<p class="pub-sec-label">Sectores en movimiento</p>');
+  parts.push('<div class="pub-msec-grid">');
+  for (const s of (d.sectores ?? [])) {
+    const mom = String(s.momentum ?? "").toLowerCase();
+    const momCls = MOMENTUM_LABEL[mom] ? ` pub-msec-mom-${mom}` : "";
+    parts.push('<div class="pub-msec-card">');
+    parts.push('<div class="pub-msec-head">');
+    parts.push(`<span class="pub-msec-name">${esc(s.nombre)}</span>`);
+    if (MOMENTUM_LABEL[mom]) {
+      parts.push(`<span class="pub-msec-mom${momCls}">${MOMENTUM_LABEL[mom]}</span>`);
+    }
+    parts.push("</div>");
+    parts.push(`<p class="pub-msec-body">${esc(s.cuerpo)}</p>`);
+    parts.push("</div>");
+  }
+  parts.push("</div></div>");
+
+  // Mapa de capital (same interactive positioning map as the Weekly).
+  const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
+  if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
+    const encoded = toBase64Utf8(JSON.stringify(d.mapa));
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">Mapa de capital</p>');
+    parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
+    parts.push("</div>");
+  }
+
+  // Operación del mes — deep-dive with a verifiable mini data-table.
+  const op = d.operacion;
+  if (op && op.nombre) {
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">Operación del mes</p>');
+    parts.push('<div class="pub-op">');
+    parts.push('<div class="pub-op-head">');
+    parts.push(`<span class="pub-op-name">${esc(op.nombre)}</span>`);
+    if (op.sector) parts.push(`<span class="pub-op-sector">${esc(op.sector)}</span>`);
+    parts.push("</div>");
+    const datos = (op.datos ?? []).filter((x) => x && x.label && x.valor);
+    if (datos.length) {
+      parts.push('<div class="pub-op-data">');
+      for (const x of datos) {
+        parts.push('<div class="pub-op-cell">');
+        parts.push(`<span class="pub-op-cell-label">${esc(x.label)}</span>`);
+        parts.push(`<span class="pub-op-cell-val">${esc(x.valor)}</span>`);
+        parts.push("</div>");
+      }
+      parts.push("</div>");
+    }
+    parts.push(`<p class="pub-op-analysis">${esc(op.analisis)}</p>`);
+    parts.push("</div></div>");
+  }
+
+  // Catalizadores — forward calendar for the month ahead.
+  const cats = (d.catalizadores ?? []).filter((c) => c && c.titulo);
+  if (cats.length) {
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">Catalizadores</p>');
+    parts.push('<div class="pub-cat-list">');
+    for (const c of cats) {
+      parts.push('<div class="pub-cat-item">');
+      parts.push(`<span class="pub-cat-date">${esc(c.fecha)}</span>`);
+      parts.push('<div class="pub-cat-body">');
+      parts.push(`<p class="pub-cat-title">${esc(c.titulo)}</p>`);
+      parts.push(`<p class="pub-cat-context">${esc(c.contexto)}</p>`);
+      parts.push("</div></div>");
+    }
+    parts.push("</div></div>");
+  }
+
+  // Fuentes
+  parts.push('<div class="pub-sources-new">');
+  parts.push('<p class="pub-sec-label">Fuentes</p>');
+  for (const f of (d.fuentes ?? [])) {
+    parts.push('<div class="pub-source-row">');
+    parts.push(`<span class="pub-source-medio">${esc(f.medio)}</span>`);
+    parts.push(`<span class="pub-source-titulo">${esc(f.titulo)}</span>`);
+    parts.push("</div>");
+  }
+  parts.push("</div>");
+
+  // Footer
+  parts.push('<div class="pub-footer-new">');
+  parts.push('<span class="pub-footer-text">Criterial Signals · Pro</span>');
+  parts.push('<span class="pub-footer-text">criterialsignals.com</span>');
+  parts.push("</div>");
+
+  parts.push("</div>");
+  return parts.join("");
+}
+
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
 
 const CORS_HEADERS = {
@@ -439,20 +590,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const userWithPeriod = prompt.user.replace(/\{\{period\}\}/g, periodLabel);
 
   // Edition number is assigned server-side — the model can't know the sequence
-  // (it used to echo the "1" from the prompt schema, so every Weekly rendered
-  // "Nº 1"). It is the count of already-published weeklies + 1, i.e. the next
-  // edition. Falls back to Nº 1 only if the count query fails.
-  let weeklyNumber = 1;
-  if (type === "weekly") {
+  // (it used to echo the "1" from the prompt schema, so every edition rendered
+  // "Nº 1"). It is the count of already-published rows of THIS type + 1, i.e.
+  // the next edition. Falls back to Nº 1 only if the count query fails.
+  let editionNumber = 1;
+  {
     const { count, error: countErr } = await supabase
       .from("publications")
       .select("*", { count: "exact", head: true })
-      .eq("type", "weekly")
+      .eq("type", type)
       .eq("status", "published");
     if (countErr) {
-      console.error("Weekly count failed, defaulting to Nº 1:", countErr);
+      console.error(`${type} count failed, defaulting to Nº 1:`, countErr);
     } else {
-      weeklyNumber = (count ?? 0) + 1;
+      editionNumber = (count ?? 0) + 1;
     }
   }
 
@@ -485,10 +636,26 @@ Deno.serve(async (req: Request): Promise<Response> => {
         );
       }
       // Two projections of the same generation: full (Pro) + reduced (Free).
-      html = weeklyJsonToHtml(parsed, weeklyNumber);
-      publicHtml = weeklyJsonToPublicHtml(parsed, weeklyNumber);
+      html = weeklyJsonToHtml(parsed, editionNumber);
+      publicHtml = weeklyJsonToPublicHtml(parsed, editionNumber);
     } else {
-      html = result.text;
+      // Monthly is now JSON too (since v4) — parse safely like the Weekly and
+      // convert to pub-* HTML. publicHtml stays null: the Brief is Pro-only.
+      let parsed: MonthlyJson;
+      try {
+        parsed = JSON.parse(extractJsonObject(result.text)) as MonthlyJson;
+      } catch (parseErr) {
+        console.error("Monthly JSON parse failed:", parseErr);
+        console.error("Raw model output (first 800 chars):", result.text.slice(0, 800));
+        return jsonResponse(
+          {
+            error:
+              "El modelo devolvió contenido no parseable como JSON. Vuelve a generar el Brief Mensual.",
+          },
+          502,
+        );
+      }
+      html = monthlyJsonToHtml(parsed, editionNumber);
     }
 
     return jsonResponse(

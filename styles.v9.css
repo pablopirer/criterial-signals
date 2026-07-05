@@ -913,7 +913,54 @@ button.btn-dark {
 .pub-map-src { font-size: 11px; color: #8a857c; margin: 8px 0 0; }
 .pub-map-note { font-size: 10px; color: #b6b0a4; margin: 12px 0 0; }
 
+/* ── Monthly Brief v4 — premium widgets ─────────────────────────────────────── */
+/* El mes en cifras (bars — hydrated by criterial-shared.js buildMetrics) */
+.pub-metrics { display: block; max-width: 640px; }
+.pub-metrics-inner { display: flex; flex-direction: column; gap: 0.9rem; }
+.pub-metric { outline: none; }
+.pub-metric:focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; }
+.pub-metric-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 5px; }
+.pub-metric-label { font-size: 12px; color: var(--muted); }
+.pub-metric-val { font-family: 'EB Garamond', Georgia, serif; font-size: 18px; color: var(--navy); line-height: 1; white-space: nowrap; }
+.pub-metric-track { height: 8px; background: #EEEAE3; overflow: hidden; }
+.pub-metric-fill { height: 100%; background: var(--navy); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+.pub-metric-src { display: block; font-size: 10.5px; color: #9a958a; font-style: italic; margin-top: 5px; }
+
+/* Sectores en movimiento (cards) */
+.pub-msec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pub-msec-card { border: 0.5px solid var(--border); padding: 1rem 1.25rem; background: #fff; }
+.pub-msec-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
+.pub-msec-name { font-size: 13.5px; font-weight: 500; color: var(--navy); }
+.pub-msec-mom { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; white-space: nowrap; background: #efedea; color: #9a958a; }
+.pub-msec-mom-creciente { background: #e1efe9; color: #1d7a5f; }
+.pub-msec-mom-estable { background: #efedea; color: #9a958a; }
+.pub-msec-mom-enfriandose { background: #f3e7e1; color: #b06a4e; }
+.pub-msec-body { font-size: 13px; line-height: 1.65; color: var(--muted); }
+
+/* Operación del mes (deep-dive + mini data table) */
+.pub-op { border: 0.5px solid var(--border); background: #fff; padding: 1.25rem 1.5rem; }
+.pub-op-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.pub-op-name { font-family: 'EB Garamond', Georgia, serif; font-size: 20px; color: var(--navy); line-height: 1.2; }
+.pub-op-sector { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
+.pub-op-data { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.25rem; }
+.pub-op-cell { background: #F8F6F2; padding: 0.65rem 0.85rem; display: flex; flex-direction: column; gap: 3px; }
+.pub-op-cell-label { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label); }
+.pub-op-cell-val { font-size: 14px; font-weight: 500; color: var(--navy); line-height: 1.25; }
+.pub-op-analysis { font-size: 13.5px; line-height: 1.75; color: var(--muted); margin: 0; }
+
+/* Catalizadores (forward calendar) */
+.pub-cat-list { display: flex; flex-direction: column; }
+.pub-cat-item { display: flex; gap: 1rem; padding: 0.85rem 0; border-bottom: 0.5px solid var(--border); align-items: flex-start; }
+.pub-cat-item:last-child { border-bottom: none; }
+.pub-cat-date { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy); font-weight: 500; min-width: 90px; flex-shrink: 0; padding-top: 2px; }
+.pub-cat-title { font-size: 13.5px; font-weight: 500; color: var(--navy); margin: 0 0 3px; }
+.pub-cat-context { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin: 0; }
+
 @media (max-width: 600px) {
+  .pub-msec-grid { grid-template-columns: 1fr; }
+  .pub-op-data { grid-template-columns: 1fr 1fr; }
+  .pub-cat-item { flex-direction: column; gap: 0.25rem; }
+  .pub-cat-date { min-width: 0; }
   .pub-vigilar-grid { grid-template-columns: 1fr; }
   .pub-readthrough-body { grid-template-columns: 1fr; }
   .pub-rt-item { border-right: none; border-bottom: 0.5px solid var(--border); }
