@@ -52,7 +52,30 @@
     .pub-modal-upsell { max-width: 1100px; margin: 0 auto 40px; padding: 0 48px; }
     .pub-modal-upsell-box { border: 0.5px solid var(--border); background: #fff; padding: 26px 30px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
     .pub-modal-upsell-text { font-size: 13px; line-height: 1.6; color: var(--muted); font-weight: 300; max-width: 560px; }
+    /* Email capture band (newsletter) — distinct ask from the navy Pro upsell */
+    .sg-capture { padding: 56px 64px; border-top: 0.5px solid var(--border); }
+    .sg-capture-inner { max-width: 620px; }
+    .sg-capture-eyebrow { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--label); margin-bottom: 14px; }
+    .sg-capture-title { font-family: 'EB Garamond', Georgia, serif; font-size: 30px; font-weight: 400; color: var(--navy); line-height: 1.15; margin-bottom: 12px; }
+    .sg-capture-sub { font-size: 14px; line-height: 1.7; color: var(--muted); font-weight: 300; margin: 0 0 24px; }
+    .sg-capture-form { display: flex; gap: 10px; max-width: 480px; flex-wrap: wrap; }
+    .sg-capture-input { flex: 1; min-width: 220px; font-family: 'Inter', sans-serif; font-size: 14px; padding: 13px 16px; border: 0.5px solid var(--border); background: #fff; color: var(--navy); outline: none; }
+    .sg-capture-input:focus { border-color: var(--navy); }
+    .sg-capture-btn { font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 0.04em; padding: 13px 26px; background: var(--navy); color: #fff; border: none; cursor: pointer; white-space: nowrap; }
+    .sg-capture-btn:disabled { opacity: 0.5; cursor: default; }
+    .sg-capture-note { font-size: 12px; margin: 14px 0 0; min-height: 1em; font-weight: 300; }
+    .sg-capture-note.is-ok { color: var(--navy); }
+    .sg-capture-note.is-error { color: #b23b3b; }
+    /* variant: inside the reader modal */
+    .sg-capture--modal { padding: 0 48px; max-width: 1100px; margin: 0 auto 60px; border-top: none; }
+    .sg-capture--modal .sg-capture-inner { border: 0.5px solid var(--border); background: #fff; padding: 30px 34px; max-width: none; }
+    .sg-capture--modal .sg-capture-title { font-size: 24px; }
+    /* variant: inside the empty state */
+    .sg-capture--empty { border-top: none; padding: 40px 40px 0; margin: 0 auto; }
     @media (max-width: 900px) {
+      .sg-capture { padding-left: 32px; padding-right: 32px; }
+      .sg-capture--modal { padding-left: 24px; padding-right: 24px; }
+      .sg-capture-title { font-size: 26px; }
       .sg-intro, .sg-body { padding-left: 32px; padding-right: 32px; }
       .sg-intro { padding-top: 72px; }
       .sg-title { font-size: 38px; }
@@ -91,6 +114,19 @@
     <div id="sg-editions"></div>
   </div>
 
+  <section class="sg-capture">
+    <div class="sg-capture-inner">
+      <p class="sg-capture-eyebrow">Newsletter</p>
+      <h2 class="sg-capture-title">Recíbela en tu correo.</h2>
+      <p class="sg-capture-sub">Cada nueva edición abierta, directa a tu bandeja. Gratis y sin ruido. Te puedes dar de baja cuando quieras.</p>
+      <form class="sg-capture-form" novalidate>
+        <input type="email" class="sg-capture-input" placeholder="tu@correo.com" required aria-label="Tu correo electrónico" />
+        <button type="submit" class="sg-capture-btn">Suscribirme</button>
+      </form>
+      <p class="sg-capture-note" aria-live="polite"></p>
+    </div>
+  </section>
+
   <section class="sg-cta">
     <div>
       <p class="sg-cta-label">Acceso completo</p>
@@ -126,12 +162,67 @@
           <a href="pricing.html" class="btn-dark">Ver Pro</a>
         </div>
       </div>
+      <div class="sg-capture sg-capture--modal">
+        <div class="sg-capture-inner">
+          <p class="sg-capture-eyebrow">Newsletter</p>
+          <h2 class="sg-capture-title">Recibe la próxima edición.</h2>
+          <p class="sg-capture-sub">Déjanos tu correo y te avisamos en cuanto publiquemos la siguiente edición abierta. Baja cuando quieras.</p>
+          <form class="sg-capture-form" novalidate>
+            <input type="email" class="sg-capture-input" placeholder="tu@correo.com" required aria-label="Tu correo electrónico" />
+            <button type="submit" class="sg-capture-btn">Suscribirme</button>
+          </form>
+          <p class="sg-capture-note" aria-live="polite"></p>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
     const GET_PUBLIC_EDITIONS_URL = "https://epmltqhtxkmfboaxdois.supabase.co/functions/v1/get-public-editions";
+    const SUBSCRIBE_SIGNALS_URL = "https://epmltqhtxkmfboaxdois.supabase.co/functions/v1/subscribe-signals";
+    // Same lightweight bot-deterrent shared secret sample.html sends (not real auth).
+    const SIGNAL_SECRET = "596394206a475b401e93639148407dd7b4c8ce7fffd36ccaa204aca73b527dcb";
     let _editions = [];
+
+    // Wire any newsletter capture form (dedicated band, empty state, reader
+    // modal). Idempotent via data-wired so it can be called after re-renders.
+    function wireCaptureForm(form) {
+      if (!form || form.dataset.wired) return;
+      form.dataset.wired = "1";
+      const note = form.parentElement.querySelector(".sg-capture-note");
+      const setNote = (msg, cls) => { if (note) { note.textContent = msg; note.className = "sg-capture-note " + cls; } };
+      form.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const input = form.querySelector(".sg-capture-input");
+        const btn = form.querySelector(".sg-capture-btn");
+        const email = (input.value || "").trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setNote("Introduce un correo válido.", "is-error");
+          return;
+        }
+        const orig = btn.textContent;
+        btn.disabled = true; btn.textContent = "Enviando…";
+        try {
+          const res = await fetch(SUBSCRIBE_SIGNALS_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-criterial-signal": SIGNAL_SECRET },
+            body: JSON.stringify({ email })
+          });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          form.reset();
+          form.style.display = "none";
+          setNote("Listo. Te hemos enviado un correo de confirmación.", "is-ok");
+        } catch (e) {
+          setNote("No se pudo completar. Inténtalo de nuevo.", "is-error");
+        } finally {
+          btn.disabled = false; btn.textContent = orig;
+        }
+      });
+    }
+
+    function initCaptureForms() {
+      document.querySelectorAll(".sg-capture-form").forEach(wireCaptureForm);
+    }
 
     function fmtDate(start, end) {
       const f = d => new Date(d + "T12:00:00Z").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
@@ -155,7 +246,16 @@
       if (!_editions.length) {
         host.innerHTML =
           '<div class="sg-empty"><p class="sg-empty-label">Próximamente</p>' +
-          '<p class="sg-empty-title">La primera edición abierta llega pronto.</p></div>';
+          '<p class="sg-empty-title">La primera edición abierta llega pronto.</p></div>' +
+          '<div class="sg-capture sg-capture--empty"><div class="sg-capture-inner">' +
+          '<p class="sg-capture-eyebrow">Newsletter</p>' +
+          '<h2 class="sg-capture-title">Sé el primero en recibirla.</h2>' +
+          '<p class="sg-capture-sub">Déjanos tu correo y te avisamos en cuanto publiquemos la primera edición abierta.</p>' +
+          '<form class="sg-capture-form" novalidate>' +
+          '<input type="email" class="sg-capture-input" placeholder="tu@correo.com" required aria-label="Tu correo electrónico" />' +
+          '<button type="submit" class="sg-capture-btn">Suscribirme</button></form>' +
+          '<p class="sg-capture-note" aria-live="polite"></p></div></div>';
+        initCaptureForms();
         return;
       }
       host.innerHTML =
@@ -206,6 +306,15 @@
         _editions = [];
       }
       renderEditions();
+      initCaptureForms();
+
+      // Deep-link from newsletter emails: signals.html?edition=<id> auto-opens
+      // that edition's reader modal.
+      const wanted = new URLSearchParams(location.search).get("edition");
+      if (wanted) {
+        const idx = _editions.findIndex(e => e.id === wanted);
+        if (idx !== -1) openSgModal(idx);
+      }
     })();
   </script>
   <script src="criterial-shared.js?v=6"></script>

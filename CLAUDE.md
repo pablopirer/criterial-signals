@@ -73,6 +73,9 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 | `sample-request` | Lead capture, brief generation (Anthropic + web search), envelope email (Resend) |
 | `get-sample` | Public read-only access to a sample brief by `public_token` (no auth; `verify_jwt: false`). Serves `body_data` to `muestra.html` |
 | `get-public-editions` | Public read-only feed of free Signals editions (no auth; `verify_jwt: false`). Returns only `body_public` of `published` rows; never exposes `body_markdown`. Serves `signals.html`. Added Day 27. |
+| `subscribe-signals` | Inline newsletter capture from `signals.html` (no auth; `verify_jwt: false`; gated by `x-criterial-signal` like `sample-request`). Upserts `signals_subscribers` (idempotent, reactivates bajas), sends confirmation email. Added Day 28. |
+| `send-open-edition` | Emails the free newsletter list (`signals_subscribers` active) when an open edition publishes. Admin-JWT (mirrors `send-weekly`). Called from `admin-publications` on publish, background. Added Day 28. |
+| `unsubscribe-signals` | Public opt-out by `unsubscribe_token` (no auth; `verify_jwt: false`). GET → sets `status='unsubscribed'`, returns HTML page. Target of the unsubscribe link in every newsletter email. Added Day 28. |
 | `advisory-request` | Advisory form: internal notification + user confirmation |
 | `stripe-webhook` | Stripe event receiver: verifies signature, upserts `subscribers` |
 | `welcome-subscriber` | Triggered by DB Webhook on INSERT to `subscribers` (plan=pro) |
@@ -151,6 +154,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - `publications.public_token` — unguessable handle for public sample access. Added Day 22 (migration `20260613120000_publications_sample_token.sql`).
 - `publications.body_data` — jsonb; structured sample brief content (snapshot, signals, watch, mapa, fuentes). Served by `get-sample`, rendered by `muestra.html`. (`body_markdown` still stores HTML for Weekly/Monthly — see Publication content system.)
 - `publications.body_public` — text (nullable); the reduced free/"open" HTML projection of a Weekly (apertura + señales[hecho] + mapa), stored on the SAME row as the full `body_markdown` (Pro). Served by `get-public-editions` to `signals.html`; never returned by `get-publications` (Pro archive shows the full `body_markdown`). Only weekly rows carry it. Added Day 27 (migration `20260703120000_publications_body_public.sql`).
+- `publications.open_notified_at` — timestamptz (nullable); idempotency stamp for the free open-edition email blast (`send-open-edition`), separate from `notified_at` (Pro). Set by `admin-publications` after the blast. Added Day 28 (migration `20260705120100_publications_open_notified_at.sql`).
+- `signals_subscribers` — newsletter list for the free open edition (distinct from `leads`, which is sales/muestra). Columns: `id`, `email` (NOT NULL, `UNIQUE` — plain constraint, not `lower(email)`, because `subscribe-signals` always stores lowercase and PostgREST `onConflict` can't target an expression index), `created_at`, `status` (`active`|`unsubscribed`), `unsubscribe_token` (uuid, unguessable), `source` (default `signals_open`). RLS on, no public policies — access only via the three service-role EFs. Added Day 28 (migration `20260705120000_signals_subscribers.sql`).
 - Always audit live schema before writing functions that insert/upsert data.
 
 ### Development environment
@@ -656,6 +661,19 @@ Los scripts bash fallan en Git Bash si Git convierte los line endings a CRLF al 
 **Backlog (memoria `project_weekly_map_backlog`):** Fase 2 — ② operaciones filtrables/expandibles, ③ barras del "Dato de contexto"; y pendientes menores — `numero` fijo en "Nº 1" (error de contenido), a11y de teclado del mapa. (El solape burbuja↔burbuja de la revisión se resolvió con el relax.)
 
 **Estado en producción al cierre:** `sample-request` v24, **`generate-content` v7**, `get-sample` v1, `send-weekly` v1 — todas activas. Assets nuevos (`styles.v8.css`, `criterial-shared.js?v=5`, hidratación) en la rama de Fase 1 / PR; el mapa queda vivo en el sitio al mergear. El borrador del 3-jul sigue sin publicar (decisión del usuario).
+
+### Day 28 — Complete (2026-07-05)
+
+**Captura de email inline + newsletter de la edición abierta en `signals.html` (peldaño 2 de la escalera GTM).** El tráfico que traiga LinkedIn ya no se pierde: `signals.html` capta correos y funciona como newsletter con ciclo de vida propio (confirmación + aviso en cada edición + baja voluntaria). Sesión: plan mode → decisiones de negocio (modelo newsletter completo, captura en 3 sitios incl. lector) → build → deploy → validación E2E en prod.
+
+- **Esquema (2 migraciones, aplicadas vía MCP):** tabla nueva `signals_subscribers` (lista de newsletter, separada de `leads`; `email UNIQUE` plano, `status active|unsubscribed`, `unsubscribe_token`, `source`; RLS on sin políticas públicas) y `publications.open_notified_at` (idempotencia del blast Free, separada de `notified_at` de Pro). Ver §2 schema notes.
+- **3 EFs nuevas (deploy vía MCP):** `subscribe-signals` v1 (`verify_jwt:false`, secret `x-criterial-signal`; upsert idempotente que reactiva bajas; email de confirmación), `send-open-edition` v1 (`verify_jwt:true`, JWT admin como `send-weekly`; blast a la lista activa con deep-link `signals.html?edition=<id>` + baja por suscriptor), `unsubscribe-signals` v1 (`verify_jwt:false`, baja pública por token → página HTML). Bundle de las dos EFs de email: `_shared/resend.ts` **recortado** (solo `sendEmail` + helpers de newsletter), precedente de `generate-linkedin` — el repo mantiene el `resend.ts` completo con `sendSignalsConfirmation`/`sendOpenEditionEmail`.
+- **`admin-publications` v7:** al publicar (PATCH→published) dispara Pro (`send-weekly`) **y** Free (`send-open-edition`) en paralelo, ambos en background e idempotentes por separado (`notified_at` / `open_notified_at`). Solo dispara Free para weekly con `body_public`.
+- **`signals.html`:** banda de captura en 3 sitios (dedicada, estado vacío, lector), wiring del form con estados inline, deep-link `?edition=<id>` que auto-abre la edición. CSS `.sg-capture*` inline en la página → **sin** rename de `styles.v8.css` ni bump de `criterial-shared.js` (no se tocan).
+- **Validación E2E en prod (2026-07-05):** suscripción → fila `active`/`signals_open` (HTTP 200); baja por token → `unsubscribed` + página HTML; re-suscripción (mayúsculas) → reactiva a `active` sin duplicado (colapso case-insensitive), token conservado. El blast al publicar hereda el patrón probado de `send-weekly` (no re-testeado en vivo; se ejercita en el próximo publish).
+- **Pendiente:** el blast Free solo se dispara al publicar desde `admin-publications` (publicar por SQL directo no lo dispara, igual que Pro).
+
+**Estado en producción al cierre:** `sample-request` v24, `generate-content` v9, `get-sample` v1, `send-weekly` v1, **`admin-publications` v7**, `get-public-editions` v1, **`subscribe-signals` v1**, **`send-open-edition` v1**, **`unsubscribe-signals` v1** — todas activas. Tablas: `signals_subscribers` nueva + `publications.open_notified_at`. Assets sin cambios (`styles.v8.css`, `criterial-shared.js?v=6`).
 
 ### Day 27 — Complete (2026-07-03)
 
