@@ -559,6 +559,146 @@ export async function sendPublicationNotification(
   }
 }
 
+// ── Open Signals newsletter (free edition) ──────────────────────────────────
+// signals.html captures emails inline; these two emails are the newsletter
+// lifecycle: a confirmation on subscribe, then one email per new open edition.
+// Both carry the mandatory unsubscribe link in the footer.
+
+const SIGNALS_URL = "https://criterialsignals.com/signals.html";
+
+function buildSignalsFooter(unsubscribeUrl: string): string {
+  const sans =
+    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
+  return `<tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="font-family:${sans};font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL SIGNALS</td>
+      <td align="right"><a href="${unsubscribeUrl}" style="font-family:${sans};font-size:10px;color:#CCC;text-decoration:underline;">Darse de baja</a></td>
+    </tr></table>
+  </td></tr>`;
+}
+
+export interface SendSignalsConfirmationInput {
+  to: string;
+  unsubscribeUrl: string;
+}
+
+function buildSignalsConfirmationHtml(input: SendSignalsConfirmationInput): string {
+  const sans =
+    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Estás suscrito a la edición abierta de Criterial Signals.</div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
+  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
+    <div style="font-family:${sans};font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">Criterial. · Signals</div>
+    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">Estás dentro.</div>
+    <div style="font-family:${sans};font-size:12px;color:#999;">Edición abierta</div>
+  </td></tr>
+  <tr><td style="padding:32px 44px;">
+    <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#444;margin:0 0 24px;">Gracias por suscribirte. Recibirás cada nueva edición abierta de Criterial Signals —las señales del mercado español de capital privado— directamente en tu correo.</p>
+    <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#444;margin:0 0 28px;">El análisis en profundidad de cada señal, el read-through de la semana y el Brief Mensual son parte de Pro.</p>
+    <div style="text-align:center;">
+      <a href="${SIGNALS_URL}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:${sans};font-size:12px;font-weight:500;letter-spacing:.04em;padding:13px 30px;text-decoration:none;">Ver las ediciones →</a>
+    </div>
+  </td></tr>
+  ${buildSignalsFooter(input.unsubscribeUrl)}
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+export async function sendSignalsConfirmation(
+  input: SendSignalsConfirmationInput,
+): Promise<void> {
+  const text = [
+    "Estás dentro.",
+    "",
+    "Gracias por suscribirte. Recibirás cada nueva edición abierta de Criterial Signals —las señales del mercado español de capital privado— en tu correo.",
+    "",
+    `Ver las ediciones: ${SIGNALS_URL}`,
+    "",
+    `Darse de baja: ${input.unsubscribeUrl}`,
+    "",
+    "Criterial.",
+  ].join("\n");
+
+  await sendEmail({
+    to: input.to,
+    subject: "Estás suscrito a Criterial Signals · Edición abierta",
+    text,
+    html: buildSignalsConfirmationHtml(input),
+  });
+}
+
+export interface SendOpenEditionInput {
+  to: string;
+  title: string;
+  period: string;
+  editionUrl: string;
+  unsubscribeUrl: string;
+}
+
+function buildOpenEditionHtml(input: SendOpenEditionInput): string {
+  const sans =
+    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Nueva edición abierta de Criterial Signals.</div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
+  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
+    <div style="font-family:${sans};font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">Criterial Signals · Edición abierta</div>
+    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">${input.title}</div>
+    <div style="font-family:${sans};font-size:12px;color:#999;">${input.period}</div>
+  </td></tr>
+  <tr><td style="padding:32px 44px;">
+    <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#444;margin:0 0 32px;">Ya está disponible la nueva edición abierta: las señales de la semana en el mercado español de capital privado, con el mapa de posicionamiento del periodo.</p>
+    <div style="text-align:center;margin:0 0 32px;">
+      <a href="${input.editionUrl}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:${sans};font-size:12px;font-weight:500;letter-spacing:.04em;padding:14px 32px;text-decoration:none;">Leer la edición →</a>
+    </div>
+    <p style="font-family:${sans};font-size:12px;line-height:1.65;color:#999;margin:0;">El análisis de cada señal (patrón e implicación), el read-through y el Brief Mensual son parte de <a href="https://criterialsignals.com/pricing.html" style="color:#0D1F3C;">Pro</a>.</p>
+  </td></tr>
+  ${buildSignalsFooter(input.unsubscribeUrl)}
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+export async function sendOpenEditionEmail(
+  input: SendOpenEditionInput,
+): Promise<void> {
+  const text = [
+    input.title,
+    input.period,
+    "",
+    "Ya está disponible la nueva edición abierta de Criterial Signals.",
+    "",
+    `Leer la edición: ${input.editionUrl}`,
+    "",
+    `Darse de baja: ${input.unsubscribeUrl}`,
+    "",
+    "Criterial Signals",
+  ].join("\n");
+
+  await sendEmail({
+    to: input.to,
+    subject: `${input.title} — Criterial Signals`,
+    text,
+    html: buildOpenEditionHtml(input),
+  });
+}
+
 export interface SendAdvisoryEmailInput {
   toUser: string;
   toInternal: string;
