@@ -292,116 +292,172 @@ def esc(s):
     parts = _re.split(r'(</?strong>)', str(s))
     return ''.join(html.escape(p) if not p.startswith('<') else p for p in parts)
 
-MOM = {'creciente': 'Creciente', 'estable': 'Estable', 'enfriandose': 'Enfriándose'}
-out = ['<div class="pub-content">']
+def b64(o):
+    return base64.b64encode(json.dumps(o, ensure_ascii=False).encode('utf-8')).decode('ascii')
 
-# Header
-out.append('<div class="pub-header-new">')
-out.append('<div class="pub-brand-row">')
-out.append('<span class="pub-brand-label">Criterial · Brief Mensual</span>')
-out.append(f'<span class="pub-brand-num">Nº {esc(NUM)} · {esc(d.get("period",""))}</span>')
-out.append('</div>')
-out.append(f'<h1 class="pub-title-new">{esc(d.get("titulo",""))}</h1>')
-out.append(f'<p class="pub-period-new">Brief Mensual · {esc(d.get("period",""))}</p>')
-out.append('</div>')
+def paras(v):
+    if isinstance(v, list): return [p for p in v if isinstance(p, str) and p.strip()]
+    if isinstance(v, str) and v.strip(): return [v]
+    return []
 
-# Tesis del mes
-out.append('<div class="pub-section-new">')
-out.append('<p class="pub-sec-label">Tesis del mes</p>')
-out.append(f'<div class="pub-apertura-new"><p>{esc(d.get("tesis",""))}</p></div>')
-out.append('</div>')
-
-# El mes en cifras (bars — hydrated). Only figures with numeric n AND a source.
-cifras = [c for c in d.get('cifras', []) if isinstance(c, dict) and str(c.get('n','')).strip() != '' and c.get('fuente')]
-def _isnum(x):
+def isnum(x):
     try: float(x); return True
     except Exception: return False
-cifras = [c for c in cifras if _isnum(c.get('n'))]
-if len(cifras) >= 2:
-    encoded = base64.b64encode(json.dumps(cifras, ensure_ascii=False).encode('utf-8')).decode('ascii')
-    out.append('<div class="pub-section-new">')
-    out.append('<p class="pub-sec-label">El mes en cifras</p>')
-    out.append(f'<div class="pub-metrics" data-metrics="{encoded}"></div>')
-    out.append('</div>')
 
-# Sectores en movimiento
-out.append('<div class="pub-section-new">')
-out.append('<p class="pub-sec-label">Sectores en movimiento</p>')
-out.append('<div class="pub-msec-grid">')
-for s in d.get('sectores', []):
-    mom = str(s.get('momentum','')).lower()
-    momcls = f' pub-msec-mom-{mom}' if mom in MOM else ''
-    out.append('<div class="pub-msec-card">')
-    out.append('<div class="pub-msec-head">')
-    out.append(f'<span class="pub-msec-name">{esc(s.get("nombre",""))}</span>')
-    if mom in MOM:
-        out.append(f'<span class="pub-msec-mom{momcls}">{MOM[mom]}</span>')
-    out.append('</div>')
-    out.append(f'<p class="pub-msec-body">{esc(s.get("cuerpo",""))}</p>')
-    out.append('</div>')
-out.append('</div></div>')
+def fmt_meur(n):
+    return format(int(round(n)), ',').replace(',', '.') + ' M€'
 
-# Mapa de capital (interactive positioning map)
+_sec = [0]
+def num():
+    _sec[0] += 1
+    return str(_sec[0]).zfill(2)
+
+out = ['<div class="pub-content mb-report">']
+
+# Masthead
+out.append('<div class="mb-masthead">')
+out.append('<div class="mb-brand-row">')
+out.append('<span class="mb-kicker">Criterial · Brief Mensual</span>')
+out.append(f'<span class="mb-num">Nº {esc(NUM)} · {esc(d.get("period",""))}</span>')
+out.append('</div>')
+out.append(f'<h1 class="mb-title">{esc(d.get("titulo",""))}</h1>')
+if d.get('dek'):
+    out.append(f'<p class="mb-dek">{esc(d.get("dek",""))}</p>')
+out.append('</div>')
+
+# Resumen ejecutivo
+resumen = paras(d.get('resumen'))
+if resumen:
+    out.append('<div class="mb-summary">')
+    out.append('<p class="mb-summary-label">Resumen ejecutivo</p>')
+    out.append('<ul class="mb-summary-list">')
+    for r in resumen:
+        out.append(f'<li>{esc(r)}</li>')
+    out.append('</ul></div>')
+
+# 01 Tesis del mes (developed, multi-paragraph)
+out.append('<section class="mb-section">')
+out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">Tesis del mes</h2></div>')
+out.append('<div class="mb-prose">')
+for p in paras(d.get('tesis')):
+    out.append(f'<p>{esc(p)}</p>')
+out.append('</div></section>')
+
+# 02 El mes en datos — panel DERIVED from the cited deal table
+ops = [o for o in d.get('operaciones', []) if isinstance(o, dict) and o.get('nombre') and o.get('sector')]
+if ops:
+    by = {}
+    for o in ops:
+        by[o['sector']] = by.get(o['sector'], 0) + 1
+    sector_bars = [{'label': k, 'valor': str(v), 'n': v} for k, v in sorted(by.items(), key=lambda kv: -kv[1])]
+    with_amt = [o for o in ops if isnum(o.get('n_importe')) and float(o.get('n_importe')) > 0]
+    volume = sum(float(o['n_importe']) for o in with_amt)
+    avg = (volume / len(with_amt)) if with_amt else None
+    macro = [m for m in d.get('macro', []) if isinstance(m, dict) and m.get('label') and m.get('valor') and m.get('fuente')]
+
+    out.append('<section class="mb-section">')
+    out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">El mes en datos</h2></div>')
+    out.append('<div class="mb-stats">')
+    def stat(val, label, src=None):
+        out.append('<div class="mb-stat">')
+        out.append(f'<span class="mb-stat-val">{esc(val)}</span>')
+        out.append(f'<span class="mb-stat-label">{esc(label)}</span>')
+        if src:
+            out.append(f'<span class="mb-stat-src">{esc(src)}</span>')
+        out.append('</div>')
+    stat(str(len(ops)), 'Operaciones seguidas')
+    if volume > 0:
+        stat(fmt_meur(volume), 'Volumen divulgado')
+    if avg is not None:
+        stat(fmt_meur(avg), 'Ticket medio')
+    for m in macro:
+        stat(m['valor'], m['label'], m['fuente'])
+    out.append('</div>')
+    if len(sector_bars) >= 2:
+        out.append('<p class="mb-data-caption">Operaciones por sector</p>')
+        out.append(f'<div class="pub-metrics" data-metrics="{b64(sector_bars)}"></div>')
+    out.append(f'<p class="mb-data-note">Cálculo de Criterial sobre las {len(ops)} operaciones del mes recogidas abajo. Cada operación, con su fuente.</p>')
+    out.append('</section>')
+
+    # 03 Operaciones del mes (cited table)
+    out.append('<section class="mb-section">')
+    out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">Operaciones del mes</h2></div>')
+    out.append('<table class="mb-ops"><thead><tr><th>Operación</th><th>Sector</th><th>Tipo</th><th>Importe</th><th>Fuente</th></tr></thead><tbody>')
+    for o in ops:
+        out.append(f'<tr><td>{esc(o.get("nombre",""))}</td><td>{esc(o.get("sector",""))}</td><td>{esc(o.get("tipo",""))}</td><td>{esc(o.get("importe","n.d."))}</td><td>{esc(o.get("fuente",""))}</td></tr>')
+    out.append('</tbody></table></section>')
+
+# 04 Rotación de capital — sector prose
+sectores = [s for s in d.get('sectores', []) if isinstance(s, dict) and s.get('nombre') and s.get('cuerpo')]
+if sectores:
+    out.append('<section class="mb-section">')
+    out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">Rotación de capital</h2></div>')
+    for s in sectores:
+        out.append('<div class="mb-sector">')
+        out.append(f'<h3 class="mb-sector-name">{esc(s.get("nombre",""))}</h3>')
+        out.append(f'<div class="mb-prose"><p>{esc(s.get("cuerpo",""))}</p></div>')
+        out.append('</div>')
+    out.append('</section>')
+
+# 05 Mapa del mes — temporal tracker
 mapa = d.get('mapa')
 if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.get('nodos')) >= 3:
-    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False).encode('utf-8')).decode('ascii')
-    out.append('<div class="pub-section-new">')
-    out.append('<p class="pub-sec-label">Mapa de capital</p>')
-    out.append(f'<div class="pub-map" data-mapa="{encoded}"></div>')
-    out.append('</div>')
+    out.append('<section class="mb-section mb-section-map">')
+    out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">Mapa del mes</h2></div>')
+    out.append('<p class="mb-sec-lede">Posición de cada sector y su movimiento respecto al mes anterior. Usa el interruptor para ver dónde estaba hace un mes.</p>')
+    out.append(f'<div class="pub-map" data-mapa="{b64(mapa)}"></div>')
+    out.append('</section>')
 
-# Operación del mes
+# 06 Operación del mes — deep-dive
 op = d.get('operacion')
 if isinstance(op, dict) and op.get('nombre'):
-    out.append('<div class="pub-section-new">')
-    out.append('<p class="pub-sec-label">Operación del mes</p>')
-    out.append('<div class="pub-op">')
-    out.append('<div class="pub-op-head">')
-    out.append(f'<span class="pub-op-name">{esc(op.get("nombre",""))}</span>')
+    out.append('<section class="mb-section">')
+    out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">Operación del mes</h2></div>')
+    out.append('<div class="mb-op">')
+    out.append('<div class="mb-op-head">')
+    out.append(f'<span class="mb-op-name">{esc(op.get("nombre",""))}</span>')
     if op.get('sector'):
-        out.append(f'<span class="pub-op-sector">{esc(op.get("sector",""))}</span>')
+        out.append(f'<span class="mb-op-sector">{esc(op.get("sector",""))}</span>')
     out.append('</div>')
     datos = [x for x in op.get('datos', []) if isinstance(x, dict) and x.get('label') and x.get('valor')]
     if datos:
-        out.append('<div class="pub-op-data">')
+        out.append('<div class="mb-op-data">')
         for x in datos:
-            out.append('<div class="pub-op-cell">')
-            out.append(f'<span class="pub-op-cell-label">{esc(x.get("label",""))}</span>')
-            out.append(f'<span class="pub-op-cell-val">{esc(x.get("valor",""))}</span>')
+            out.append('<div class="mb-op-cell">')
+            out.append(f'<span class="mb-op-cell-label">{esc(x.get("label",""))}</span>')
+            out.append(f'<span class="mb-op-cell-val">{esc(x.get("valor",""))}</span>')
             out.append('</div>')
         out.append('</div>')
-    out.append(f'<p class="pub-op-analysis">{esc(op.get("analisis",""))}</p>')
-    out.append('</div></div>')
+    out.append(f'<div class="mb-prose"><p>{esc(op.get("analisis",""))}</p></div>')
+    out.append('</div></section>')
 
-# Catalizadores
-cats = [c for c in d.get('catalizadores', []) if isinstance(c, dict) and c.get('titulo')]
-if cats:
-    out.append('<div class="pub-section-new">')
-    out.append('<p class="pub-sec-label">Catalizadores</p>')
-    out.append('<div class="pub-cat-list">')
-    for c in cats:
-        out.append('<div class="pub-cat-item">')
-        out.append(f'<span class="pub-cat-date">{esc(c.get("fecha",""))}</span>')
-        out.append('<div class="pub-cat-body">')
-        out.append(f'<p class="pub-cat-title">{esc(c.get("titulo",""))}</p>')
-        out.append(f'<p class="pub-cat-context">{esc(c.get("contexto",""))}</p>')
-        out.append('</div></div>')
-    out.append('</div></div>')
+# 07 Perspectiva — house view
+persp = [p for p in d.get('perspectiva', []) if isinstance(p, dict) and p.get('titulo')]
+if persp:
+    out.append('<section class="mb-section">')
+    out.append(f'<div class="mb-sec-head"><span class="mb-sec-num">{num()}</span><h2 class="mb-sec-title">Perspectiva</h2></div>')
+    out.append('<div class="mb-persp">')
+    for p in persp:
+        out.append('<div class="mb-persp-item">')
+        out.append(f'<p class="mb-persp-title">{esc(p.get("titulo",""))}</p>')
+        out.append(f'<p class="mb-persp-text">{esc(p.get("contexto",""))}</p>')
+        out.append('</div>')
+    out.append('</div></section>')
 
 # Fuentes
-out.append('<div class="pub-sources-new">')
-out.append('<p class="pub-sec-label">Fuentes</p>')
+out.append('<div class="mb-sources">')
+out.append('<p class="mb-sources-label">Fuentes</p>')
 for f in d.get('fuentes', []):
-    out.append('<div class="pub-source-row">')
-    out.append(f'<span class="pub-source-medio">{esc(f.get("medio",""))}</span>')
-    out.append(f'<span class="pub-source-titulo">{esc(f.get("titulo",""))}</span>')
+    out.append('<div class="mb-source-row">')
+    out.append(f'<span class="mb-source-medio">{esc(f.get("medio",""))}</span>')
+    out.append(f'<span class="mb-source-titulo">{esc(f.get("titulo",""))}</span>')
     out.append('</div>')
 out.append('</div>')
 
 # Footer
-out.append('<div class="pub-footer-new">')
-out.append('<span class="pub-footer-text">Criterial Signals · Pro</span>')
-out.append('<span class="pub-footer-text">criterialsignals.com</span>')
+out.append('<div class="mb-footer">')
+out.append('<span>Criterial Signals · Pro</span>')
+out.append('<span>criterialsignals.com</span>')
 out.append('</div>')
 
 out.append('</div>')

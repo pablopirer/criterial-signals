@@ -381,14 +381,29 @@ function weeklyJsonToPublicHtml(d: WeeklyJson, numero: number): string {
   return parts.join("");
 }
 
-// ── Monthly JSON → HTML conversion ────────────────────────────────────────────
+// ── Monthly JSON → HTML conversion (v5 — "El Informe": editorial report) ───────
+
+interface MonthlyOp {
+  nombre: string;
+  sector: string;
+  tipo?: string;
+  importe?: string;
+  n_importe?: number;
+  fuente?: string;
+}
 
 interface MonthlyJson {
   titulo: string;
+  dek?: string;
   period: string;
-  tesis: string;
-  cifras?: Array<{ label: string; valor: string; n?: number; fuente?: string }>;
-  sectores?: Array<{ nombre: string; cuerpo: string; momentum?: string }>;
+  resumen?: string[] | string;
+  /** Developed thesis as an array of paragraphs (string accepted as fallback). */
+  tesis: string[] | string;
+  /** Cited deal table — the spine the data panel is derived from. */
+  operaciones?: MonthlyOp[];
+  /** Optional, sourced macro aggregates (extra stat callouts). */
+  macro?: Array<{ label: string; valor: string; n?: number; fuente?: string }>;
+  sectores?: Array<{ nombre: string; cuerpo: string }>;
   mapa?: Record<string, unknown>;
   operacion?: {
     nombre: string;
@@ -396,136 +411,188 @@ interface MonthlyJson {
     datos?: Array<{ label: string; valor: string }>;
     analisis: string;
   };
-  catalizadores?: Array<{ fecha: string; titulo: string; contexto: string }>;
+  perspectiva?: Array<{ titulo: string; contexto: string }>;
   fuentes?: Array<{ medio: string; titulo: string }>;
 }
 
-const MOMENTUM_LABEL: Record<string, string> = {
-  creciente: "Creciente",
-  estable: "Estable",
-  enfriandose: "Enfriándose",
-};
+/** Format an integer number of € millions with es-ES thousands separators. */
+function fmtMEur(n: number): string {
+  const s = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${s} M€`;
+}
+
+function asParagraphs(v: string[] | string | undefined): string[] {
+  if (Array.isArray(v)) return v.filter((p) => typeof p === "string" && p.trim());
+  if (typeof v === "string" && v.trim()) return [v];
+  return [];
+}
 
 function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
   const parts: string[] = [];
-  parts.push('<div class="pub-content">');
+  let sec = 0;
+  const num = () => String(++sec).padStart(2, "0");
 
-  // Header
-  parts.push('<div class="pub-header-new">');
-  parts.push('<div class="pub-brand-row">');
-  parts.push('<span class="pub-brand-label">Criterial · Brief Mensual</span>');
-  parts.push(`<span class="pub-brand-num">Nº ${numero} · ${esc(d.period)}</span>`);
-  parts.push("</div>");
-  parts.push(`<h1 class="pub-title-new">${esc(d.titulo)}</h1>`);
-  parts.push(`<p class="pub-period-new">Brief Mensual · ${esc(d.period)}</p>`);
-  parts.push("</div>");
+  parts.push('<div class="pub-content mb-report">');
 
-  // Tesis del mes
-  parts.push('<div class="pub-section-new">');
-  parts.push('<p class="pub-sec-label">Tesis del mes</p>');
-  parts.push(`<div class="pub-apertura-new"><p>${esc(d.tesis)}</p></div>`);
+  // Masthead
+  parts.push('<div class="mb-masthead">');
+  parts.push('<div class="mb-brand-row">');
+  parts.push('<span class="mb-kicker">Criterial · Brief Mensual</span>');
+  parts.push(`<span class="mb-num">Nº ${numero} · ${esc(d.period)}</span>`);
+  parts.push("</div>");
+  parts.push(`<h1 class="mb-title">${esc(d.titulo)}</h1>`);
+  if (d.dek) parts.push(`<p class="mb-dek">${esc(d.dek)}</p>`);
   parts.push("</div>");
 
-  // El mes en cifras (interactive bars — hydrated client-side from base64).
-  // Defensive: only emit when there are >=2 figures with a numeric value AND a
-  // source (the anti-fabrication guard); otherwise the panel is omitted.
-  const cifras = (d.cifras ?? []).filter(
-    (c) => c && isFinite(Number(c.n)) && c.fuente,
-  );
-  if (cifras.length >= 2) {
-    const encoded = toBase64Utf8(JSON.stringify(cifras));
-    parts.push('<div class="pub-section-new">');
-    parts.push('<p class="pub-sec-label">El mes en cifras</p>');
-    parts.push(`<div class="pub-metrics" data-metrics="${encoded}"></div>`);
-    parts.push("</div>");
+  // Resumen ejecutivo
+  const resumen = asParagraphs(d.resumen);
+  if (resumen.length) {
+    parts.push('<div class="mb-summary">');
+    parts.push('<p class="mb-summary-label">Resumen ejecutivo</p>');
+    parts.push("<ul class=\"mb-summary-list\">");
+    for (const r of resumen) parts.push(`<li>${esc(r)}</li>`);
+    parts.push("</ul></div>");
   }
 
-  // Sectores en movimiento
-  parts.push('<div class="pub-section-new">');
-  parts.push('<p class="pub-sec-label">Sectores en movimiento</p>');
-  parts.push('<div class="pub-msec-grid">');
-  for (const s of (d.sectores ?? [])) {
-    const mom = String(s.momentum ?? "").toLowerCase();
-    const momCls = MOMENTUM_LABEL[mom] ? ` pub-msec-mom-${mom}` : "";
-    parts.push('<div class="pub-msec-card">');
-    parts.push('<div class="pub-msec-head">');
-    parts.push(`<span class="pub-msec-name">${esc(s.nombre)}</span>`);
-    if (MOMENTUM_LABEL[mom]) {
-      parts.push(`<span class="pub-msec-mom${momCls}">${MOMENTUM_LABEL[mom]}</span>`);
+  // 01 · Tesis del mes (developed, multi-paragraph)
+  parts.push('<section class="mb-section">');
+  parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Tesis del mes</h2></div>`);
+  parts.push('<div class="mb-prose">');
+  for (const p of asParagraphs(d.tesis)) parts.push(`<p>${esc(p)}</p>`);
+  parts.push("</div></section>");
+
+  // 02 · El mes en datos — panel DERIVED from the cited deal table
+  const ops = (d.operaciones ?? []).filter((o) => o && o.nombre && o.sector);
+  if (ops.length) {
+    const bySector = new Map<string, number>();
+    for (const o of ops) bySector.set(o.sector, (bySector.get(o.sector) ?? 0) + 1);
+    const sectorBars = [...bySector.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([sector, count]) => ({ label: sector, valor: String(count), n: count }));
+    const withAmt = ops.filter((o) => isFinite(Number(o.n_importe)) && Number(o.n_importe) > 0);
+    const volume = withAmt.reduce((s, o) => s + Number(o.n_importe), 0);
+    const avgTicket = withAmt.length ? volume / withAmt.length : null;
+    const macro = (d.macro ?? []).filter((m) => m && m.label && m.valor && m.fuente);
+
+    parts.push('<section class="mb-section">');
+    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">El mes en datos</h2></div>`);
+
+    // Stat callouts (computed — always present)
+    parts.push('<div class="mb-stats">');
+    const stat = (val: string, label: string, src?: string) => {
+      parts.push('<div class="mb-stat">');
+      parts.push(`<span class="mb-stat-val">${esc(val)}</span>`);
+      parts.push(`<span class="mb-stat-label">${esc(label)}</span>`);
+      if (src) parts.push(`<span class="mb-stat-src">${esc(src)}</span>`);
+      parts.push("</div>");
+    };
+    stat(String(ops.length), "Operaciones seguidas");
+    if (volume > 0) stat(fmtMEur(volume), "Volumen divulgado");
+    if (avgTicket !== null) stat(fmtMEur(avgTicket), "Ticket medio");
+    for (const m of macro) stat(m.valor, m.label, m.fuente);
+    parts.push("</div>");
+
+    // Sector split bars (derived; hydrated by buildMetrics — collective provenance)
+    if (sectorBars.length >= 2) {
+      const encoded = toBase64Utf8(JSON.stringify(sectorBars));
+      parts.push('<p class="mb-data-caption">Operaciones por sector</p>');
+      parts.push(`<div class="pub-metrics" data-metrics="${encoded}"></div>`);
     }
-    parts.push("</div>");
-    parts.push(`<p class="pub-msec-body">${esc(s.cuerpo)}</p>`);
-    parts.push("</div>");
-  }
-  parts.push("</div></div>");
+    parts.push(`<p class="mb-data-note">Cálculo de Criterial sobre las ${ops.length} operaciones del mes recogidas abajo. Cada operación, con su fuente.</p>`);
+    parts.push("</section>");
 
-  // Mapa de capital (same interactive positioning map as the Weekly).
+    // 03 · Operaciones del mes (the cited table)
+    parts.push('<section class="mb-section">');
+    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Operaciones del mes</h2></div>`);
+    parts.push('<table class="mb-ops"><thead><tr><th>Operación</th><th>Sector</th><th>Tipo</th><th>Importe</th><th>Fuente</th></tr></thead><tbody>');
+    for (const o of ops) {
+      parts.push(
+        `<tr><td>${esc(o.nombre)}</td><td>${esc(o.sector)}</td><td>${esc(o.tipo ?? "")}</td><td>${esc(o.importe ?? "n.d.")}</td><td>${esc(o.fuente ?? "")}</td></tr>`,
+      );
+    }
+    parts.push("</tbody></table></section>");
+  }
+
+  // 04 · Rotación de capital — sector prose (no cards)
+  const sectores = (d.sectores ?? []).filter((s) => s && s.nombre && s.cuerpo);
+  if (sectores.length) {
+    parts.push('<section class="mb-section">');
+    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Rotación de capital</h2></div>`);
+    for (const s of sectores) {
+      parts.push('<div class="mb-sector">');
+      parts.push(`<h3 class="mb-sector-name">${esc(s.nombre)}</h3>`);
+      parts.push(`<div class="mb-prose"><p>${esc(s.cuerpo)}</p></div>`);
+      parts.push("</div>");
+    }
+    parts.push("</section>");
+  }
+
+  // 05 · Mapa del mes — temporal tracker (last month → now)
   const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
   if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
     const encoded = toBase64Utf8(JSON.stringify(d.mapa));
-    parts.push('<div class="pub-section-new">');
-    parts.push('<p class="pub-sec-label">Mapa de capital</p>');
+    parts.push('<section class="mb-section mb-section-map">');
+    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Mapa del mes</h2></div>`);
+    parts.push('<p class="mb-sec-lede">Posición de cada sector y su movimiento respecto al mes anterior. Usa el interruptor para ver dónde estaba hace un mes.</p>');
     parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
-    parts.push("</div>");
+    parts.push("</section>");
   }
 
-  // Operación del mes — deep-dive with a verifiable mini data-table.
+  // 06 · Operación del mes — deep-dive with a verifiable mini data-table
   const op = d.operacion;
   if (op && op.nombre) {
-    parts.push('<div class="pub-section-new">');
-    parts.push('<p class="pub-sec-label">Operación del mes</p>');
-    parts.push('<div class="pub-op">');
-    parts.push('<div class="pub-op-head">');
-    parts.push(`<span class="pub-op-name">${esc(op.nombre)}</span>`);
-    if (op.sector) parts.push(`<span class="pub-op-sector">${esc(op.sector)}</span>`);
+    parts.push('<section class="mb-section">');
+    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Operación del mes</h2></div>`);
+    parts.push('<div class="mb-op">');
+    parts.push('<div class="mb-op-head">');
+    parts.push(`<span class="mb-op-name">${esc(op.nombre)}</span>`);
+    if (op.sector) parts.push(`<span class="mb-op-sector">${esc(op.sector)}</span>`);
     parts.push("</div>");
     const datos = (op.datos ?? []).filter((x) => x && x.label && x.valor);
     if (datos.length) {
-      parts.push('<div class="pub-op-data">');
+      parts.push('<div class="mb-op-data">');
       for (const x of datos) {
-        parts.push('<div class="pub-op-cell">');
-        parts.push(`<span class="pub-op-cell-label">${esc(x.label)}</span>`);
-        parts.push(`<span class="pub-op-cell-val">${esc(x.valor)}</span>`);
+        parts.push('<div class="mb-op-cell">');
+        parts.push(`<span class="mb-op-cell-label">${esc(x.label)}</span>`);
+        parts.push(`<span class="mb-op-cell-val">${esc(x.valor)}</span>`);
         parts.push("</div>");
       }
       parts.push("</div>");
     }
-    parts.push(`<p class="pub-op-analysis">${esc(op.analisis)}</p>`);
-    parts.push("</div></div>");
+    parts.push(`<div class="mb-prose"><p>${esc(op.analisis)}</p></div>`);
+    parts.push("</div></section>");
   }
 
-  // Catalizadores — forward calendar for the month ahead.
-  const cats = (d.catalizadores ?? []).filter((c) => c && c.titulo);
-  if (cats.length) {
-    parts.push('<div class="pub-section-new">');
-    parts.push('<p class="pub-sec-label">Catalizadores</p>');
-    parts.push('<div class="pub-cat-list">');
-    for (const c of cats) {
-      parts.push('<div class="pub-cat-item">');
-      parts.push(`<span class="pub-cat-date">${esc(c.fecha)}</span>`);
-      parts.push('<div class="pub-cat-body">');
-      parts.push(`<p class="pub-cat-title">${esc(c.titulo)}</p>`);
-      parts.push(`<p class="pub-cat-context">${esc(c.contexto)}</p>`);
-      parts.push("</div></div>");
+  // 07 · Perspectiva — house view / forward
+  const persp = (d.perspectiva ?? []).filter((p) => p && p.titulo);
+  if (persp.length) {
+    parts.push('<section class="mb-section">');
+    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Perspectiva</h2></div>`);
+    parts.push('<div class="mb-persp">');
+    for (const p of persp) {
+      parts.push('<div class="mb-persp-item">');
+      parts.push(`<p class="mb-persp-title">${esc(p.titulo)}</p>`);
+      parts.push(`<p class="mb-persp-text">${esc(p.contexto)}</p>`);
+      parts.push("</div>");
     }
-    parts.push("</div></div>");
+    parts.push("</div></section>");
   }
 
   // Fuentes
-  parts.push('<div class="pub-sources-new">');
-  parts.push('<p class="pub-sec-label">Fuentes</p>');
+  parts.push('<div class="mb-sources">');
+  parts.push('<p class="mb-sources-label">Fuentes</p>');
   for (const f of (d.fuentes ?? [])) {
-    parts.push('<div class="pub-source-row">');
-    parts.push(`<span class="pub-source-medio">${esc(f.medio)}</span>`);
-    parts.push(`<span class="pub-source-titulo">${esc(f.titulo)}</span>`);
+    parts.push('<div class="mb-source-row">');
+    parts.push(`<span class="mb-source-medio">${esc(f.medio)}</span>`);
+    parts.push(`<span class="mb-source-titulo">${esc(f.titulo)}</span>`);
     parts.push("</div>");
   }
   parts.push("</div>");
 
   // Footer
-  parts.push('<div class="pub-footer-new">');
-  parts.push('<span class="pub-footer-text">Criterial Signals · Pro</span>');
-  parts.push('<span class="pub-footer-text">criterialsignals.com</span>');
+  parts.push('<div class="mb-footer">');
+  parts.push('<span>Criterial Signals · Pro</span>');
+  parts.push('<span>criterialsignals.com</span>');
   parts.push("</div>");
 
   parts.push("</div>");

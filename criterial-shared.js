@@ -210,13 +210,20 @@ document.addEventListener('DOMContentLoaded', () => {
       return pts;
     };
 
+    // The "other" position set: for the Monthly tracker it's LAST MONTH (xprev/yprev);
+    // for the Weekly it's the expected TRAJECTORY (x2/y2). Tracker mode is detected by
+    // the presence of xprev/yprev on any node and only changes the toggle labels.
+    const isTracker = nodos.some(n => isFinite(Number(n.xprev)) || isFinite(Number(n.yprev)));
+    const otherX = (n) => isFinite(Number(n.xprev)) ? n.xprev : (isFinite(Number(n.x2)) ? n.x2 : n.x);
+    const otherY = (n) => isFinite(Number(n.yprev)) ? n.yprev : (isFinite(Number(n.y2)) ? n.y2 : n.y);
+
     const cur = relax(nodos.map(n => {
       const x = fit(px(n.x), n._r, left, right), y = fit(py(n.y), n._r, top, bottom);
       return { x, y, ax: x, ay: y, r: n._r };
     }));
     const tra = relax(nodos.map(n => {
-      const x = fit(isFinite(Number(n.x2)) ? px(n.x2) : px(n.x), n._r, left, right);
-      const y = fit(isFinite(Number(n.y2)) ? py(n.y2) : py(n.y), n._r, top, bottom);
+      const x = fit(px(otherX(n)), n._r, left, right);
+      const y = fit(py(otherY(n)), n._r, top, bottom);
       return { x, y, ax: x, ay: y, r: n._r };
     }));
     nodos.forEach((n, i) => {
@@ -224,8 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
       n._x2 = tra[i].x; n._y2 = tra[i].y;
     });
     const hasTrajectory = nodos.some(n =>
-      (isFinite(Number(n.x2)) && Number(n.x2) !== Number(n.x)) ||
-      (isFinite(Number(n.y2)) && Number(n.y2) !== Number(n.y)));
+      Number(otherX(n)) !== Number(n.x) || Number(otherY(n)) !== Number(n.y));
 
     const bubbleSvg = (n) => {
       const m = MOMENTUM[n.momentum] || MOMENTUM.estable;
@@ -258,8 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
       `<text class="pub-map-axb" x="14" y="${midY}" text-anchor="middle" transform="rotate(-90 14 ${midY})">${ejeY} →</text>` +
       bubbles + `</svg>`;
 
+    const otherLabel = isTracker ? "Hace un mes" : "Trayectoria";
+    const nowLabel = isTracker ? "Ahora" : "Posición actual";
     const toggleHtml = hasTrajectory
-      ? `<div class="pub-map-toggle"><button class="pub-map-tg on" data-mode="r" type="button">Posición actual</button><button class="pub-map-tg" data-mode="e" type="button">Trayectoria</button></div>`
+      ? `<div class="pub-map-toggle"><button class="pub-map-tg on" data-mode="r" type="button">${nowLabel}</button><button class="pub-map-tg" data-mode="e" type="button">${otherLabel}</button></div>`
       : "";
 
     container.innerHTML =
