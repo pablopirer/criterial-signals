@@ -397,19 +397,23 @@ interface MonthlyJson {
   dek?: string;
   period: string;
   resumen?: string[] | string;
+  /** One punchy line for the design pull-quote. */
+  pullquote?: string;
   /** Developed thesis as an array of paragraphs (string accepted as fallback). */
   tesis: string[] | string;
+  /** Macro backdrop of the month, 1-2 paragraphs. */
+  contexto?: string[] | string;
   /** Cited deal table — the spine the data panel is derived from. */
   operaciones?: MonthlyOp[];
   /** Optional, sourced macro aggregates (extra stat callouts). */
   macro?: Array<{ label: string; valor: string; n?: number; fuente?: string }>;
-  sectores?: Array<{ nombre: string; cuerpo: string }>;
+  sectores?: Array<{ nombre: string; cuerpo: string[] | string }>;
   mapa?: Record<string, unknown>;
   operacion?: {
     nombre: string;
     sector?: string;
     datos?: Array<{ label: string; valor: string }>;
-    analisis: string;
+    analisis: string[] | string;
   };
   perspectiva?: Array<{ titulo: string; contexto: string }>;
   fuentes?: Array<{ medio: string; titulo: string }>;
@@ -431,6 +435,12 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
   const parts: string[] = [];
   let sec = 0;
   const num = () => String(++sec).padStart(2, "0");
+  const head = (t: string) =>
+    parts.push(
+      `<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">${t}</h2></div>`,
+    );
+  const proseP = (v: string[] | string | undefined) =>
+    asParagraphs(v).map((p) => `<p>${esc(p)}</p>`).join("");
 
   parts.push('<div class="pub-content mb-report">');
 
@@ -442,6 +452,7 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
   parts.push("</div>");
   parts.push(`<h1 class="mb-title">${esc(d.titulo)}</h1>`);
   if (d.dek) parts.push(`<p class="mb-dek">${esc(d.dek)}</p>`);
+  parts.push('<p class="mb-byline">Un informe de Criterial · Solo Pro</p>');
   parts.push("</div>");
 
   // Resumen ejecutivo
@@ -449,19 +460,35 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
   if (resumen.length) {
     parts.push('<div class="mb-summary">');
     parts.push('<p class="mb-summary-label">Resumen ejecutivo</p>');
-    parts.push("<ul class=\"mb-summary-list\">");
+    parts.push('<ul class="mb-summary-list">');
     for (const r of resumen) parts.push(`<li>${esc(r)}</li>`);
     parts.push("</ul></div>");
   }
 
-  // 01 · Tesis del mes (developed, multi-paragraph)
+  // 01 · Tesis del mes — lead prose (drop cap) + pull-quote after the first para
   parts.push('<section class="mb-section">');
-  parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Tesis del mes</h2></div>`);
-  parts.push('<div class="mb-prose">');
-  for (const p of asParagraphs(d.tesis)) parts.push(`<p>${esc(p)}</p>`);
+  head("Tesis del mes");
+  parts.push('<div class="mb-col">');
+  const tp = asParagraphs(d.tesis);
+  if (tp.length) {
+    parts.push(`<div class="mb-prose mb-prose--lead"><p>${esc(tp[0])}</p></div>`);
+  }
+  if (d.pullquote) parts.push(`<div class="mb-quote">${esc(d.pullquote)}</div>`);
+  if (tp.length > 1) {
+    parts.push(`<div class="mb-prose">${tp.slice(1).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
+  }
   parts.push("</div></section>");
 
-  // 02 · El mes en datos — panel DERIVED from the cited deal table
+  // Contexto de mercado — macro backdrop (prose)
+  const ctx = asParagraphs(d.contexto);
+  if (ctx.length) {
+    parts.push('<section class="mb-section">');
+    head("Contexto de mercado");
+    parts.push(`<div class="mb-col"><div class="mb-prose">${proseP(ctx)}</div></div>`);
+    parts.push("</section>");
+  }
+
+  // El mes en datos — framed panel, DERIVED from the cited deal table
   const ops = (d.operaciones ?? []).filter((o) => o && o.nombre && o.sector);
   if (ops.length) {
     const bySector = new Map<string, number>();
@@ -475,7 +502,8 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
     const macro = (d.macro ?? []).filter((m) => m && m.label && m.valor && m.fuente);
 
     parts.push('<section class="mb-section">');
-    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">El mes en datos</h2></div>`);
+    head("El mes en datos");
+    parts.push('<div class="mb-data">');
 
     // Stat callouts (computed — always present)
     parts.push('<div class="mb-stats">');
@@ -489,6 +517,7 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
     stat(String(ops.length), "Operaciones seguidas");
     if (volume > 0) stat(fmtMEur(volume), "Volumen divulgado");
     if (avgTicket !== null) stat(fmtMEur(avgTicket), "Ticket medio");
+    if (sectorBars.length) stat(sectorBars[0].label, "Sector más activo");
     for (const m of macro) stat(m.valor, m.label, m.fuente);
     parts.push("</div>");
 
@@ -499,11 +528,11 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
       parts.push(`<div class="pub-metrics" data-metrics="${encoded}"></div>`);
     }
     parts.push(`<p class="mb-data-note">Cálculo de Criterial sobre las ${ops.length} operaciones del mes recogidas abajo. Cada operación, con su fuente.</p>`);
-    parts.push("</section>");
+    parts.push("</div></section>");
 
-    // 03 · Operaciones del mes (the cited table)
+    // Operaciones del mes — the cited table (full-width exhibit)
     parts.push('<section class="mb-section">');
-    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Operaciones del mes</h2></div>`);
+    head("Operaciones del mes");
     parts.push('<table class="mb-ops"><thead><tr><th>Operación</th><th>Sector</th><th>Tipo</th><th>Importe</th><th>Fuente</th></tr></thead><tbody>');
     for (const o of ops) {
       parts.push(
@@ -513,36 +542,37 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
     parts.push("</tbody></table></section>");
   }
 
-  // 04 · Rotación de capital — sector prose (no cards)
-  const sectores = (d.sectores ?? []).filter((s) => s && s.nombre && s.cuerpo);
+  // Rotación de capital — sector prose (2-3 paragraphs each)
+  const sectores = (d.sectores ?? []).filter((s) => s && s.nombre && asParagraphs(s.cuerpo).length);
   if (sectores.length) {
     parts.push('<section class="mb-section">');
-    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Rotación de capital</h2></div>`);
+    head("Rotación de capital");
+    parts.push('<div class="mb-col">');
     for (const s of sectores) {
       parts.push('<div class="mb-sector">');
       parts.push(`<h3 class="mb-sector-name">${esc(s.nombre)}</h3>`);
-      parts.push(`<div class="mb-prose"><p>${esc(s.cuerpo)}</p></div>`);
+      parts.push(`<div class="mb-prose">${proseP(s.cuerpo)}</div>`);
       parts.push("</div>");
     }
-    parts.push("</section>");
+    parts.push("</div></section>");
   }
 
-  // 05 · Mapa del mes — temporal tracker (last month → now)
+  // Mapa del mes — temporal tracker (full-width exhibit)
   const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
   if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
     const encoded = toBase64Utf8(JSON.stringify(d.mapa));
     parts.push('<section class="mb-section mb-section-map">');
-    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Mapa del mes</h2></div>`);
+    head("Mapa del mes");
     parts.push('<p class="mb-sec-lede">Posición de cada sector y su movimiento respecto al mes anterior. Usa el interruptor para ver dónde estaba hace un mes.</p>');
     parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
     parts.push("</section>");
   }
 
-  // 06 · Operación del mes — deep-dive with a verifiable mini data-table
+  // Operación del mes — deep-dive (mini data-table + multi-paragraph analysis)
   const op = d.operacion;
   if (op && op.nombre) {
     parts.push('<section class="mb-section">');
-    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Operación del mes</h2></div>`);
+    head("Operación del mes");
     parts.push('<div class="mb-op">');
     parts.push('<div class="mb-op-head">');
     parts.push(`<span class="mb-op-name">${esc(op.nombre)}</span>`);
@@ -559,23 +589,23 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
       }
       parts.push("</div>");
     }
-    parts.push(`<div class="mb-prose"><p>${esc(op.analisis)}</p></div>`);
+    parts.push(`<div class="mb-prose">${proseP(op.analisis)}</div>`);
     parts.push("</div></section>");
   }
 
-  // 07 · Perspectiva — house view / forward
+  // Perspectiva — house view / forward
   const persp = (d.perspectiva ?? []).filter((p) => p && p.titulo);
   if (persp.length) {
     parts.push('<section class="mb-section">');
-    parts.push(`<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">Perspectiva</h2></div>`);
-    parts.push('<div class="mb-persp">');
+    head("Perspectiva");
+    parts.push('<div class="mb-col"><div class="mb-persp">');
     for (const p of persp) {
       parts.push('<div class="mb-persp-item">');
       parts.push(`<p class="mb-persp-title">${esc(p.titulo)}</p>`);
       parts.push(`<p class="mb-persp-text">${esc(p.contexto)}</p>`);
       parts.push("</div>");
     }
-    parts.push("</div></section>");
+    parts.push("</div></div></section>");
   }
 
   // Fuentes
@@ -681,7 +711,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // 8000 was tuned for the pre-map Weekly, which already ran close to the
       // limit; adding the mapa block pushed output past 8000 and truncated the
       // JSON mid-object (→ "no parseable" 502). 12000 gives the map headroom.
-      maxTokens: 12000,
+      maxTokens: 16000,
       tools: WEB_SEARCH_TOOLS,
     });
 
