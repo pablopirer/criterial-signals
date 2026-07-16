@@ -145,11 +145,25 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function clamp(v, lo, hi) { v = Number(v); if (!isFinite(v)) return lo; return Math.max(lo, Math.min(hi, v)); }
+  // Split a sector label into at most two balanced lines. The break is chosen to
+  // minimise the longer line (the old [firstWord, rest] split produced badly
+  // lopsided pairs), and a separator is kept on the first line so a line never
+  // opens with a stray "/".
   function labelLines(label) {
-    const txt = String(label || "");
+    const txt = String(label || "").trim();
+    if (!txt) return [""];
+    if (txt.length <= 13) return [txt];
     const words = txt.split(/\s+/).filter(Boolean);
-    if (words.length <= 1 || txt.length <= 9) return [txt];
-    return [words[0], words.slice(1).join(" ")];
+    if (words.length <= 1) return [txt];
+    let best = 1, bestScore = Infinity;
+    for (let i = 1; i < words.length; i++) {
+      const a = words.slice(0, i).join(" "), b = words.slice(i).join(" ");
+      const score = Math.max(a.length, b.length) + (b[0] === "/" ? 2 : 0);
+      if (score <= bestScore) { bestScore = score; best = i; }
+    }
+    let a = words.slice(0, best).join(" "), b = words.slice(best).join(" ");
+    if (b[0] === "/") { a += " /"; b = b.slice(1).trim(); }
+    return b ? [a, b] : [a];
   }
 
   function buildMap(container, mapa) {
@@ -233,14 +247,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const hasTrajectory = nodos.some(n =>
       Number(otherX(n)) !== Number(n.x) || Number(otherY(n)) !== Number(n.y));
 
+    // The label sits OUTSIDE the circle: a multi-word sector name never fits
+    // inside a 40-64px bubble, and drawing it at the centre is what made the text
+    // spill past the edge. Placing it always below is not enough either — in a
+    // cluster the label lands on a neighbouring bubble. So try below → above →
+    // right → left and keep the first side that is clear of every other bubble,
+    // of the labels already placed and of the frame; if every side collides, keep
+    // the one that overlaps least. Widths are measured with the real font, so the
+    // decision is made before the SVG is built (no second layout pass).
+    const LH = 11, GAP = 11, PAD = 4;
+    const measure = (() => {
+      let ctx = null;
+      try {
+        ctx = document.createElement("canvas").getContext("2d");
+        ctx.font = "500 10.5px Inter, Helvetica, Arial, sans-serif";
+      } catch (e) { ctx = null; }
+      return (s) => ctx ? ctx.measureText(String(s)).width : String(s).length * 5.8;
+    })();
+    const overlap = (a, b) =>
+      Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) *
+      Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+
+    nodos.forEach(n => {
+      n._lines = labelLines(n.label);
+      n._lw = Math.max.apply(null, n._lines.map(measure));
+      n._lh = (n._lines.length - 1) * LH;
+    });
+    const circleBoxes = nodos.map(n => ({ x0: n._x - n._r, x1: n._x + n._r, y0: n._y - n._r, y1: n._y + n._r }));
+    const placedBoxes = [];
+    nodos.forEach((n, idx) => {
+      const w = n._lw, bh = n._lh, r = n._r;
+      const cands = [
+        { anchor: "middle", tx: 0,          ty: r + GAP,               x0: -w / 2,          x1: w / 2,          y0: r + GAP - 9,             y1: r + GAP + bh + 3 },
+        { anchor: "middle", tx: 0,          ty: -(r + GAP - 2 + bh),   x0: -w / 2,          x1: w / 2,          y0: -(r + GAP + bh + 7),     y1: -(r + GAP - 5) },
+        { anchor: "start",  tx: r + 6,      ty: -bh / 2 + 3.5,         x0: r + 6,           x1: r + 6 + w,      y0: -bh / 2 - 6,             y1: bh / 2 + 6 },
+        { anchor: "end",    tx: -(r + 6),   ty: -bh / 2 + 3.5,         x0: -(r + 6) - w,    x1: -(r + 6),       y0: -bh / 2 - 6,             y1: bh / 2 + 6 }
+      ];
+      let best = cands[0], bestCost = Infinity;
+      for (const c of cands) {
+        // Test with a clearance margin: the rendered glyphs carry a 3px white
+        // halo, and a label that merely grazes a neighbouring bubble still reads
+        // as cramped. PAD buys breathing room on top of the raw text metrics.
+        const box = { x0: n._x + c.x0 - PAD, x1: n._x + c.x1 + PAD, y0: n._y + c.y0 - PAD, y1: n._y + c.y1 + PAD };
+        let cost = 0;
+        for (let j = 0; j < circleBoxes.length; j++) if (j !== idx) cost += overlap(box, circleBoxes[j]);
+        for (const p of placedBoxes) cost += overlap(box, p);
+        cost += (Math.max(0, left - box.x0) + Math.max(0, box.x1 - right) +
+                 Math.max(0, top - box.y0) + Math.max(0, box.y1 - bottom)) * 40;
+        if (cost < bestCost) { bestCost = cost; best = c; }
+        if (cost === 0) break;
+      }
+      n._lp = best;
+      placedBoxes.push({ x0: n._x + best.x0, x1: n._x + best.x1, y0: n._y + best.y0, y1: n._y + best.y1 });
+    });
+
     const bubbleSvg = (n) => {
       const m = MOMENTUM[n.momentum] || MOMENTUM.estable;
-      const lines = labelLines(n.label);
-      const text = lines.length === 1
-        ? `<text class="pub-map-bl" y="3" text-anchor="middle">${esc(lines[0])}</text>`
-        : `<text class="pub-map-bl" y="-1" text-anchor="middle">${esc(lines[0])}</text><text class="pub-map-bl" y="11" text-anchor="middle">${esc(lines[1])}</text>`;
+      const p = n._lp;
+      const text = n._lines.map((ln, i) =>
+        `<text class="pub-map-bl" x="${p.tx}" y="${p.ty + i * LH}" text-anchor="${p.anchor}">${esc(ln)}</text>`).join("");
       const al = esc((n.label || "sector") + " — " + m.label);
-      return `<g class="pub-map-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})" tabindex="0" role="button" aria-label="${al}"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.6"></circle>${text}</g>`;
+      return `<g class="pub-map-bub" data-k="${esc(n.id)}" data-rx="${n._x}" data-ry="${n._y}" data-ex="${n._x2}" data-ey="${n._y2}" transform="translate(${n._x},${n._y})" tabindex="0" role="button" aria-label="${al}"><circle r="${n._r}" fill="${m.bg}" stroke="${m.color}" stroke-width="1.75"></circle>${text}</g>`;
     };
     const bubbles = nodos.map(bubbleSvg).join("");
 
