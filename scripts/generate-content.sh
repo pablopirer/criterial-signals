@@ -83,7 +83,14 @@ if [[ ! -f "$PROMPT_PATH" ]]; then
   exit 1
 fi
 
-SYSTEM_PROMPT=$(awk '/^## System/{found=1; next} found && /^## /{found=0} found{print}' "$PROMPT_PATH" | sed '/^[[:space:]]*$/d; s/^[[:space:]]*//')
+# Placeholder substitution must cover the SYSTEM prompt too, not just USER: the
+# temporal-tag rule ({{mes_actual}}) and the monthly "period" schema example live
+# in the System section. Leaving them unsubstituted would ship a literal
+# "{{mes_actual}}" to the model. Keep in sync with the generate-content EF.
+MES_ACTUAL="$(mes_es "$(date '+%m')") $(date '+%Y')"
+MES_ACTUAL="$(tr '[:lower:]' '[:upper:]' <<< "${MES_ACTUAL:0:1}")${MES_ACTUAL:1}"   # "Julio 2026"
+
+SYSTEM_PROMPT=$(awk '/^## System/{found=1; next} found && /^## /{found=0} found{print}' "$PROMPT_PATH" | sed '/^[[:space:]]*$/d; s/^[[:space:]]*//; s/{{mes_actual}}/'"$MES_ACTUAL"'/g; s/{{period}}/'"$PERIOD"'/g')
 USER_PROMPT=$(awk '/^## User/{found=1; next} found && /^## /{found=0} found{print}' "$PROMPT_PATH" | sed "s/{{period}}/$PERIOD/g")
 
 # ── Header ─────────────────────────────────────────────────────────────────────
