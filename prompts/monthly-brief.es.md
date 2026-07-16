@@ -44,7 +44,7 @@ Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Si
 {
   "titulo": "string — titular editorial del mes, con criterio (no descriptivo plano)",
   "dek": "string — subtítulo/standfirst de una frase que resume la tesis",
-  "period": "string — el mes, p.ej. 'junio de 2026'",
+  "period": "string — el mes, p.ej. '{{period}}'",
   "resumen": [
     "string — conclusión ejecutiva del mes, una frase contundente (3-4 en total)"
   ],
