@@ -25,18 +25,30 @@ ANTHROPIC_API="https://api.anthropic.com/v1/messages"
 MODEL="claude-sonnet-4-6"
 BOLD='\033[1m'; CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
+# ── Spanish month names ────────────────────────────────────────────────────────
+# date's %B is locale-dependent, and Git Bash on Windows ships no es_ES locale:
+# `LC_TIME=es_ES.UTF-8 date` does not fail there, it silently falls back to C and
+# emits English — so a `2>/dev/null ||` guard never fires. That is how the title
+# "Brief Mensual — July 2026" reached the database. Map the month explicitly
+# instead of trusting the locale. Mirrors MONTHS_ES in the generate-content EF.
+MONTHS_ES=(enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre)
+mes_es() { echo "${MONTHS_ES[$((10#$1 - 1))]}"; }   # "07" -> "julio"
+
 # ── Period label ───────────────────────────────────────────────────────────────
 if [[ "$TYPE" == "weekly" ]]; then
-  PERIOD="semana del $(date -d 'last monday' '+%-d de %B' 2>/dev/null || date '+%-d de %B') al $(date '+%-d de %B de %Y')"
-  PERIOD_START=$(date -d 'last monday' '+%Y-%m-%d' 2>/dev/null || date '+%Y-%m-%d')
+  MONDAY=$(date -d 'last monday' '+%Y-%m-%d' 2>/dev/null || date '+%Y-%m-%d')
+  MON_D=$(date -d "$MONDAY" '+%-d' 2>/dev/null || date '+%-d')
+  MON_M=$(date -d "$MONDAY" '+%m' 2>/dev/null || date '+%m')
+  PERIOD="semana del ${MON_D} de $(mes_es "$MON_M") al $(date '+%-d') de $(mes_es "$(date '+%m')") de $(date '+%Y')"
+  PERIOD_START="$MONDAY"
   PERIOD_END=$(date '+%Y-%m-%d')
-  TITLE="Weekly Signals — $(date '+%-d de %B de %Y')"
+  TITLE="Weekly Signals — $(date '+%-d') de $(mes_es "$(date '+%m')") de $(date '+%Y')"
   PROMPT_FILE="prompts/weekly-digest.es.md"
 else
-  PERIOD="$(LC_TIME=es_ES.UTF-8 date '+%B de %Y' 2>/dev/null || date '+%B %Y')"
+  PERIOD="$(mes_es "$(date '+%m')") de $(date '+%Y')"
   PERIOD_START="$(date '+%Y-%m-01')"
   PERIOD_END="$(date '+%Y-%m-%d')"
-  TITLE="Brief Mensual — $(date '+%B %Y')"
+  TITLE="Brief Mensual — $(mes_es "$(date '+%m')") $(date '+%Y')"
   PROMPT_FILE="prompts/monthly-brief.es.md"
 fi
 

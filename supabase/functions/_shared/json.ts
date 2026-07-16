@@ -7,9 +7,9 @@
  * fences leaves the prose and breaks JSON.parse. This helper prefers a fenced
  * block if present, then bounds to the outermost { ... }.
  *
- * Note: `generate-content` and `sample-request` still carry their own local
- * copies of this function — they were left untouched on purpose so this
- * extraction is only introduced where it's newly needed (generate-linkedin).
+ * This is the single copy: `sample-request`, `generate-content` and
+ * `generate-linkedin` all import it. Any new JSON-returning path that enables web
+ * search must parse through this helper, never raw JSON.parse.
  */
 export function extractJsonObject(text: string): string {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);

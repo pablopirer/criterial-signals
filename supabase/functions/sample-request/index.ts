@@ -25,6 +25,7 @@
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { generateBrief } from "../_shared/anthropic.ts";
 import { sendSampleEnvelope, sendEmail } from "../_shared/resend.ts";
+import { extractJsonObject } from "../_shared/json.ts";
 import type {
   SampleRequestErrorResponse,
   SampleRequestPayload,
@@ -131,11 +132,26 @@ const SAMPLE_BRIEF_PROMPT = {
     "operaciones), con su URL real cuando exista. NO inventes URLs ni fuentes.",
   user:
     "Genera un sample brief sobre: {{interest_type}}.\n\n" +
-    "Fecha de referencia: junio de 2026. Razona desde ese punto temporal. " +
+    "Fecha de referencia: {{fecha_referencia}}. Razona desde ese punto temporal. " +
     "Si usas cifras o referencias a períodos concretos, asegúrate de que son " +
-    "coherentes con junio de 2026 como presente. Cuando una estimación sea " +
+    "coherentes con {{fecha_referencia}} como presente. Cuando una estimación sea " +
     "orientativa, indícalo con 'aproximadamente' o 'en torno a'.",
 };
+
+const MONTHS_ES = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+/**
+ * "julio de 2026" — fills {{fecha_referencia}} at call time. This used to be a
+ * literal month written into the prompt, which meant every brief generated after
+ * that month reasoned from a stale present.
+ */
+function fechaReferencia(): string {
+  const now = new Date();
+  return `${MONTHS_ES[now.getMonth()]} de ${now.getFullYear()}`;
+}
 
 interface BriefContent {
   titulo: string;
@@ -187,25 +203,6 @@ function validatePayload(
   return { email, data: { ...p, email } };
 }
 
-/**
- * Extract a JSON object from model output. With web search enabled the model
- * frequently wraps the JSON in conversational prose and/or a ```json fence
- * (e.g. "Con los datos recopilados, genero ahora el brief...") despite the
- * prompt asking for JSON only. Naively stripping the fences leaves the prose
- * and breaks JSON.parse — the confirmed cause of the generation_failed runs.
- * Prefer a fenced block if present, then bound to the outermost { ... }.
- */
-function extractJsonObject(text: string): string {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced ? fenced[1] : text;
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end < start) {
-    throw new SyntaxError("No JSON object found in model output");
-  }
-  return body.slice(start, end + 1);
-}
-
 /** Build the markdown-ish body kept for archive (back-compat) rendering. */
 function buildBodyMarkdown(b: BriefContent): string {
   return (
@@ -242,7 +239,12 @@ async function generateAndDeliver(opts: {
   try {
     const result = await generateBrief({
       interestType: interestForPrompt,
-      prompt: SAMPLE_BRIEF_PROMPT,
+      prompt: {
+        system: SAMPLE_BRIEF_PROMPT.system,
+        // generateBrief only substitutes {{interest_type}}, so the reference date
+        // is injected here.
+        user: SAMPLE_BRIEF_PROMPT.user.replace(/\{\{fecha_referencia\}\}/g, fechaReferencia()),
+      },
       maxTokens: 8000,
       tools: WEB_SEARCH_TOOLS,
     });

@@ -80,7 +80,7 @@ económicos, notas de operaciones), con su URL real cuando exista. NO inventes U
 
 Genera un sample brief sobre: {{interest_type}}.
 
-Fecha de referencia: junio de 2026. Razona desde ese punto temporal. Si usas
+Fecha de referencia: {{fecha_referencia}}. Razona desde ese punto temporal. Si usas
 cifras o referencias a períodos concretos, asegúrate de que son coherentes con
-junio de 2026 como presente. Cuando una estimación sea orientativa, indícalo
+{{fecha_referencia}} como presente. Cuando una estimación sea orientativa, indícalo
 con 'aproximadamente' o 'en torno a'.

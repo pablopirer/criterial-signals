@@ -20,6 +20,7 @@
 import { generateBrief } from "../_shared/anthropic.ts";
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { weeklyPrompt, monthlyPrompt } from "../_shared/prompts.ts";
+import { extractJsonObject } from "../_shared/json.ts";
 
 const ADMIN_EMAIL = "pablopirer@gmail.com";
 // max_uses reduced 5->3: the Weekly+map generation runs synchronously (the admin
@@ -46,10 +47,14 @@ function computePeriod(type: "weekly" | "monthly"): {
   title: string;
   period_start: string;
   period_end: string;
+  /** "Julio 2026" — fills {{mes_actual}} in the prompt, so the temporal-tag
+      example tracks the real clock instead of a month frozen in the prompt text. */
+  mesActual: string;
 } {
   const now = new Date();
   const month = MONTHS_ES[now.getMonth()];
   const year = now.getFullYear();
+  const mesActual = `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`;
 
   if (type === "weekly") {
     const dayOfWeek = now.getDay();
@@ -65,6 +70,7 @@ function computePeriod(type: "weekly" | "monthly"): {
       title: `Weekly Signals — ${now.getDate()} de ${month} de ${year}`,
       period_start: fmtDate(monday),
       period_end: fmtDate(now),
+      mesActual,
     };
   } else {
     return {
@@ -72,6 +78,7 @@ function computePeriod(type: "weekly" | "monthly"): {
       title: `Brief Mensual — ${month} ${year}`,
       period_start: `${year}-${pad(now.getMonth() + 1)}-01`,
       period_end: fmtDate(now),
+      mesActual,
     };
   }
 }
@@ -129,25 +136,6 @@ function esc(s: unknown): string {
             .replace(/"/g, "&quot;")
     )
     .join("");
-}
-
-/**
- * Extract a JSON object from model output. With web search enabled the model
- * frequently wraps the JSON in conversational prose and/or a ```json fence
- * (e.g. "Con los datos recopilados, genero ahora el brief...") despite the
- * prompt asking for JSON only. Naively stripping the fences leaves the prose
- * and breaks JSON.parse. Prefer a fenced block if present, then bound to the
- * outermost { ... }.
- */
-function extractJsonObject(text: string): string {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced ? fenced[1] : text;
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end < start) {
-    throw new SyntaxError("No JSON object found in model output");
-  }
-  return body.slice(start, end + 1);
 }
 
 function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
@@ -682,9 +670,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ error: "type must be 'weekly' or 'monthly'" }, 400);
   }
 
-  const { periodLabel, title, period_start, period_end } = computePeriod(type);
+  const { periodLabel, title, period_start, period_end, mesActual } = computePeriod(type);
   const prompt = type === "weekly" ? weeklyPrompt : monthlyPrompt;
   const userWithPeriod = prompt.user.replace(/\{\{period\}\}/g, periodLabel);
+  // The month/period examples in the schema used to be literal months baked into
+  // the prompt, so they went stale the moment the calendar moved on — and a literal
+  // in a schema example is what the model copies (every Weekly once rendered "Nº 1"
+  // for exactly that reason). Inject the real ones.
+  const systemWithMonth = prompt.system
+    .replace(/\{\{mes_actual\}\}/g, mesActual)
+    .replace(/\{\{period\}\}/g, periodLabel);
 
   // Edition number is assigned server-side — the model can't know the sequence
   // (it used to echo the "1" from the prompt schema, so every edition rendered
@@ -707,7 +702,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     const result = await generateBrief({
       interestType: "",
-      prompt: { system: prompt.system, user: userWithPeriod },
+      prompt: { system: systemWithMonth, user: userWithPeriod },
       // 8000 was tuned for the pre-map Weekly, which already ran close to the
       // limit; adding the mapa block pushed output past 8000 and truncated the
       // JSON mid-object (→ "no parseable" 502). 12000 gives the map headroom.
