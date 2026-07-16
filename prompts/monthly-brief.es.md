@@ -36,7 +36,7 @@ El bloque "operaciones" es la lista de operaciones notables del mid-market espa�
 El bloque "macro" es OPCIONAL: solo agregados de mercado que encuentres con fuente real (p.ej. volumen total del trimestre según un informe). Si no encuentras ninguno con fuente, devuelve `"macro": []`. NUNCA inventes agregados macro.
 
 ### Formato de salida — OBLIGATORIO
-En los campos de texto (párrafos de tesis, contexto, cuerpo de sector, analisis, contexto de perspectiva) puedes usar `<strong>término o cifra clave</strong>` con moderación (máx 2-3 por campo).
+**Énfasis por párrafo (OBLIGATORIO).** En CADA párrafo de prosa (los de tesis, contexto, cuerpo de sector, analisis y contexto de perspectiva) destaca con `<strong>…</strong>` lo que sostiene ese párrafo: la afirmación de más peso, la cifra decisiva o el actor que lo cambia todo. Uno por párrafo siempre; dos solo si el párrafo carga de verdad dos ideas. Resalta una cláusula corta con sentido propio (unas 4-12 palabras), nunca una palabra suelta ni la frase entera. La unidad es el PÁRRAFO, no el campo: un campo de cinco párrafos lleva cinco énfasis, uno en cada uno. Si todo va en negrita, nada destaca: elige el fragmento que un lector con prisa debería leer.
 
 Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Sin bloques de código markdown. Sin explicaciones. El JSON debe seguir exactamente este schema:
 

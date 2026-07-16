@@ -901,7 +901,9 @@ button.btn-dark {
 .pub-map-bub { cursor: pointer; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); }
 .pub-map-bub circle { transition: opacity 0.18s; }
 .pub-map-bub:hover circle { opacity: 0.82; }
-.pub-map-bl { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: var(--navy); pointer-events: none; }
+/* Bubble label: drawn outside the circle, so it needs a white halo to stay
+   legible where it crosses the grid lines or the plot frame. */
+.pub-map-bl { font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 500; fill: var(--navy); pointer-events: none; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
 .pub-map-axb { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: #6f6a60; letter-spacing: 0.04em; }
 .pub-map-corner { font-family: 'Inter', sans-serif; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; fill: #9a958a; }
 .pub-map-detail { background: #fff; border: 0.5px solid var(--border); border-radius: 7px; padding: 16px 18px; min-height: 104px; margin-top: 8px; }
@@ -959,8 +961,13 @@ button.btn-dark {
 /* ── Brief Mensual v6 — "El Informe" (editorial report; break-out layout: prose
       in a reading column, data/table/map as full-width exhibits). ───────────── */
 .mb-report { max-width: 920px; margin: 0 auto; }
-/* Reading column for prose; exhibits (data/table/map) span the full report width */
-.mb-col { max-width: 660px; }
+/* Reading spine (v7): masthead, summary, section heads, prose, pull-quote, sources
+   and footer are centered on a 700px measure; the data panel, deal table, map and
+   deep-dive are the only full-width exhibits, breaking out symmetrically (~86px each
+   side). Replaces the earlier left-hug break-out that left a dead right gutter. */
+.mb-masthead, .mb-summary, .mb-sec-head, .mb-col, .mb-quote, .mb-sources, .mb-footer {
+  max-width: 700px; margin-left: auto; margin-right: auto;
+}
 /* Masthead */
 .mb-masthead { border-top: 2px solid var(--navy); border-bottom: 0.5px solid var(--border); padding: 1.1rem 0 1.75rem; margin-bottom: 2.5rem; }
 .mb-brand-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.75rem; }
@@ -982,7 +989,7 @@ button.btn-dark {
 .mb-sec-title { font-family: 'EB Garamond', Georgia, serif; font-size: 27px; font-weight: 400; color: var(--navy); margin: 0; line-height: 1.05; }
 .mb-sec-lede { font-size: 13px; line-height: 1.6; color: var(--muted); margin: -0.6rem 0 1.4rem; max-width: 60ch; }
 /* Long-form prose */
-.mb-prose p { font-family: 'EB Garamond', Georgia, serif; font-size: 17.5px; line-height: 1.85; color: #2b2b2b; margin: 0 0 1.2rem; }
+.mb-prose p { font-family: 'EB Garamond', Georgia, serif; font-size: 17.5px; line-height: 1.85; color: #2b2b2b; margin: 0 0 1.2rem; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
 .mb-prose p:last-child { margin-bottom: 0; }
 .mb-prose--lead p:first-child::first-letter { float: left; font-family: 'EB Garamond', Georgia, serif; font-size: 3.6em; line-height: 0.74; font-weight: 500; color: var(--navy); padding: 0.05em 0.09em 0 0; }
 /* Pull-quote */
@@ -1006,6 +1013,12 @@ button.btn-dark {
 .mb-ops td { padding: 0.8rem 0.85rem; border-bottom: 0.5px solid var(--border); color: var(--muted); vertical-align: top; line-height: 1.45; }
 .mb-ops td:first-child { color: var(--navy); font-weight: 500; }
 .mb-ops tr:last-child td { border-bottom: none; }
+.mb-ops td:nth-child(4), .mb-ops th:nth-child(4) { text-align: right; white-space: nowrap; }
+/* Map (full-width exhibit): the widget SVG is a fixed 640px; center it in its
+   break-out section so it reads as a plate, not a left-hugged block with a dead
+   right gutter. Scoped to the Monthly — the Weekly's .pub-map stays left-aligned
+   in its narrower column. */
+.mb-section-map .pub-map { margin-left: auto; margin-right: auto; }
 /* Sector prose */
 .mb-sector { margin-bottom: 2.25rem; }
 .mb-sector:last-child { margin-bottom: 0; }
