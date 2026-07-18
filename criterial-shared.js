@@ -273,33 +273,44 @@ document.addEventListener('DOMContentLoaded', () => {
       n._lw = Math.max.apply(null, n._lines.map(measure));
       n._lh = (n._lines.length - 1) * LH;
     });
-    const circleBoxes = nodos.map(n => ({ x0: n._x - n._r, x1: n._x + n._r, y0: n._y - n._r, y1: n._y + n._r }));
-    const placedBoxes = [];
-    nodos.forEach((n, idx) => {
-      const w = n._lw, bh = n._lh, r = n._r;
-      const cands = [
-        { anchor: "middle", tx: 0,          ty: r + GAP,               x0: -w / 2,          x1: w / 2,          y0: r + GAP - 9,             y1: r + GAP + bh + 3 },
-        { anchor: "middle", tx: 0,          ty: -(r + GAP - 2 + bh),   x0: -w / 2,          x1: w / 2,          y0: -(r + GAP + bh + 7),     y1: -(r + GAP - 5) },
-        { anchor: "start",  tx: r + 6,      ty: -bh / 2 + 3.5,         x0: r + 6,           x1: r + 6 + w,      y0: -bh / 2 - 6,             y1: bh / 2 + 6 },
-        { anchor: "end",    tx: -(r + 6),   ty: -bh / 2 + 3.5,         x0: -(r + 6) - w,    x1: -(r + 6),       y0: -bh / 2 - 6,             y1: bh / 2 + 6 }
-      ];
-      let best = cands[0], bestCost = Infinity;
-      for (const c of cands) {
-        // Test with a clearance margin: the rendered glyphs carry a 3px white
-        // halo, and a label that merely grazes a neighbouring bubble still reads
-        // as cramped. PAD buys breathing room on top of the raw text metrics.
-        const box = { x0: n._x + c.x0 - PAD, x1: n._x + c.x1 + PAD, y0: n._y + c.y0 - PAD, y1: n._y + c.y1 + PAD };
-        let cost = 0;
-        for (let j = 0; j < circleBoxes.length; j++) if (j !== idx) cost += overlap(box, circleBoxes[j]);
-        for (const p of placedBoxes) cost += overlap(box, p);
-        cost += (Math.max(0, left - box.x0) + Math.max(0, box.x1 - right) +
-                 Math.max(0, top - box.y0) + Math.max(0, box.y1 - bottom)) * 40;
-        if (cost < bestCost) { bestCost = cost; best = c; }
-        if (cost === 0) break;
-      }
-      n._lp = best;
-      placedBoxes.push({ x0: n._x + best.x0, x1: n._x + best.x1, y0: n._y + best.y0, y1: n._y + best.y1 });
-    });
+    // Choose each label's side for a GIVEN layout (the "Ahora" positions or the
+    // "Hace un mes" ones). The best side depends on where every bubble sits, so a
+    // side that is clear in one layout can be covered by a moved bubble in the
+    // other. We therefore solve the placement once PER layout (getX/getY select
+    // it) and the toggle swaps the offsets along with the transform, so labels
+    // never end up under a bubble after the tracker moves.
+    const placeLabels = (getX, getY) => {
+      const cboxes = nodos.map(n => ({ x0: getX(n) - n._r, x1: getX(n) + n._r, y0: getY(n) - n._r, y1: getY(n) + n._r }));
+      const placed = [];
+      return nodos.map((n, idx) => {
+        const x = getX(n), y = getY(n), w = n._lw, bh = n._lh, r = n._r;
+        const cands = [
+          { anchor: "middle", tx: 0,          ty: r + GAP,               x0: -w / 2,          x1: w / 2,          y0: r + GAP - 9,             y1: r + GAP + bh + 3 },
+          { anchor: "middle", tx: 0,          ty: -(r + GAP - 2 + bh),   x0: -w / 2,          x1: w / 2,          y0: -(r + GAP + bh + 7),     y1: -(r + GAP - 5) },
+          { anchor: "start",  tx: r + 6,      ty: -bh / 2 + 3.5,         x0: r + 6,           x1: r + 6 + w,      y0: -bh / 2 - 6,             y1: bh / 2 + 6 },
+          { anchor: "end",    tx: -(r + 6),   ty: -bh / 2 + 3.5,         x0: -(r + 6) - w,    x1: -(r + 6),       y0: -bh / 2 - 6,             y1: bh / 2 + 6 }
+        ];
+        let best = cands[0], bestCost = Infinity;
+        for (const c of cands) {
+          // Test with a clearance margin: the rendered glyphs carry a 3px white
+          // halo, and a label that merely grazes a neighbouring bubble still reads
+          // as cramped. PAD buys breathing room on top of the raw text metrics.
+          const box = { x0: x + c.x0 - PAD, x1: x + c.x1 + PAD, y0: y + c.y0 - PAD, y1: y + c.y1 + PAD };
+          let cost = 0;
+          for (let j = 0; j < cboxes.length; j++) if (j !== idx) cost += overlap(box, cboxes[j]);
+          for (const p of placed) cost += overlap(box, p);
+          cost += (Math.max(0, left - box.x0) + Math.max(0, box.x1 - right) +
+                   Math.max(0, top - box.y0) + Math.max(0, box.y1 - bottom)) * 40;
+          if (cost < bestCost) { bestCost = cost; best = c; }
+          if (cost === 0) break;
+        }
+        placed.push({ x0: x + best.x0, x1: x + best.x1, y0: y + best.y0, y1: y + best.y1 });
+        return best;
+      });
+    };
+    const lpCur  = placeLabels(n => n._x,  n => n._y);
+    const lpPrev = placeLabels(n => n._x2, n => n._y2);
+    nodos.forEach((n, i) => { n._lp = lpCur[i]; n._lpPrev = lpPrev[i]; });
 
     const bubbleSvg = (n) => {
       const m = MOMENTUM[n.momentum] || MOMENTUM.estable;
@@ -390,6 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = g.getAttribute(mode === "r" ? "data-rx" : "data-ex");
         const y = g.getAttribute(mode === "r" ? "data-ry" : "data-ey");
         g.setAttribute("transform", `translate(${x},${y})`);
+        // Re-place the label for the target layout so it doesn't end up under a
+        // bubble that moved (the placement is layout-specific — see placeLabels).
+        const n = byId[g.getAttribute("data-k")];
+        const lp = n && (mode === "r" ? n._lp : n._lpPrev);
+        if (lp) g.querySelectorAll(".pub-map-bl").forEach((t, i) => {
+          t.setAttribute("x", lp.tx);
+          t.setAttribute("y", lp.ty + i * LH);
+          t.setAttribute("text-anchor", lp.anchor);
+        });
       });
       btns.forEach(x => x.classList.toggle("on", x === b));
     }));
