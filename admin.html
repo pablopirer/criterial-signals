@@ -633,8 +633,19 @@
           },
           body: JSON.stringify({ type })
         });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Error desconocido");
+        // A gateway timeout (504/546) returns an HTML/empty body, not our {error}
+        // JSON — so parsing it as JSON throws. Name the cause instead of the old
+        // opaque "Error desconocido".
+        if (res.status === 504 || res.status === 546) {
+          throw new Error(
+            "el servidor agotó el tiempo (504). El contenido es demasiado denso para el " +
+            "límite de 150s. Genera por terminal: bash scripts/generate-content.sh " + type
+          );
+        }
+        let json;
+        try { json = await res.json(); }
+        catch { throw new Error(`respuesta no válida del servidor (HTTP ${res.status})`); }
+        if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
         _pending = json;
         renderVariations(json);
         setGenerating(false, "");
@@ -694,7 +705,19 @@
     }
 
     document.getElementById("btn-weekly").addEventListener("click",  () => generate("weekly"));
-    document.getElementById("btn-monthly").addEventListener("click", () => generate("monthly"));
+    // El Brief Mensual es denso (≈16k tokens + web search) y roza el límite de
+    // wall-clock del Edge Function (150s en el plan free). Entra a veces y otras
+    // expira con 504. En lugar de ofrecer un botón que falla la mitad de las veces,
+    // avisamos y remitimos al path fiable (terminal), sin bloquear el intento.
+    document.getElementById("btn-monthly").addEventListener("click", () => {
+      const ok = confirm(
+        "El Brief Mensual es un informe denso y suele exceder el límite de tiempo " +
+        "del servidor (150s), devolviendo un 504. El path fiable es la terminal:\n\n" +
+        "  source .env.local && bash scripts/generate-content.sh monthly\n\n" +
+        "¿Intentarlo igualmente desde aquí? (puede expirar)"
+      );
+      if (ok) generate("monthly");
+    });
 
     // ── Metrics ────────────────────────────────────────────────────────────
     async function loadMetrics() {
