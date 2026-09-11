@@ -28,14 +28,12 @@ import {
   preflight,
   requireAdmin,
 } from "../_shared/admin-auth.ts";
+import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 /** Aggregates are computed in memory: at this volume (tens of leads) it is
  * one round-trip per table instead of N+1 per lead. Revisit if leads grow
  * into the thousands. */
-async function buildList(supabase: ReturnType<typeof Object>) {
-  // deno-lint-ignore no-explicit-any
-  const sb = supabase as any;
-
+async function buildList(sb: SupabaseClient) {
   const [leadsRes, samplesRes, advisoryRes, signalsRes, subsRes] = await Promise
     .all([
       sb.from("leads").select(
@@ -79,11 +77,7 @@ async function buildList(supabase: ReturnType<typeof Object>) {
   });
 }
 
-async function buildDetail(
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
-  id: string,
-) {
+async function buildDetail(supabase: SupabaseClient, id: string) {
   const { data: lead, error } = await supabase
     .from("leads")
     .select(
