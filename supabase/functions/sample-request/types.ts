@@ -20,6 +20,14 @@ export interface SampleRequestPayload {
   /** Optional sector dimension (e.g. "infra_digital"), added in the Sample redesign. */
   sector?: string;
   notes?: string;
+  /**
+   * Checkpoint 2 · Fase 1, decision 2c. Only honoured when the request
+   * already carries a valid `x-criterial-signal` (checked before this field
+   * is ever read) — never trusted on its own. When true, the lead and
+   * sample_requests rows are still written, but Anthropic generation and the
+   * real envelope email are skipped.
+   */
+  qa_mode?: boolean;
 }
 
 /**
@@ -69,6 +77,8 @@ export interface PublicationRow {
 export interface SampleRequestResponse {
   ok: true;
   request_id: string;
+  /** Present (true) only when the qa_mode guard skipped external effects. */
+  test_mode?: boolean;
 }
 
 export interface SampleRequestErrorResponse {

@@ -26,6 +26,7 @@ import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { generateBrief } from "../_shared/anthropic.ts";
 import { sendSampleEnvelope, sendEmail } from "../_shared/resend.ts";
 import { extractJsonObject } from "../_shared/json.ts";
+import { upsertLeadByEmail } from "../_shared/leads.ts";
 import type {
   SampleRequestErrorResponse,
   SampleRequestPayload,
@@ -385,30 +386,27 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabase = createServiceRoleClient();
 
-  // 3. Upsert the lead.
-  const { data: leadRows, error: leadError } = await supabase
-    .from("leads")
-    .upsert(
-      {
-        email,
-        full_name: data.full_name ?? null,
-        company_name: data.company_name ?? null,
-        website: data.website ?? null,
-        interest_type: data.interest_type ?? null,
-        notes: data.notes ?? null,
-        source: "sample_form",
-        status: "new",
-      },
-      { onConflict: "email", ignoreDuplicates: false },
-    )
-    .select("id, email")
-    .limit(1);
-
-  if (leadError || !leadRows || leadRows.length === 0) {
-    console.error("Failed to upsert lead", leadError);
+  // 3. Upsert the lead. Keeps the original source and only fills blank
+  // fields on a repeat submission (Checkpoint 2, decision 2a) — this also
+  // means a lead Pablo already moved past "new" no longer gets silently
+  // reset by someone re-submitting the form, since the helper never touches
+  // `status` on an existing row.
+  let leadId: string;
+  try {
+    const lead = await upsertLeadByEmail(supabase, {
+      email,
+      full_name: data.full_name ?? null,
+      company_name: data.company_name ?? null,
+      website: data.website ?? null,
+      interest_type: data.interest_type ?? null,
+      notes: data.notes ?? null,
+      source: "sample_form",
+    });
+    leadId = lead.id;
+  } catch (err) {
+    console.error("Failed to upsert lead", err);
     return jsonResponse({ ok: false, error: "Failed to register lead" }, 500);
   }
-  const leadId = leadRows[0].id as string;
 
   // 4. Insert the sample_request.
   const { data: requestRows, error: requestError } = await supabase
@@ -426,7 +424,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   const requestId = requestRows[0].id as string;
 
-  // 5-7. Generate, persist and email in the background. The web-searched
+  // 5. Test-mode guard (Checkpoint 2, decision 2c). Only honoured here
+  // because we already passed the x-criterial-signal check in step 1 —
+  // qa_mode is never trusted on its own to skip real Anthropic/Resend
+  // calls. The lead and sample_requests rows above are written exactly as
+  // in the real flow; only the costly/external part is skipped.
+  if (data.qa_mode === true) {
+    await supabase
+      .from("sample_requests")
+      .update({ status: "skipped_test" })
+      .eq("id", requestId);
+    return jsonResponse(
+      { ok: true, request_id: requestId, test_mode: true },
+      200,
+    );
+  }
+
+  // 6-8. Generate, persist and email in the background. The web-searched
   // generation takes much longer than the request, and the form is
   // fire-and-forget (the browser redirects ~800ms after submit), so we MUST
   // detach this work from the request lifecycle or it gets killed on disconnect.
@@ -444,6 +458,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     work.catch((e) => console.error("background work failed", e));
   }
 
-  // 8. Respond immediately; generation + email happen in the background.
+  // 9. Respond immediately; generation + email happen in the background.
   return jsonResponse({ ok: true, request_id: requestId }, 200);
 });
