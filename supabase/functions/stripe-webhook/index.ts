@@ -2,7 +2,10 @@
  * Edge Function: stripe-webhook
  *
  * Receives Stripe webhook events, verifies signature, and upserts
- * subscribers on checkout.session.completed.
+ * subscribers on checkout.session.completed. Also creates/updates the
+ * matching commercial lead (source='stripe_pro') so a Pro purchase shows up
+ * in `leads` like every other acquisition channel — Checkpoint 2 · Fase 1,
+ * item 4.
  *
  * Required secrets:
  *   STRIPE_WEBHOOK_SECRET  — whsec_... from Stripe dashboard
@@ -11,7 +14,8 @@
  */
 
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno&no-check";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createServiceRoleClient } from "../_shared/supabase.ts";
+import { upsertLeadByEmail } from "../_shared/leads.ts";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -64,10 +68,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, error: "Missing email" }, 400);
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
+  // Uses the same shared client/factory as every other function (was its
+  // own inline createClient() call before; switched so it can share
+  // upsertLeadByEmail below without any type mismatch). Same URL and
+  // service role key, injected the same way — no behavior change.
+  const supabase = createServiceRoleClient();
 
   const { error } = await supabase
     .from("subscribers")
@@ -84,6 +89,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (error) {
     console.error("Supabase upsert error", error);
     return jsonResponse({ ok: false, error: error.message }, 500);
+  }
+
+  // Create/update the matching commercial lead (Checkpoint 2, item 4).
+  // Never fatal: `subscribers` above is the source of truth for Pro access
+  // — a failure here must not make a real payment look like it didn't go
+  // through. `leads.email` is UNIQUE, so this also merges cleanly with any
+  // lead that reached us earlier via sample_form/advisory_form/signals_open,
+  // keeping that original source (upsertLeadByEmail never overwrites it).
+  try {
+    await upsertLeadByEmail(supabase, {
+      email,
+      full_name: session.customer_details?.name ?? null,
+      source: "stripe_pro",
+    });
+  } catch (err) {
+    console.error("Failed to upsert lead for stripe subscriber", err);
   }
 
   console.log(`Subscriber upserted: ${email}`);
