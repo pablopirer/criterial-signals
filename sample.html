@@ -60,7 +60,12 @@
         </div>
       </div>
       <div style="padding: 44px 40px;">
-        <form id="sample-form" style="margin-top: 20px;">
+        <!-- novalidate: la validación la hace el JS de abajo, que nombra en
+             pantalla exactamente qué campos faltan. Sin esto el navegador
+             bloquea el evento submit con su globo nativo (invisible en muchos
+             contextos) y el mensaje propio nunca llega a mostrarse. Mismo
+             patrón que el formulario de captura de signals.html. -->
+        <form id="sample-form" novalidate style="margin-top: 20px;">
           <label for="full_name">Nombre</label>
           <input id="full_name" name="full_name" type="text" required />
 
