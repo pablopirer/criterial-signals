@@ -10,15 +10,21 @@
  *   1. Verify the shared-secret header.
  *   2. Validate the email.
  *   3. Upsert into signals_subscribers (on conflict email → reactivate).
- *   4. Send a branded confirmation email carrying the unsubscribe link.
+ *   4. Create/update the matching lead in `leads` (source='signals_open')
+ *      — Checkpoint 2 · Fase 1, item 3.
+ *   5. Send a branded confirmation email carrying the unsubscribe link
+ *      (skipped under the qa_mode test guard — decision 2c).
  *
- * Security: subscribers live in a dedicated table (not `leads`); RLS is on and
- * access is service-role only. The confirmation email is the single opt-in
- * signal (no double opt-in during validation).
+ * Security: signals_subscribers stays the source of truth for the newsletter
+ * lifecycle (active/unsubscribed, unsubscribe_token); RLS is on and access is
+ * service-role only. `leads` is a secondary, best-effort commercial record of
+ * the same contact — see _shared/leads.ts. The confirmation email is the
+ * single opt-in signal (no double opt-in during validation).
  */
 
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 import { sendSignalsConfirmation } from "../_shared/resend.ts";
+import { upsertLeadByEmail } from "../_shared/leads.ts";
 
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
@@ -68,6 +74,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return jsonResponse({ ok: false, error: "Email no válido" }, 400);
   }
+  // Checkpoint 2 · Fase 1, decision 2c. Only honoured because the shared
+  // secret was already validated above — never trusted on its own.
+  const qaMode = (payload as { qa_mode?: unknown })?.qa_mode === true;
 
   const supabase = createServiceRoleClient();
 
@@ -88,6 +97,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, error: "No se pudo completar la suscripción" }, 500);
   }
 
+  // 4. Create/update the matching commercial lead (source='signals_open' —
+  // Checkpoint 2, item 3). Non-fatal: the subscription above is the source
+  // of truth for the newsletter and already succeeded, so a failure here
+  // must not turn a successful opt-in into a user-facing error.
+  try {
+    await upsertLeadByEmail(supabase, { email, source: "signals_open" });
+  } catch (err) {
+    console.error("Failed to upsert lead for signals subscriber", err);
+  }
+
   const token = rows[0].unsubscribe_token as string;
   // Opt-out link targets the public unsubscribe-signals Edge Function (Supabase
   // project host), not the Pages custom domain.
@@ -95,15 +114,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const unsubscribeUrl =
     `${functionsBase}/functions/v1/unsubscribe-signals?token=${token}`;
 
-  // 4. Confirmation email. Awaited: this is a short-lived request (no
-  // EdgeRuntime.waitUntil), so the send must finish before we respond.
-  try {
-    await sendSignalsConfirmation({ to: email, unsubscribeUrl });
-  } catch (err) {
-    // The subscription is already recorded; a failed confirmation shouldn't
-    // 500 the user. Log and still return success.
-    console.error("Confirmation email failed", err);
+  // 5. Test-mode guard (Checkpoint 2, decision 2c) — skips the real
+  // confirmation email; the subscriber and lead rows above are written
+  // regardless, same as the real flow.
+  if (!qaMode) {
+    // 5b. Confirmation email. Awaited: this is a short-lived request (no
+    // EdgeRuntime.waitUntil), so the send must finish before we respond.
+    try {
+      await sendSignalsConfirmation({ to: email, unsubscribeUrl });
+    } catch (err) {
+      // The subscription is already recorded; a failed confirmation shouldn't
+      // 500 the user. Log and still return success.
+      console.error("Confirmation email failed", err);
+    }
   }
 
-  return jsonResponse({ ok: true }, 200);
+  return jsonResponse({ ok: true, test_mode: qaMode || undefined }, 200);
 });
