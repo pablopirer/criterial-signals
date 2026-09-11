@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Criterial. Admin — Prototipo</title>
+<title>Criterial. Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -168,17 +168,67 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
   .meta-grid{grid-template-columns:1fr}
 }
 @media (max-width:640px){.grid4{grid-template-columns:1fr 1fr}.kpi-num{font-size:36px}}
+
+/* ===== Checkpoint 3: separación test / real ===== */
+/* Badge de dato de prueba. Va en cada fila, tarjeta y ficha cuyo is_test
+   sea true, para que nunca haya duda de qué es real y qué no. */
+.t-badge{display:inline-flex;align-items:center;gap:5px;font-family:Inter,sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--amber);background:#f7efdf;border:1px solid #e4d2ae;
+  border-radius:2px;padding:2px 6px;white-space:nowrap;vertical-align:middle}
+.t-badge.real{color:var(--green);background:#e6efe9;border-color:#bcd3c5}
+/* Toggle de vista todo / real / test */
+.scope{display:flex;align-items:center;gap:0;border:1px solid var(--rule);border-radius:3px;overflow:hidden;background:var(--white)}
+.scope button{font-family:Inter,sans-serif;font-size:11.5px;font-weight:500;color:var(--soft);background:transparent;
+  border:0;border-right:1px solid var(--rule);padding:7px 13px;cursor:pointer;transition:background .15s,color .15s}
+.scope button:last-child{border-right:0}
+.scope button.on{background:var(--navy);color:var(--white)}
+.scope button:hover:not(.on){background:var(--paper2);color:var(--ink)}
+.scope-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 20px}
+.scope-note{font-size:11.5px;color:var(--soft)}
+/* Aviso de ámbito vacío: explica por qué no hay nada, en vez de dejar la vista en blanco */
+.scope-empty{border:1px dashed var(--rule);background:var(--white);padding:26px 22px;text-align:center;border-radius:3px}
+.scope-empty .h{font-family:Fraunces,serif;font-size:17px;color:var(--ink);margin:0 0 6px}
+.scope-empty .p{font-size:13px;color:var(--soft);line-height:1.6;margin:0}
+/* Barra de contadores de cabecera, con desglose test/real por tabla */
+.counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 24px}
+.counters .c{background:var(--white);border:1px solid var(--rule);border-radius:3px;padding:11px 13px}
+.counters .c .k{font-family:Inter,sans-serif;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--soft)}
+.counters .c .v{font-family:Fraunces,serif;font-size:23px;color:var(--ink);line-height:1.15;margin-top:3px}
+.counters .c .s{font-size:11px;color:var(--soft);margin-top:2px}
+@media (max-width:900px){.counters{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.counters{grid-template-columns:repeat(2,1fr)}}
+/* Pantalla de acceso */
+.gate{max-width:420px;margin:90px auto;background:var(--white);border:1px solid var(--rule);border-radius:3px;padding:34px 32px}
+.gate h1{font-family:Fraunces,serif;font-size:26px;margin:0 0 8px}
+.gate p{font-size:13.5px;color:var(--soft);line-height:1.65;margin:0 0 20px}
+.gate input{width:100%;font-family:Inter,sans-serif;font-size:14px;padding:11px 12px;border:1px solid var(--rule);
+  border-radius:3px;background:var(--paper);color:var(--ink);margin-bottom:12px}
+.gate .msg{font-size:12.5px;margin-top:14px;min-height:18px}
+.gate .msg.err{color:var(--copper)}
+.gate .msg.ok{color:var(--green)}
 </style>
 </head>
 <body data-sections="1">
-<div class="load-screen"><div class="load-mark">Criterial. <em>Admin</em></div><div class="load-line"><span></span></div><div class="load-caption">Prototipo navegable</div></div>
-<div class="proto-banner">Prototipo de diseño · <b>Datos de ejemplo</b> · Ninguna acción modifica información real</div>
+<div class="load-screen"><div class="load-mark">Criterial. <em>Admin</em></div><div class="load-line"><span></span></div><div class="load-caption">Cargando</div></div>
+
+<!-- Pantalla de acceso. El gate real es server-side en cada Edge Function
+     (JWT + ADMIN_EMAIL); esta comprobación en cliente solo evita enseñar
+     una interfaz vacía a quien no ha entrado. -->
+<div class="gate" id="gate" style="display:none">
+  <h1>Criterial. Admin</h1>
+  <p>Acceso restringido. Introduce el email de administración y te enviamos un enlace de acceso.</p>
+  <input type="email" id="gate-email" placeholder="tu@correo.com" autocomplete="email" />
+  <button class="btn btn-primary" id="gate-send" style="width:100%">Enviar enlace de acceso</button>
+  <div class="msg" id="gate-msg"></div>
+</div>
+
+<div id="shell-wrap" style="display:none">
 <header class="header">
   <a class="logo" href="#/resumen">Criterial.<span class="adm">Admin</span></a>
   <nav class="hnav">
     <a class="lbl" href="index.html">Web pública</a>
-    <a class="lbl" href="signals.html">Signals</a>
-    <a class="access" href="#/resumen">Prototipo v1</a>
+    <a class="lbl" href="admin.html">Publicaciones</a>
+    <a class="access" href="#" id="signout">Salir</a>
   </nav>
 </header>
 <div class="shell">
@@ -189,342 +239,461 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
       <a href="#/leads" data-r="leads"><span class="m">M2</span>Leads</a>
       <a href="#/advisory" data-r="advisory"><span class="m">M4</span>Advisory</a>
       <a href="#/muestras" data-r="muestras"><span class="m">M3</span>Muestras</a>
-      <a href="#/suscriptores" data-r="suscriptores"><span class="m">M5</span>Suscriptores Pro</a>
-      <a href="#/contenido" data-r="contenido"><span class="m">M1</span>Contenido</a>
+      <a href="#/suscriptores" data-r="suscriptores"><span class="m">M5</span>Suscriptores</a>
+      <div class="side-label" style="margin-top:22px">Otros</div>
+      <a href="admin.html"><span class="m">M1</span>Contenido ↗</a>
     </aside>
     <main class="main" id="app"></main>
   </div>
 </div>
+</div>
 <div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-/* ============ Datos de ejemplo (sin conexión real) ============ */
-const LEAD_ESTADOS={nuevo:'Nuevo',contactado:'Contactado',cualificado:'Cualificado',convertido:'Convertido',descartado:'Descartado'};
-const LEAD_COLOR={nuevo:'c-copper',contactado:'c-navy',cualificado:'c-green',convertido:'c-green',descartado:'c-gray'};
-const ADV_ETAPAS=[['nuevo','Nueva solicitud'],['evaluacion','En evaluación'],['propuesta','Propuesta enviada'],['aceptado','Aceptado'],['produccion','En producción'],['entregado','Entregado'],['cerrado','Cerrado']];
-const FUENTES={muestra:'Muestra',newsletter:'Newsletter',encargos:'Encargos',linkedin:'LinkedIn'};
+/* ============================================================
+   Criterial Admin — datos reales (Checkpoint 3 · Fase 1)
 
-const D={
-leads:[
- {id:'L1',nombre:'Marta Sanz',empresa:'Aldaya Partners',email:'marta.sanz@aldayapartners.es',web:'aldayapartners.es',fuente:'muestra',interes:'Informe sectorial · componentes industriales',estado:'cualificado',alta:'28 ago 2026',actividad:'hace 2 días',notas:'Boutique de M&A, 6 personas. Pidió muestra del sector componentes y respondió muy bien. Interesa propuesta de informe trimestral.',eventos:[{tipo:'Email',texto:'Envío de muestra componentes industriales',fecha:'28 ago'},{tipo:'Llamada',texto:'Llamada de 20 min: valida calidad, pide precio de informe sectorial',fecha:'3 sep'},{tipo:'Nota',texto:'Propuesta Advisory enviada (A4)',fecha:'7 sep'}],muestras:['S1']},
- {id:'L2',nombre:'Jorge Ferrer',empresa:'Noreal Capital',email:'jferrer@norealcapital.com',web:'norealcapital.com',fuente:'newsletter',interes:'Valoración de empresa',estado:'nuevo',alta:'10 sep 2026',actividad:'hoy',notas:'Search fund en fase de búsqueda. Llegó por el último Weekly. Ha pedido una valoración por Advisory (A1).',eventos:[{tipo:'Email',texto:'Alta en newsletter desde signals.html',fecha:'10 sep'}],muestras:['S3']},
- {id:'L3',nombre:'Lucía Andrade',empresa:'Miralta Advisory',email:'lucia@miralta.es',web:'miralta.es',fuente:'encargos',interes:'Informe sectorial · distribución alimentación',estado:'contactado',alta:'9 sep 2026',actividad:'ayer',notas:'Asesoría financiera de Zaragoza. Encargo potencial de informe de distribución alimentaria (A2).',eventos:[{tipo:'Email',texto:'Solicitud recibida por encargos.html',fecha:'9 sep'},{tipo:'Email',texto:'Primera respuesta con preguntas de alcance',fecha:'10 sep'}],muestras:[]},
- {id:'L4',nombre:'Tomás Ribes',empresa:'Delta Search',email:'tribes@deltasearch.es',web:'deltasearch.es',fuente:'muestra',interes:'Informe sectorial · logística',estado:'convertido',alta:'12 ago 2026',actividad:'hace 4 días',notas:'Convertido a Pro mensual tras la muestra de logística. Primer entregable Advisory ya entregado (A7).',eventos:[{tipo:'Email',texto:'Muestra de logística enviada',fecha:'12 ago'},{tipo:'Nota',texto:'Se suscribe a Pro mensual',fecha:'12 ago'},{tipo:'Email',texto:'Entregado informe logística (A7)',fecha:'2 sep'}],muestras:['S2']},
- {id:'L5',nombre:'Elena Vidal',empresa:'Vidal & Crespo',email:'elena.vidal@vidalcrespo.com',web:'vidalcrespo.com',fuente:'linkedin',interes:'Due diligence comercial',estado:'nuevo',alta:'8 sep 2026',actividad:'hace 2 días',notas:'Despacho jurídico que asesora operaciones de compra. Vio el post de LinkedIn de la señal de la semana.',eventos:[{tipo:'Nota',texto:'Alta desde LinkedIn',fecha:'8 sep'}],muestras:[]},
- {id:'L6',nombre:'Álvaro Montes',empresa:'Montes Iberia Capital',email:'amontes@montesiberia.com',web:'montesiberia.com',fuente:'muestra',interes:'Muestra genérica',estado:'descartado',alta:'20 ago 2026',actividad:'hace 1 semana',notas:'Pidió muestra sin contexto de operación. Sin respuesta a dos seguimientos. Descartado de momento.',eventos:[{tipo:'Email',texto:'Muestra enviada',fecha:'20 ago'},{tipo:'Email',texto:'Seguimiento sin respuesta (x2)',fecha:'1 sep'}],muestras:['S5']},
- {id:'L7',nombre:'Carla Bou',empresa:'Ordesa Search Partners',email:'carla.bou@ordesasp.com',web:'ordesasp.com',fuente:'newsletter',interes:'Pitch deck para adquisición',estado:'contactado',alta:'1 sep 2026',actividad:'hace 3 días',notas:'Search fund con target identificado. Interesados en pitch deck (A3). La generación de su muestra falló y hay que reintentarla (S4).',eventos:[{tipo:'Email',texto:'Alta en newsletter',fecha:'1 sep'},{tipo:'Llamada',texto:'Llamada exploratoria: target de industria auxiliar',fecha:'7 sep'}],muestras:['S4']},
- {id:'L8',nombre:'Ignacio Prat',empresa:'Prat & Asociados',email:'iprat@pratasociados.es',web:'pratasociados.es',fuente:'encargos',interes:'Valoración + informe sectorial',estado:'cualificado',alta:'25 ago 2026',actividad:'hace 2 días',notas:'Encargo aceptado (A6) en producción. Entrega prevista el 18 sep.',eventos:[{tipo:'Email',texto:'Solicitud por encargos.html',fecha:'25 ago'},{tipo:'Nota',texto:'Propuesta aceptada, en producción',fecha:'4 sep'}],muestras:['S6']}
-],
-advisory:[
- {id:'A1',tipo:'Valoración de empresa',empresa:'Noreal Capital',contacto:'Jorge Ferrer',email:'jferrer@norealcapital.com',mensaje:'Necesitamos una valoración orientativa de una distribuidora de material eléctrico (EBITDA ~1,2 M€) para una primera aproximación.',fecha:'hoy',etapa:'nuevo',importe:null,entrega:null,entregable:{estado:'none'},lead:'L2'},
- {id:'A2',tipo:'Informe sectorial',empresa:'Miralta Advisory',contacto:'Lucía Andrade',email:'lucia@miralta.es',mensaje:'Informe del sector de distribución alimentaria en el noreste: tamaño, fragmentación, márgenes y comparables de operaciones recientes.',fecha:'hace 1 día',etapa:'nuevo',importe:null,entrega:null,entregable:{estado:'none'},lead:'L3'},
- {id:'A3',tipo:'Pitch deck',empresa:'Ordesa Search Partners',contacto:'Carla Bou',email:'carla.bou@ordesasp.com',mensaje:'Pitch deck para presentar la adquisición de una empresa de industria auxiliar a su círculo de inversores.',fecha:'hace 2 días',etapa:'evaluacion',importe:null,entrega:null,entregable:{estado:'none'},lead:'L7'},
- {id:'A4',tipo:'Informe sectorial',empresa:'Aldaya Partners',contacto:'Marta Sanz',email:'marta.sanz@aldayapartners.es',mensaje:'Informe trimestral de componentes industriales: mapa de actores, valoraciones y pipeline de operaciones.',fecha:'hace 3 días',etapa:'propuesta',importe:'1.900 €',entrega:null,entregable:{estado:'none'},lead:'L1'},
- {id:'A5',tipo:'Due diligence comercial',empresa:'Vidal & Crespo',contacto:'Elena Vidal',email:'elena.vidal@vidalcrespo.com',mensaje:'Due diligence comercial ligera sobre una empresa de servicios industriales: clientes, contratos y concentración.',fecha:'hace 4 días',etapa:'aceptado',importe:'2.400 €',entrega:'25 sep 2026',entregable:{estado:'none'},lead:'L5'},
- {id:'A6',tipo:'Valoración + informe sectorial',empresa:'Prat & Asociados',contacto:'Ignacio Prat',email:'iprat@pratasociados.es',mensaje:'Valoración y contexto sectorial de una empresa de climatización para una operación de sucesión.',fecha:'hace 6 días',etapa:'produccion',importe:'2.900 €',entrega:'18 sep 2026',entregable:{estado:'draft',nombre:'Borrador v1 · valoración climatización'},lead:'L8'},
- {id:'A7',tipo:'Informe sectorial',empresa:'Delta Search',contacto:'Tomás Ribes',email:'tribes@deltasearch.es',mensaje:'Informe del sector logística de última milla en España.',fecha:'hace 8 días',etapa:'entregado',importe:'1.700 €',entrega:'2 sep 2026',entregable:{estado:'final',nombre:'Informe logística última milla · vFinal.pdf'},lead:'L4'}
-],
-samples:[
- {id:'S1',empresa:'Aldaya Partners',sector:'Componentes industriales',lead:'L1',estado:'generada',fecha:'28 ago 2026',pub:'Muestra · Componentes industriales'},
- {id:'S2',empresa:'Delta Search',sector:'Logística de última milla',lead:'L4',estado:'generada',fecha:'12 ago 2026',pub:'Muestra · Logística última milla'},
- {id:'S3',empresa:'Noreal Capital',sector:'Material eléctrico',lead:'L2',estado:'cola',fecha:'10 sep 2026',pub:null},
- {id:'S4',empresa:'Ordesa Search Partners',sector:'Industria auxiliar',lead:'L7',estado:'fallida',fecha:'8 sep 2026',pub:null},
- {id:'S5',empresa:'Montes Iberia Capital',sector:'Genérica',lead:'L6',estado:'generada',fecha:'20 ago 2026',pub:'Muestra · Genérica'},
- {id:'S6',empresa:'Prat & Asociados',sector:'Climatización',lead:'L8',estado:'cola',fecha:'4 sep 2026',pub:null}
-],
-subs:[
- {id:'U1',nombre:'Tomás Ribes',empresa:'Delta Search',email:'tribes@deltasearch.es',plan:'Pro mensual',precio:'9,90 €/mes',estado:'activo',desde:'12 ago 2026'},
- {id:'U2',nombre:'Andrés Leiva',empresa:'Leiva & Co',email:'aleiva@leivaco.es',plan:'Pro anual',precio:'99 €/año',estado:'activo',desde:'3 jul 2026'},
- {id:'U3',nombre:'Nuria Pallarés',empresa:'Pallarés Research',email:'nuria@pallaresresearch.com',plan:'Pro mensual',precio:'9,90 €/mes',estado:'prueba',desde:'6 sep 2026'},
- {id:'U4',nombre:'Marc Vinyes',empresa:'MV Advisory',email:'marc@mvadvisory.es',plan:'Pro mensual',precio:'9,90 €/mes',estado:'impago',desde:'15 jun 2026'},
- {id:'U5',nombre:'Sofía Roca',empresa:'Roca Partners',email:'sofia.roca@rocapartners.com',plan:'Pro anual',precio:'99 €/año',estado:'activo',desde:'21 ago 2026'}
-],
-pubs:[
- {id:'P1',titulo:'Weekly Signals — 20 de agosto de 2026',tipo:'weekly',estado:'publicada',fecha:'20 ago 2026',enviada:'5 Pro + lista abierta'},
- {id:'P2',titulo:'Brief Mensual — agosto 2026',tipo:'mensual',estado:'publicada',fecha:'1 sep 2026',enviada:'5 Pro'},
- {id:'P3',titulo:'Weekly Signals — 27 de agosto de 2026',tipo:'weekly',estado:'borrador',fecha:'27 ago 2026',enviada:null},
- {id:'P4',titulo:'Muestra · Componentes industriales',tipo:'muestra',estado:'borrador',fecha:'28 ago 2026',enviada:null},
- {id:'P5',titulo:'Post LinkedIn — señal de la semana',tipo:'linkedin',estado:'borrador',fecha:'2 sep 2026',enviada:null}
-],
-activity:[
- {when:'hace 2 h',dot:'g',texto:'Muestra generada para Aldaya Partners (componentes industriales)'},
- {when:'hace 5 h',dot:'n',texto:'Nuevo lead desde encargos.html: Miralta Advisory'},
- {when:'ayer',dot:'',texto:'Weekly Signals publicada y enviada a 5 suscriptores Pro'},
- {when:'ayer',dot:'n',texto:'Solicitud Advisory nueva: valoración (Noreal Capital)'},
- {when:'hace 2 días',dot:'a',texto:'Suscriptor Pro con impago: MV Advisory'},
- {when:'hace 2 días',dot:'a',texto:'Generación de muestra fallida: Ordesa Search Partners'}
-]};
+   Diseño: prototipo admin-v2 aprobado, intacto en CSS y estructura.
+   Lo que cambia respecto al prototipo es la capa de datos: se sustituyen
+   los objetos mock por llamadas a las Edge Functions admin-*, y se añade
+   la separación test/real que es el objeto de este checkpoint.
 
-/* ============ Helpers ============ */
-const $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-let toastT=null;
-function toast(msg){const t=$('#toast');t.innerHTML='Acción simulada — prototipo sin conexión a datos reales.<br><b>'+msg+'</b>';t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+   El gate real de acceso está en el servidor (JWT + ADMIN_EMAIL en cada
+   Edge Function). La comprobación de email de aquí abajo es cosmética:
+   evita enseñar una interfaz vacía, no protege nada por sí sola.
+   ============================================================ */
+const SUPABASE_URL      = "https://epmltqhtxkmfboaxdois.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
+const ADMIN_EMAIL       = "pablopirer@gmail.com";
+const EF_BASE           = SUPABASE_URL + "/functions/v1";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let _session = null;
+
+/* ---- Vocabularios (decisión D5).
+   Los VALORES son los que viven en la base de datos; las ETIQUETAS y los
+   colores son los del prototipo aprobado. Las columnas son texto libre
+   (sin CHECK), así que quien valida de verdad es la Edge Function. ---- */
+const LEAD_ESTADOS = {new:'Nuevo',contacted:'Contactado',qualified:'Cualificado',customer:'Cliente',discarded:'Descartado'};
+const LEAD_COLOR   = {new:'c-copper',contacted:'c-navy',qualified:'c-green',customer:'c-green',discarded:'c-gray'};
+const LEAD_ORDEN   = ['new','contacted','qualified','customer'];
+const ADV_ETAPAS   = [['new','Nueva solicitud'],['in_progress','En evaluación'],['quoted','Propuesta enviada'],['won','Ganado'],['lost','Perdido']];
+const ADV_COLOR    = {new:'c-copper',in_progress:'c-navy',quoted:'c-amber',won:'c-green',lost:'c-gray'};
+const FUENTES      = {sample_form:'Muestra',advisory_form:'Advisory',signals_open:'Newsletter',stripe_pro:'Stripe Pro',manual:'Manual'};
+const SAMPLE_EST   = {queued:['En cola','c-navy'],generated:['Generada','c-green'],generation_failed:['Fallida','c-copper'],cancelled:['Cancelada','c-gray'],skipped_test:['Omitida · test','c-gray']};
+const TIPO_ENCARGO = {valoracion:'Valoración de empresa',sectorial:'Análisis sectorial',pitch_deck:'Pitch deck',otro:'Otro'};
+
+/* ---- Estado en memoria ---- */
+let DATA   = {leads:[],advisory:[],samples:[],pro:[],signals:[]};
+let SCOPE  = 'all';                          // all | real | test
+let LF     = {q:'',st:'todos',src:'todas'};  // filtros de la lista de leads
+let DETAIL = null;                           // detalle de lead cargado
+
+/* ---- Helpers ---- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+let toastT = null;
+function toast(msg,isErr){const t=$('#toast');t.innerHTML=(isErr?'<b>No se pudo completar</b><br>':'')+esc(msg);t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200)}
 function chip(txt,color){return '<span class="chip '+color+'"><i></i>'+txt+'</span>'}
-function leadChip(st){return chip(LEAD_ESTADOS[st],LEAD_COLOR[st])}
-function advChip(e){const map={nuevo:'c-copper',evaluacion:'c-navy',propuesta:'c-amber',aceptado:'c-green',produccion:'c-navy',entregado:'c-green',cerrado:'c-gray'};const lbl=ADV_ETAPAS.find(x=>x[0]===e)[1];return chip(lbl,map[e])}
-function sampleChip(e){const m={cola:['En cola','c-navy'],generada:['Generada','c-green'],fallida:['Fallida','c-copper']};return chip(m[e][0],m[e][1])}
-function subChip(e){const m={activo:['Activo','c-green'],prueba:['En prueba','c-navy'],impago:['Impago','c-copper']};return chip(m[e][0],m[e][1])}
-function pubChip(e){return e==='publicada'?chip('Publicada','c-green'):chip('Borrador','c-gray')}
-function pubTipo(t){return{weekly:'Weekly',mensual:'Mensual',muestra:'Muestra',linkedin:'LinkedIn'}[t]}
-function leadById(id){return D.leads.find(l=>l.id===id)}
-function advById(id){return D.advisory.find(a=>a.id===id)}
-function reveal(){document.querySelectorAll('.observe').forEach(el=>{el.classList.add('in-view')})}
+function leadChip(st){return chip(LEAD_ESTADOS[st]||esc(st),LEAD_COLOR[st]||'c-gray')}
+function advChip(st){const f=ADV_ETAPAS.find(x=>x[0]===st);return chip(f?f[1]:esc(st),ADV_COLOR[st]||'c-gray')}
+function sampleChip(st){const m=SAMPLE_EST[st]||[esc(st),'c-gray'];return chip(m[0],m[1])}
+/* El badge es el corazón del checkpoint: toda fila dice siempre si es test o real. */
+function tBadge(isTest){return isTest?'<span class="t-badge">test</span>':'<span class="t-badge real">real</span>'}
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function fdate(iso){if(!iso)return '—';const d=new Date(iso);return d.getDate()+' '+MES[d.getMonth()]+' '+d.getFullYear()}
+function frel(iso){if(!iso)return '—';const s=(Date.now()-new Date(iso).getTime())/1000;
+ if(s<3600)return 'hace '+Math.max(1,Math.round(s/60))+' min';
+ if(s<86400)return 'hace '+Math.round(s/3600)+' h';
+ const d=Math.round(s/86400);return d===1?'ayer':'hace '+d+' días'}
+function reveal(){document.querySelectorAll('.observe').forEach(el=>el.classList.add('in-view'))}
+
+/* ---- Ámbito test/real ---- */
+function inScope(r){return SCOPE==='all' || (SCOPE==='test' ? !!r.is_test : !r.is_test)}
+function scopeBar(note){
+ const b=(k,l)=>'<button class="'+(SCOPE===k?'on':'')+'" onclick="A.scope(\''+k+'\')">'+l+'</button>';
+ return '<div class="scope-bar"><div class="scope">'+b('all','Todo')+b('real','Solo real')+b('test','Solo test')+'</div>'
+  +(note?'<span class="scope-note">'+note+'</span>':'')+'</div>';
+}
+/* Un ámbito vacío explica POR QUÉ está vacío, en vez de dejar una vista en blanco. */
+function scopeEmpty(what){
+ if(SCOPE==='real')return '<div class="scope-empty"><p class="h">Todavía no hay '+what+' reales.</p>'
+  +'<p class="p">Todo lo que existe ahora mismo está marcado como dato de prueba. Es lo esperado antes del lanzamiento: '
+  +'cada fila nueva nace como <b>test</b> y se marca como real a mano desde la ficha del lead.</p></div>';
+ if(SCOPE==='test')return '<div class="scope-empty"><p class="h">No hay '+what+' de prueba.</p>'
+  +'<p class="p">Cambia el ámbito a «Todo» para ver el resto.</p></div>';
+ return '<div class="scope-empty"><p class="h">Todavía no hay '+what+'.</p><p class="p">Aparecerán aquí en cuanto lleguen.</p></div>';
+}
+
+/* ---- Acceso a las Edge Functions ---- */
+async function api(path,opts){
+ if(!_session) throw new Error('Sin sesión');
+ const res = await fetch(EF_BASE+path, Object.assign({},opts,{
+   headers: Object.assign({'Content-Type':'application/json','Authorization':'Bearer '+_session.access_token},(opts&&opts.headers)||{})
+ }));
+ let body=null;
+ try{ body = await res.json() }catch(_){}
+ if(!res.ok) throw new Error((body&&body.error)||('HTTP '+res.status));
+ return body;
+}
+
+async function loadAll(){
+ const [l,a,s,u] = await Promise.all([
+   api('/admin-leads'), api('/admin-advisory'), api('/admin-samples'), api('/admin-subscribers')
+ ]);
+ DATA.leads    = l.leads    || [];
+ DATA.advisory = a.requests || [];
+ DATA.samples  = s.samples  || [];
+ DATA.pro      = u.pro      || [];
+ DATA.signals  = u.signals  || [];
+}
+
+/* ---- Contadores de cabecera con desglose test/real por tabla ---- */
+function counters(){
+ const c=(k,rows)=>{
+  const t=rows.filter(r=>r.is_test).length, r=rows.length-t;
+  return '<div class="c"><div class="k">'+k+'</div><div class="v">'+rows.length+'</div>'
+   +'<div class="s">'+r+' real · '+t+' test</div></div>';
+ };
+ return '<div class="counters">'
+  +c('Leads',DATA.leads)+c('Muestras',DATA.samples)+c('Advisory',DATA.advisory)
+  +c('Newsletter',DATA.signals)+c('Pro',DATA.pro)+'</div>';
+}
 
 /* ============ Vistas ============ */
 function vResumen(){
- const nuevos=D.leads.filter(l=>l.estado==='nuevo').length;
- const cola=D.samples.filter(s=>s.estado==='cola').length;
- const fallidas=D.samples.filter(s=>s.estado==='fallida').length;
- const activos=D.subs.filter(s=>s.estado==='activo').length;
+ const L=DATA.leads.filter(inScope), S=DATA.samples.filter(inScope), AD=DATA.advisory.filter(inScope);
+ const nuevos=L.filter(l=>l.status==='new').length;
+ const cola=S.filter(s=>s.status==='queued').length;
+ const fallidas=S.filter(s=>s.status==='generation_failed').length;
+ const proAct=DATA.pro.filter(inScope).filter(s=>s.status==='active').length;
+ const sigAct=DATA.signals.filter(inScope).filter(s=>s.status==='active').length;
+ const advAbiertos=AD.filter(a=>!['won','lost'].includes(a.status)).length;
+ const porFuente={};L.forEach(l=>{porFuente[l.source]=(porFuente[l.source]||0)+1});
+ const maxF=Math.max(1,...Object.values(porFuente));
+
  return '<div class="observe"><div class="eyebrow">M6 · Métricas y salud operativa</div><h1>Resumen</h1>'
- +'<p class="sub">Visión general del negocio: captación, conversión, suscriptores y salud de los flujos automáticos.</p>'
+ +'<p class="sub">Visión general del negocio con separación explícita entre datos reales y de prueba. Los contadores de arriba son siempre del total; el resto de la vista responde al ámbito seleccionado.</p>'
+ +counters()
+ +scopeBar('Ámbito aplicado a las tarjetas y al embudo')
  +'<div class="grid4">'
- +'<div class="card"><div class="kpi-label">Leads totales</div><div class="kpi-num">'+D.leads.length+'</div><div class="kpi-note"><b>'+nuevos+' nuevos</b> esta semana</div></div>'
- +'<div class="card"><div class="kpi-label">Suscriptores Pro activos</div><div class="kpi-num">'+activos+'</div><div class="kpi-note">1 en prueba · 1 con impago</div></div>'
- +'<div class="card"><div class="kpi-label">Muestras en cola</div><div class="kpi-num">'+cola+'</div><div class="kpi-note"><b>'+fallidas+' fallida</b> necesita reintento</div></div>'
- +'<div class="card"><div class="kpi-label">Publicaciones</div><div class="kpi-num">12</div><div class="kpi-note">2 publicadas este mes</div></div>'
+ +'<div class="card"><div class="kpi-label">Leads</div><div class="kpi-num">'+L.length+'</div><div class="kpi-note"><b>'+nuevos+'</b> sin contactar</div></div>'
+ +'<div class="card"><div class="kpi-label">Suscriptores Pro activos</div><div class="kpi-num">'+proAct+'</div><div class="kpi-note">'+sigAct+' en la lista abierta</div></div>'
+ +'<div class="card"><div class="kpi-label">Muestras en cola</div><div class="kpi-num">'+cola+'</div><div class="kpi-note">'+(fallidas?'<b>'+fallidas+' fallidas</b> en el histórico':'sin fallos pendientes')+'</div></div>'
+ +'<div class="card"><div class="kpi-label">Advisory abiertos</div><div class="kpi-num">'+advAbiertos+'</div><div class="kpi-note">de '+AD.length+' solicitudes</div></div>'
  +'</div>'
  +'<div class="block grid2">'
- +'<div class="card observe"><h2>Embudo de captación</h2>'
- +'<div class="funnel-row"><div>Leads captados</div><div class="funnel-bar"><span style="width:100%"></span></div><div class="funnel-num">23</div></div>'
- +'<div class="funnel-row"><div>Pidieron muestra <span style="color:var(--soft);font-size:11px">61%</span></div><div class="funnel-bar navy"><span style="width:61%"></span></div><div class="funnel-num">14</div></div>'
- +'<div class="funnel-row"><div>Suscriptores Pro <span style="color:var(--soft);font-size:11px">36% / 22%</span></div><div class="funnel-bar green"><span style="width:22%"></span></div><div class="funnel-num">5</div></div>'
- +'<p style="font-size:12px;color:var(--soft);margin:14px 0 0">Conversión muestra → Pro del 36%. Conversión total lead → Pro del 22%.</p></div>'
+ +'<div class="card observe"><h2>Captación por fuente</h2>'
+ +(L.length?Object.keys(porFuente).sort((a,b)=>porFuente[b]-porFuente[a]).map(k=>
+    '<div class="funnel-row"><div>'+(FUENTES[k]||esc(k))+'</div><div class="funnel-bar navy"><span style="width:'+Math.round(porFuente[k]/maxF*100)+'%"></span></div><div class="funnel-num">'+porFuente[k]+'</div></div>').join('')
+   :'<div class="empty">Sin leads en este ámbito.</div>')
+ +'<p style="font-size:12px;color:var(--soft);margin:14px 0 0">Cada lead conserva la fuente con la que llegó la primera vez, aunque después entre por otro canal.</p></div>'
  +'<div class="card observe"><h2>Salud de los flujos</h2>'
- +'<div class="health-row"><span class="feed-dot a"></span>Generación de muestras<span class="tag">'+chip('1 fallida','c-copper')+'</span></div>'
+ +'<div class="health-row"><span class="feed-dot '+(fallidas?'a':'g')+'"></span>Generación de muestras<span class="tag">'+(fallidas?chip(fallidas+' fallidas','c-copper'):chip('Sin fallos','c-green'))+'</span></div>'
  +'<div class="health-row"><span class="feed-dot a"></span>Stripe<span class="tag">'+chip('Modo prueba','c-amber')+'</span></div>'
- +'<div class="health-row"><span class="feed-dot g"></span>Envío de emails<span class="tag">'+chip('0 fallos','c-green')+'</span></div>'
+ +'<div class="health-row"><span class="feed-dot '+(DATA.leads.some(l=>!l.is_test)?'g':'a')+'"></span>Datos reales<span class="tag">'+(DATA.leads.some(l=>!l.is_test)?chip('Hay leads reales','c-green'):chip('Todo es test','c-amber'))+'</span></div>'
  +'<div class="health-row"><span class="feed-dot g"></span>Supabase<span class="tag">'+chip('Operativo','c-green')+'</span></div>'
- +'<p style="font-size:12px;color:var(--soft);margin:14px 0 0">Stripe sigue en modo prueba: nadie puede suscribirse de verdad hasta activar la cuenta real.</p></div>'
+ +'<p style="font-size:12px;color:var(--soft);margin:14px 0 0">Mientras Stripe siga en modo prueba nadie puede suscribirse de verdad, y toda fila nueva nace marcada como test.</p></div>'
  +'</div>'
- +'<div class="block card observe"><h2>Actividad reciente</h2>'
- +D.activity.map(a=>'<div class="feed-item"><span class="feed-dot '+a.dot+'"></span><span class="when">'+a.when+'</span><span>'+esc(a.texto)+'</span></div>').join('')
- +'</div></div>';
+ +'<div class="block card observe"><h2>Actividad reciente</h2>'+actividad()+'</div></div>';
 }
 
-let LF={q:'',st:'todos',src:'todas'};
+/* La actividad se DERIVA de hechos reales (altas, muestras, solicitudes),
+   no de una tabla de eventos: outreach_events existe pero está vacía y
+   queda fuera del alcance de este checkpoint. */
+function actividad(){
+ const ev=[];
+ DATA.leads.filter(inScope).forEach(l=>ev.push({at:l.created_at,dot:'n',txt:'Nuevo lead '+(FUENTES[l.source]||l.source).toLowerCase()+': '+esc(l.full_name||l.email),test:l.is_test}));
+ DATA.samples.filter(inScope).forEach(s=>ev.push({at:s.created_at,dot:s.status==='generation_failed'?'a':'g',txt:'Muestra '+(SAMPLE_EST[s.status]?SAMPLE_EST[s.status][0].toLowerCase():s.status)+' · '+esc((s.lead&&(s.lead.company_name||s.lead.email))||'—'),test:s.is_test}));
+ DATA.advisory.filter(inScope).forEach(a=>ev.push({at:a.created_at,dot:'n',txt:'Solicitud Advisory: '+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+' · '+esc((a.lead&&(a.lead.company_name||a.lead.email))||'—'),test:a.is_test}));
+ ev.sort((x,y)=>new Date(y.at)-new Date(x.at));
+ if(!ev.length)return '<div class="empty">Sin actividad en este ámbito.</div>';
+ return ev.slice(0,12).map(e=>'<div class="feed-item"><span class="feed-dot '+e.dot+'"></span><span class="when">'+frel(e.at)+'</span><span>'+e.txt+' '+tBadge(e.test)+'</span></div>').join('');
+}
+
 function vLeads(){
- const counts={};D.leads.forEach(l=>counts[l.estado]=(counts[l.estado]||0)+1);
- let list=D.leads.filter(l=>
-   (LF.st==='todos'||l.estado===LF.st)&&
-   (LF.src==='todas'||l.fuente===LF.src)&&
-   (!LF.q||(l.nombre+' '+l.empresa+' '+l.interes).toLowerCase().includes(LF.q.toLowerCase())));
- let chips='<button class="chip f-chip '+(LF.st==='todos'?'on':'')+'" onclick="A.fLeadSt(\'todos\')"><i></i>Todos · '+D.leads.length+'</button>'
+ const base=DATA.leads.filter(inScope);
+ const counts={};base.forEach(l=>counts[l.status]=(counts[l.status]||0)+1);
+ const list=base.filter(l=>
+   (LF.st==='todos'||l.status===LF.st) &&
+   (LF.src==='todas'||l.source===LF.src) &&
+   (!LF.q||((l.full_name||'')+' '+(l.company_name||'')+' '+(l.email||'')+' '+(l.interest_type||'')).toLowerCase().includes(LF.q.toLowerCase())));
+
+ const chips='<button class="chip f-chip '+(LF.st==='todos'?'on':'')+'" onclick="A.fLeadSt(\'todos\')"><i></i>Todos · '+base.length+'</button>'
   +Object.keys(LEAD_ESTADOS).map(k=>'<button class="chip f-chip '+(LF.st===k?'on':'')+' '+LEAD_COLOR[k]+'" onclick="A.fLeadSt(\''+k+'\')"><i></i>'+LEAD_ESTADOS[k]+' · '+(counts[k]||0)+'</button>').join('');
+
  let rows=list.map(l=>'<a class="row" href="#/leads/'+l.id+'">'
-  +'<div><div class="t">'+esc(l.nombre)+'</div><div class="d">'+esc(l.empresa)+'</div></div>'
-  +'<div class="hide-m" style="font-size:12px;color:#55534c">'+esc(l.interes)+'</div>'
-  +'<div class="hide-m">'+chip(FUENTES[l.fuente],'c-gray')+'</div>'
-  +'<div>'+leadChip(l.estado)+'</div>'
-  +'<div class="hide-m" style="font-size:11.5px;color:var(--soft)">'+l.actividad+'</div>'
+  +'<div><div class="t">'+esc(l.full_name||l.email)+' '+tBadge(l.is_test)+'</div><div class="d">'+esc(l.company_name||l.email)+'</div></div>'
+  +'<div class="hide-m" style="font-size:12px;color:#55534c">'+esc(l.interest_type||'—')+'</div>'
+  +'<div class="hide-m">'+chip(FUENTES[l.source]||esc(l.source),'c-gray')+'</div>'
+  +'<div>'+leadChip(l.status)+'</div>'
+  +'<div class="hide-m" style="font-size:11.5px;color:var(--soft)">'+frel(l.last_contact_at||l.created_at)+'</div>'
   +'<div class="arr">→</div></a>').join('');
- if(!rows)rows='<div class="empty">Ningún lead coincide con estos filtros.</div>';
+
+ if(!rows) rows = base.length ? '<div class="empty">Ningún lead coincide con estos filtros.</div>' : scopeEmpty('leads');
+
  return '<div class="observe"><div class="eyebrow">M2 · Control de tráfico de leads</div><h1>Leads</h1>'
- +'<p class="sub">Gestión individual de leads: estado, notas, seguimiento y muestras vinculadas. Antes solo existía un contador agregado.</p>'
- +'<div class="filters"><input class="f-input" placeholder="Buscar nombre, empresa, interés…" value="'+esc(LF.q)+'" oninput="A.fLeadQ(this.value)">'
+ +'<p class="sub">Gestión individual: estado, notas y rastro completo. Cada fila indica si es un dato real o de prueba.</p>'
+ +scopeBar(base.length+' de '+DATA.leads.length+' leads en este ámbito')
+ +'<div class="filters"><input class="f-input" placeholder="Buscar nombre, empresa, email…" value="'+esc(LF.q)+'" oninput="A.fLeadQ(this.value)">'
  +'<select class="f-select" onchange="A.fLeadSrc(this.value)"><option value="todas"'+(LF.src==='todas'?' selected':'')+'>Todas las fuentes</option>'
  +Object.keys(FUENTES).map(k=>'<option value="'+k+'"'+(LF.src===k?' selected':'')+'>'+FUENTES[k]+'</option>').join('')+'</select>'
  +chips+'</div>'
  +'<div class="rows">'+rows+'</div></div>';
 }
 
-function vLeadDetail(id){
- const l=leadById(id);if(!l)return '<div class="empty">Lead no encontrado.</div>';
- const orden=['nuevo','contactado','cualificado','convertido'];
- const idx=orden.indexOf(l.estado);
- let steps=orden.map((k,i)=>'<div class="step '+(i<idx?'done ':'')+(k===l.estado?'current':'')+'" onclick="A.leadStatus(\''+id+'\',\''+k+'\')"><i></i>'+LEAD_ESTADOS[k]+'</div>'+(i<orden.length-1?'<div class="step-sep"></div>':'')).join('');
- steps+='<div class="step-sep"></div><div class="step '+(l.estado==='descartado'?'current':'')+'" onclick="A.leadStatus(\''+id+'\',\'descartado\')"><i></i>Descartado</div>';
- const muestras=D.samples.filter(s=>s.lead===id);
+function vLeadDetail(){
+ if(!DETAIL) return '<div class="empty">Cargando ficha…</div>';
+ const l=DETAIL.lead;
+ const idx=LEAD_ORDEN.indexOf(l.status);
+ let steps=LEAD_ORDEN.map((k,i)=>'<div class="step '+(i<idx?'done ':'')+(k===l.status?'current':'')+'" onclick="A.leadStatus(\''+k+'\')"><i></i>'+LEAD_ESTADOS[k]+'</div>'+(i<LEAD_ORDEN.length-1?'<div class="step-sep"></div>':'')).join('');
+ steps+='<div class="step-sep"></div><div class="step '+(l.status==='discarded'?'current':'')+'" onclick="A.leadStatus(\'discarded\')"><i></i>Descartado</div>';
+
+ /* Rastro derivado de hechos reales, ordenado del más reciente al más antiguo. */
+ const tl=[];
+ tl.push({at:l.created_at,kind:'Alta',txt:'Lead creado desde '+(FUENTES[l.source]||l.source)});
+ DETAIL.samples.forEach(s=>{
+  tl.push({at:s.created_at,kind:'Muestra',txt:'Solicitud de muestra · '+esc(s.topic||'—')+' ('+(SAMPLE_EST[s.status]?SAMPLE_EST[s.status][0]:s.status)+')'});
+  if(s.sent_at) tl.push({at:s.sent_at,kind:'Email',txt:'Muestra enviada'+(s.publication?': '+esc(s.publication.title):'')});
+ });
+ DETAIL.advisory.forEach(a=>tl.push({at:a.created_at,kind:'Advisory',txt:'Solicitud: '+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))}));
+ if(DETAIL.signals_subscription) tl.push({at:DETAIL.signals_subscription.created_at,kind:'Newsletter',txt:'Alta en la lista abierta de Signals'});
+ if(DETAIL.pro_subscription) tl.push({at:DETAIL.pro_subscription.created_at,kind:'Pro',txt:'Suscripción Pro ('+esc(DETAIL.pro_subscription.plan)+'/'+esc(DETAIL.pro_subscription.status)+')'});
+ tl.sort((a,b)=>new Date(b.at)-new Date(a.at));
+ const kindColor=k=>k==='Email'?'c-gray':k==='Advisory'?'c-amber':k==='Pro'?'c-green':k==='Alta'?'c-copper':'c-navy';
+
  return '<div class="observe"><a class="back" href="#/leads">← Volver a Leads</a>'
- +'<div class="detail-head"><div><div class="eyebrow">M2 · Lead '+l.id+'</div><h1>'+esc(l.nombre)+'</h1><div style="font-size:14px;color:#55534c">'+esc(l.empresa)+'</div></div>'+leadChip(l.estado)+'</div>'
+ +'<div class="detail-head"><div><div class="eyebrow">M2 · Ficha de lead</div><h1>'+esc(l.full_name||l.email)+'</h1>'
+ +'<div style="font-size:14px;color:#55534c">'+esc(l.company_name||'—')+'</div></div><div style="display:flex;gap:8px;align-items:center">'+tBadge(l.is_test)+leadChip(l.status)+'</div></div>'
  +'<div class="grid2">'
  +'<div class="card"><h2>Ficha</h2><div class="meta-grid">'
  +'<div class="meta-cell"><div class="l">Email</div>'+esc(l.email)+'</div>'
- +'<div class="meta-cell"><div class="l">Web</div>'+esc(l.web)+'</div>'
- +'<div class="meta-cell"><div class="l">Fuente</div>'+FUENTES[l.fuente]+'</div>'
- +'<div class="meta-cell"><div class="l">Alta</div>'+l.alta+'</div>'
- +'<div class="meta-cell" style="grid-column:1/-1"><div class="l">Interés</div>'+esc(l.interes)+'</div>'
+ +'<div class="meta-cell"><div class="l">Web</div>'+esc(l.website||'—')+'</div>'
+ +'<div class="meta-cell"><div class="l">Fuente</div>'+(FUENTES[l.source]||esc(l.source))+'</div>'
+ +'<div class="meta-cell"><div class="l">Alta</div>'+fdate(l.created_at)+'</div>'
+ +'<div class="meta-cell"><div class="l">Último contacto</div>'+fdate(l.last_contact_at)+'</div>'
+ +'<div class="meta-cell"><div class="l">Interés</div>'+esc(l.interest_type||'—')+'</div>'
  +'</div>'
  +'<h2 style="margin-top:26px">Estado</h2><div class="stepper">'+steps+'</div>'
- +'<p style="font-size:11.5px;color:var(--soft);margin:6px 0 0">Toca un estado para mover el lead por el pipeline.</p></div>'
- +'<div class="card"><h2>Notas</h2><textarea class="f-textarea" id="note-'+id+'">'+esc(l.notas)+'</textarea>'
- +'<div style="margin-top:12px;text-align:right"><button class="btn btn-secondary btn-mini" onclick="A.saveNote(\''+id+'\')">Guardar nota</button></div>'
+ +'<p style="font-size:11.5px;color:var(--soft);margin:6px 0 0">Toca un estado para mover el lead por el pipeline.</p>'
+ +'<h2 style="margin-top:26px">Clasificación</h2>'
+ +'<p style="font-size:12.5px;color:var(--soft);margin:0 0 10px">Este lead está marcado como <b>'+(l.is_test?'dato de prueba':'dato real')+'</b>. '
+ +'Mientras Criterial esté en validación, todo lo que entra nace como prueba; marca como real solo lo que sea negocio de verdad.</p>'
+ +'<button class="btn '+(l.is_test?'btn-copper':'btn-secondary')+' btn-mini" onclick="A.toggleTest()">'
+ +(l.is_test?'Marcar como real':'Devolver a dato de prueba')+'</button></div>'
+ +'<div class="card"><h2>Notas</h2><textarea class="f-textarea" id="note-box">'+esc(l.notes||'')+'</textarea>'
+ +'<div style="margin-top:12px;text-align:right"><button class="btn btn-secondary btn-mini" onclick="A.saveNote()">Guardar nota</button></div>'
  +'<h2 style="margin-top:26px">Seguimiento</h2>'
- +l.eventos.map(e=>'<div class="tl-item"><span class="when">'+e.fecha+'</span><span class="tl-kind">'+chip(e.tipo,e.tipo==='Llamada'?'c-navy':e.tipo==='Email'?'c-gray':'c-amber')+'</span><span>'+esc(e.texto)+'</span></div>').join('')
- +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-mini" onclick="A.addEvent(\''+id+'\',\'Email\')">+ Email</button><button class="btn btn-secondary btn-mini" onclick="A.addEvent(\''+id+'\',\'Llamada\')">+ Llamada</button><button class="btn btn-secondary btn-mini" onclick="A.addEvent(\''+id+'\',\'Nota\')">+ Nota interna</button></div></div>'
+ +tl.map(e=>'<div class="tl-item"><span class="when">'+fdate(e.at)+'</span><span class="tl-kind">'+chip(e.kind,kindColor(e.kind))+'</span><span>'+e.txt+'</span></div>').join('')
+ +'<p style="font-size:11.5px;color:var(--soft);margin:12px 0 0">El seguimiento se deriva de hechos registrados (altas, muestras, solicitudes, suscripciones). Todavía no hay registro manual de llamadas o emails.</p></div>'
  +'</div>'
  +'<div class="block card"><h2>Muestras vinculadas</h2>'
- +(muestras.length?'<table class="tbl"><tr><th>Muestra</th><th>Sector</th><th>Estado</th><th>Fecha</th><th></th></tr>'
-  +muestras.map(s=>'<tr><td class="t">'+s.id+' · '+esc(s.empresa)+'</td><td>'+esc(s.sector)+'</td><td>'+sampleChip(s.estado)+'</td><td>'+s.fecha+'</td><td><a href="#/muestras" style="font-size:12px">Ver en Muestras →</a></td></tr>').join('')+'</table>'
+ +(DETAIL.samples.length?'<table class="tbl"><tr><th>Tema</th><th>Estado</th><th>Fecha</th><th>Publicación</th><th></th></tr>'
+  +DETAIL.samples.map(s=>'<tr><td class="t">'+esc(s.topic||'—')+' '+tBadge(s.is_test)+'</td><td>'+sampleChip(s.status)+'</td><td>'+fdate(s.created_at)+'</td>'
+   +'<td style="font-size:12px">'+(s.publication?esc(s.publication.title):'—')+'</td>'
+   +'<td>'+(s.publication?'<a href="muestra.html?token='+encodeURIComponent(s.publication.public_token)+'" target="_blank" rel="noopener" style="font-size:12px">Abrir muestra →</a>':'')+'</td></tr>').join('')+'</table>'
   :'<div class="empty">Este lead todavía no ha pedido ninguna muestra.</div>')
- +'</div></div>';
+ +'</div>'
+ +(DETAIL.advisory.length?'<div class="block card"><h2>Solicitudes Advisory</h2><table class="tbl"><tr><th>Tipo</th><th>Estado</th><th>Fecha</th><th></th></tr>'
+  +DETAIL.advisory.map(a=>'<tr><td class="t">'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+' '+tBadge(a.is_test)+'</td><td>'+advChip(a.status)+'</td><td>'+fdate(a.created_at)+'</td>'
+   +'<td><a href="#/advisory" style="font-size:12px">Ver en Advisory →</a></td></tr>').join('')+'</table></div>':'')
+ +'</div>';
 }
 
 function vAdvisory(){
- let cols=ADV_ETAPAS.map(([k,lbl])=>{
-  const items=D.advisory.filter(a=>a.etapa===k);
+ const base=DATA.advisory.filter(inScope);
+ const cols=ADV_ETAPAS.map(([k,lbl])=>{
+  const items=base.filter(a=>a.status===k);
   const cards=items.map(a=>'<a class="kcard" href="#/advisory/'+a.id+'">'
-   +'<span class="chip c-gray"><i></i>'+esc(a.tipo)+'</span>'
-   +'<div class="t">'+esc(a.empresa)+'</div>'
-   +'<div class="d">'+esc(a.contacto)+' · '+a.fecha+'</div>'
-   +'<div class="foot"><span>'+(a.entrega?'Entrega '+a.entrega:'Sin fecha de entrega')+'</span><b>'+(a.importe||'')+'</b></div></a>').join('');
-  return '<div class="kcol"><div class="kcol-head"><span>'+lbl+'</span><b>'+items.length+'</b></div>'+(cards||'<div style="font-size:11.5px;color:var(--soft);padding:6px 2px">Sin solicitudes</div>')+'</div>';
+   +'<span class="chip c-gray"><i></i>'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+'</span> '+tBadge(a.is_test)
+   +'<div class="t">'+esc((a.lead&&(a.lead.company_name||a.lead.full_name))||'—')+'</div>'
+   +'<div class="d">'+esc((a.lead&&a.lead.email)||'')+' · '+frel(a.created_at)+'</div></a>').join('');
+  return '<div class="kcol"><div class="kcol-head"><span>'+lbl+'</span><b>'+items.length+'</b></div>'
+   +(cards||'<div style="font-size:11.5px;color:var(--soft);padding:6px 2px">Sin solicitudes</div>')+'</div>';
  }).join('');
- const activos=D.advisory.filter(a=>!['entregado','cerrado'].includes(a.etapa)).length;
- return '<div class="observe"><div class="eyebrow">M4 · Encargos y entregables</div><h1>Advisory</h1>'
- +'<p class="sub">Pipeline completo de encargos: desde la solicitud hasta el entregable. Hoy estas solicitudes solo llegan como email — aquí pasan a tener seguimiento, estado y generación de entregables. <b>'+activos+' encargos activos.</b></p>'
- +'<div class="kanban">'+cols+'</div></div>';
+ const abiertos=base.filter(a=>!['won','lost'].includes(a.status)).length;
+ return '<div class="observe"><div class="eyebrow">M4 · Encargos</div><h1>Advisory</h1>'
+ +'<p class="sub">Pipeline de encargos. Antes estas solicitudes solo llegaban por email y no dejaban rastro; ahora se guardan y tienen estado. <b>'+abiertos+' abiertos.</b></p>'
+ +scopeBar(base.length+' de '+DATA.advisory.length+' solicitudes en este ámbito')
+ +(base.length?'<div class="kanban">'+cols+'</div>':scopeEmpty('solicitudes Advisory'))+'</div>';
 }
 
 function vAdvDetail(id){
- const a=advById(id);if(!a)return '<div class="empty">Solicitud no encontrada.</div>';
+ const a=DATA.advisory.find(x=>x.id===id);
+ if(!a) return '<div class="empty">Solicitud no encontrada.</div>';
  const orden=ADV_ETAPAS.map(x=>x[0]);
- const idx=orden.indexOf(a.etapa);
- let steps=orden.map((k,i)=>'<div class="step '+(i<idx?'done ':'')+(k===a.etapa?'current':'')+'" onclick="A.advStage(\''+id+'\',\''+k+'\')"><i></i>'+ADV_ETAPAS[i][1]+'</div>'+(i<orden.length-1?'<div class="step-sep"></div>':'')).join('');
- let ent='';
- if(a.entregable.estado==='none'){
-  ent='<div class="empty">Todavía no hay entregable.<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-copper btn-mini" onclick="A.genDeliv(\''+id+'\')">Generar borrador con IA</button><button class="btn btn-secondary btn-mini" onclick="A.uploadDeliv(\''+id+'\')">Subir PDF final</button></div></div>';
- }else{
-  ent='<div class="gen-var"><span class="chip '+(a.entregable.estado==='final'?'c-green':'c-amber')+'"><i></i>'+(a.entregable.estado==='final'?'Entregable final':'Borrador')+'</span>'
-  +'<div class="t">'+esc(a.entregable.nombre)+'</div>'
-  +'<div class="d">'+(a.entregable.estado==='final'?'Listo para entregar al cliente.':'Generado como borrador. Revísalo antes de convertirlo en entregable final.')+'</div>'
-  +'<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-mini" onclick="A.prevDeliv(\''+id+'\')">Previsualizar</button>'
-  +(a.entregable.estado==='draft'?'<button class="btn btn-secondary btn-mini" onclick="A.genDeliv(\''+id+'\')">Regenerar</button><button class="btn btn-copper btn-mini" onclick="A.uploadDeliv(\''+id+'\')">Marcar como final</button>':'<button class="btn btn-secondary btn-mini" onclick="A.downloadDeliv(\''+id+'\')">Descargar PDF</button>')+'</div></div>';
- }
- const lead=a.lead?leadById(a.lead):null;
+ const idx=orden.indexOf(a.status);
+ const steps=orden.map((k,i)=>'<div class="step '+(i<idx?'done ':'')+(k===a.status?'current':'')+'" onclick="A.advStatus(\''+id+'\',\''+k+'\')"><i></i>'+ADV_ETAPAS[i][1]+'</div>'+(i<orden.length-1?'<div class="step-sep"></div>':'')).join('');
  return '<div class="observe"><a class="back" href="#/advisory">← Volver a Advisory</a>'
- +'<div class="detail-head"><div><div class="eyebrow">M4 · Encargo '+a.id+'</div><h1>'+esc(a.tipo)+'</h1><div style="font-size:14px;color:#55534c">'+esc(a.empresa)+' · '+esc(a.contacto)+'</div></div>'+advChip(a.etapa)+'</div>'
+ +'<div class="detail-head"><div><div class="eyebrow">M4 · Solicitud</div><h1>'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+'</h1>'
+ +'<div style="font-size:14px;color:#55534c">'+esc((a.lead&&(a.lead.company_name||a.lead.full_name))||'—')+'</div></div>'
+ +'<div style="display:flex;gap:8px;align-items:center">'+tBadge(a.is_test)+advChip(a.status)+'</div></div>'
  +'<div class="grid2">'
  +'<div class="card"><h2>Solicitud</h2><div class="meta-grid">'
- +'<div class="meta-cell"><div class="l">Empresa</div>'+esc(a.empresa)+'</div>'
- +'<div class="meta-cell"><div class="l">Contacto</div>'+esc(a.contacto)+' · '+esc(a.email)+'</div>'
- +'<div class="meta-cell"><div class="l">Recibida</div>'+a.fecha+'</div>'
- +'<div class="meta-cell"><div class="l">Importe</div>'+(a.importe||'Sin presupuestar')+'</div>'
- +'<div class="meta-cell"><div class="l">Entrega prevista</div>'+(a.entrega||'—')+'</div>'
- +'<div class="meta-cell"><div class="l">Lead vinculado</div>'+(lead?'<a href="#/leads/'+lead.id+'">'+esc(lead.nombre)+' · '+esc(lead.empresa)+'</a>':'—')+'</div>'
- +'<div class="meta-cell" style="grid-column:1/-1"><div class="l">Mensaje</div>'+esc(a.mensaje)+'</div>'
+ +'<div class="meta-cell"><div class="l">Contacto</div>'+esc((a.lead&&a.lead.full_name)||'—')+'</div>'
+ +'<div class="meta-cell"><div class="l">Email</div>'+esc((a.lead&&a.lead.email)||'—')+'</div>'
+ +'<div class="meta-cell"><div class="l">Recibida</div>'+fdate(a.created_at)+'</div>'
+ +'<div class="meta-cell"><div class="l">Tipo</div>'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+'</div>'
+ +'<div class="meta-cell" style="grid-column:1/-1"><div class="l">Mensaje</div>'+esc(a.descripcion||'(sin descripción)')+'</div>'
  +'</div>'
- +'<h2 style="margin-top:26px">Pipeline</h2><div class="stepper">'+steps+'</div>'
- +'<p style="font-size:11.5px;color:var(--soft);margin:6px 0 0">Toca una etapa para mover el encargo.</p></div>'
- +'<div class="card"><h2>Entregable</h2>'+ent
- +'<h2 style="margin-top:26px">Entrega</h2>'
- +'<div class="feed-item"><span class="feed-dot g"></span><span>Solicitud recibida y notificada por email</span></div>'
- +(a.etapa==='entregado'||a.etapa==='cerrado'?'<div class="feed-item"><span class="feed-dot g"></span><span>Entregable enviado al cliente · '+(a.entrega||'')+'</span></div>':'<div class="feed-item"><span class="feed-dot a"></span><span>Pendiente de entrega</span></div>')
- +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-mini" onclick="A.emailClient(\''+id+'\')">Enviar entregable al cliente</button><button class="btn btn-secondary btn-mini" onclick="A.closeAdv(\''+id+'\')">Cerrar encargo</button></div></div>'
+ +(a.lead?'<div style="margin-top:16px"><a class="btn btn-secondary btn-mini" href="#/leads/'+a.lead.id+'">Ver ficha del lead →</a></div>':'')
+ +'</div>'
+ +'<div class="card"><h2>Pipeline</h2><div class="stepper">'+steps+'</div>'
+ +'<p style="font-size:11.5px;color:var(--soft);margin:6px 0 0">Toca una etapa para mover la solicitud.</p>'
+ +'<h2 style="margin-top:26px">Entregable</h2>'
+ +'<p style="font-size:12.5px;color:var(--soft);margin:0">Importe, fecha de entrega y fichero del entregable todavía no existen en el esquema: se añadirán con su propia migración cuando el pipeline de Advisory lo justifique.</p></div>'
  +'</div></div>';
 }
 
 function vMuestras(){
- const rows=D.samples.map(s=>{
-  const l=leadById(s.lead);
-  return '<tr><td class="t">'+esc(s.empresa)+'<div style="font-size:11.5px;color:var(--soft);font-weight:400">'+esc(s.sector)+'</div></td>'
-  +'<td>'+(l?'<a href="#/leads/'+l.id+'">'+esc(l.nombre)+'</a>':'—')+'</td>'
-  +'<td>'+sampleChip(s.estado)+'</td><td>'+s.fecha+'</td>'
-  +'<td style="white-space:nowrap">'
-  +(s.pub?'<button class="btn btn-secondary btn-mini" onclick="A.prevSample(\''+s.id+'\')">Ver brief</button> ':'')
-  +(s.estado==='fallida'?'<button class="btn btn-copper btn-mini" onclick="A.retrySample(\''+s.id+'\')">Reintentar</button> ':'')
-  +(s.estado==='generada'?'<button class="btn btn-secondary btn-mini" onclick="A.resendSample(\''+s.id+'\')">Reenviar email</button>':'')
-  +'</td></tr>';
- }).join('');
+ const base=DATA.samples.filter(inScope);
+ const rows=base.map(s=>'<tr>'
+  +'<td class="t">'+esc(s.topic||'—')+' '+tBadge(s.is_test)+'<div style="font-size:11.5px;color:var(--soft);font-weight:400">'+esc((s.lead&&(s.lead.company_name||s.lead.email))||'—')+'</div></td>'
+  +'<td>'+(s.lead?'<a href="#/leads/'+s.lead.id+'">'+esc(s.lead.full_name||s.lead.email)+'</a>':'—')+'</td>'
+  +'<td>'+sampleChip(s.status)+'</td><td>'+fdate(s.created_at)+'</td>'
+  +'<td>'+(s.publication?'<a href="muestra.html?token='+encodeURIComponent(s.publication.public_token)+'" target="_blank" rel="noopener" style="font-size:12px">Abrir muestra →</a>':'<span style="font-size:12px;color:var(--soft)">—</span>')+'</td></tr>').join('');
  return '<div class="observe"><div class="eyebrow">M3 · Flujo de muestras</div><h1>Muestras</h1>'
- +'<p class="sub">Visibilidad y control del circuito automático: cada muestra enlaza con su lead y con la publicación generada. Las fallidas se pueden reintentar desde aquí.</p>'
- +'<div class="card" style="padding:8px 22px"><table class="tbl"><tr><th>Muestra</th><th>Lead</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr>'+rows+'</table></div></div>';
+ +'<p class="sub">Circuito automático de muestras: cada una enlaza con su lead y con la publicación generada. Vista de solo lectura.</p>'
+ +scopeBar(base.length+' de '+DATA.samples.length+' muestras en este ámbito')
+ +(base.length?'<div class="card" style="padding:8px 22px"><table class="tbl"><tr><th>Muestra</th><th>Lead</th><th>Estado</th><th>Fecha</th><th>Entregable</th></tr>'+rows+'</table></div>':scopeEmpty('muestras'))
+ +'<p style="font-size:11.5px;color:var(--soft);margin:14px 0 0">Reintentar o reenviar una muestra gasta dinero real (Anthropic y Resend) en cada clic, así que esas acciones no están cableadas todavía.</p></div>';
 }
 
 function vSuscriptores(){
- const rows=D.subs.map(u=>'<tr><td class="t">'+esc(u.nombre)+'<div style="font-size:11.5px;color:var(--soft);font-weight:400">'+esc(u.empresa)+' · '+esc(u.email)+'</div></td>'
-  +'<td>'+u.plan+'<div style="font-size:11.5px;color:var(--soft)">'+u.precio+'</div></td>'
-  +'<td>'+subChip(u.estado)+'</td><td>'+u.desde+'</td>'
-  +'<td style="white-space:nowrap"><button class="btn btn-secondary btn-mini" onclick="A.stripeSub(\''+u.id+'\')">Ver en Stripe</button> '
-  +(u.estado==='activo'?'<button class="btn btn-secondary btn-mini" onclick="A.toggleSub(\''+u.id+'\')">Desactivar</button>':'<button class="btn btn-copper btn-mini" onclick="A.toggleSub(\''+u.id+'\')">Activar</button>')
-  +'</td></tr>').join('');
- return '<div class="observe"><div class="eyebrow">M5 · Suscriptores Pro</div><h1>Suscriptores Pro</h1>'
- +'<p class="sub">Gestión de suscripciones mientras Stripe sigue en modo prueba: alta y baja manual, estado de pago y registro de distribución.</p>'
- +'<div class="card" style="padding:8px 22px"><div style="padding:14px 0 4px">'+chip('Stripe en modo prueba','c-amber')+'</div><table class="tbl"><tr><th>Suscriptor</th><th>Plan</th><th>Estado</th><th>Desde</th><th>Acciones</th></tr>'+rows+'</table></div>'
- +'<div class="block card"><h2>Registro de distribución</h2>'
- +'<div class="feed-item"><span class="feed-dot g"></span><span class="when">20 ago</span><span>Weekly Signals — 20 de agosto → 5 suscriptores Pro</span></div>'
- +'<div class="feed-item"><span class="feed-dot g"></span><span class="when">1 sep</span><span>Brief Mensual — agosto 2026 → 5 suscriptores Pro</span></div>'
- +'<div class="feed-item"><span class="feed-dot g"></span><span class="when">13 ago</span><span>Weekly Signals — 13 de agosto → 4 suscriptores Pro</span></div>'
- +'</div></div>';
-}
-
-let VARIATIONS=null;
-function vContenido(){
- const rows=D.pubs.map(p=>'<tr><td class="t">'+esc(p.titulo)+'</td><td>'+chip(pubTipo(p.tipo),'c-gray')+'</td><td>'+pubChip(p.estado)+'</td><td>'+p.fecha+'</td><td style="font-size:11.5px;color:var(--soft)">'+(p.enviada||'—')+'</td>'
-  +'<td style="white-space:nowrap"><button class="btn btn-secondary btn-mini" onclick="A.pubAct(\''+p.id+'\',\'previsualizar\')">Previsualizar</button> '
-  +(p.estado==='borrador'?'<button class="btn btn-copper btn-mini" onclick="A.pubAct(\''+p.id+'\',\'publicar\')">Publicar</button>':'<button class="btn btn-secondary btn-mini" onclick="A.pubAct(\''+p.id+'\',\'despublicar\')">Despublicar</button>')+' '
-  +(p.estado==='publicada'?'<button class="btn btn-secondary btn-mini" onclick="A.pubAct(\''+p.id+'\',\'enviar\')">Enviar →</button> ':'')
-  +'<button class="btn btn-secondary btn-mini" onclick="A.pubAct(\''+p.id+'\',\'linkedin\')">LinkedIn</button></td></tr>').join('');
- let vars='<div class="empty" id="varbox">Genera variaciones para comparar enfoques antes de guardar un borrador.</div>';
- if(VARIATIONS){
-  vars=VARIATIONS.map((v,i)=>'<div class="gen-var"><span class="chip c-copper"><i></i>Variación '+(i+1)+'</span><div class="t">'+esc(v.t)+'</div><div class="d">'+esc(v.d)+'</div><div style="margin-top:12px"><button class="btn btn-secondary btn-mini" onclick="A.saveDraft('+i+')">Guardar como borrador</button></div></div>').join('');
- }
- return '<div class="observe"><div class="eyebrow">M1 · Contenido y publicaciones</div><h1>Contenido</h1>'
- +'<p class="sub">El módulo que ya funciona hoy: generar Weekly y Brief Mensual, revisar variaciones, publicar y distribuir. Aquí se mantiene, con la misma lógica y mejor presentación.</p>'
- +'<div class="card"><h2>Nuevo contenido</h2>'
- +'<div class="filters" style="margin-bottom:14px"><select class="f-select" id="gentype"><option value="weekly">Weekly Signals</option><option value="mensual">Brief Mensual</option></select>'
- +'<input class="f-input" style="width:280px" placeholder="Tema o foco opcional (p. ej. industria auxiliar)">'
- +'<button class="btn btn-primary btn-mini" onclick="A.genVars()">Generar variaciones</button></div>'
- +'<div id="variations">'+vars+'</div></div>'
- +'<div class="block card" style="padding:8px 22px"><table class="tbl"><tr><th>Publicación</th><th>Tipo</th><th>Estado</th><th>Fecha</th><th>Enviada</th><th>Acciones</th></tr>'+rows+'</table></div></div>';
+ const pro=DATA.pro.filter(inScope), sig=DATA.signals.filter(inScope);
+ const proRows=pro.map(u=>'<tr><td class="t">'+esc(u.full_name||u.email)+' '+tBadge(u.is_test)
+  +'<div style="font-size:11.5px;color:var(--soft);font-weight:400">'+esc(u.company_name||'')+' · '+esc(u.email)+'</div></td>'
+  +'<td>'+esc(u.plan)+'</td>'
+  +'<td>'+chip(esc(u.status),u.status==='active'?'c-green':'c-copper')+'</td>'
+  +'<td>'+fdate(u.subscription_start||u.created_at)+'</td></tr>').join('');
+ const sigRows=sig.map(s=>'<tr><td class="t">'+esc(s.email)+' '+tBadge(s.is_test)+'</td>'
+  +'<td>'+chip(esc(s.source),'c-gray')+'</td>'
+  +'<td>'+chip(s.status==='active'?'Activo':'Baja',s.status==='active'?'c-green':'c-gray')+'</td>'
+  +'<td>'+fdate(s.created_at)+'</td></tr>').join('');
+ return '<div class="observe"><div class="eyebrow">M5 · Suscriptores</div><h1>Suscriptores</h1>'
+ +'<p class="sub">Las dos listas: suscriptores Pro de pago (los escribe el webhook de Stripe) y la lista abierta de la newsletter. Solo lectura.</p>'
+ +scopeBar((pro.length+sig.length)+' de '+(DATA.pro.length+DATA.signals.length)+' suscriptores en este ámbito')
+ +'<div class="card" style="padding:8px 22px"><div style="padding:14px 0 4px"><h2 style="display:inline">Pro</h2> '+chip('Stripe en modo prueba','c-amber')+'</div>'
+ +(pro.length?'<table class="tbl"><tr><th>Suscriptor</th><th>Plan</th><th>Estado</th><th>Desde</th></tr>'+proRows+'</table>':'<div class="empty">Sin suscriptores Pro en este ámbito.</div>')+'</div>'
+ +'<div class="block card" style="padding:8px 22px"><div style="padding:14px 0 4px"><h2 style="display:inline">Newsletter · edición abierta</h2></div>'
+ +(sig.length?'<table class="tbl"><tr><th>Email</th><th>Fuente</th><th>Estado</th><th>Alta</th></tr>'+sigRows+'</table>':'<div class="empty">Sin suscriptores de newsletter en este ámbito.</div>')+'</div>'
+ +'<p style="font-size:11.5px;color:var(--soft);margin:14px 0 0">Activar o desactivar una suscripción Pro desde aquí desincronizaría la base de datos de Stripe, que es donde vive el estado real del cobro. La baja de la newsletter es acción del lector, por el enlace de cada email.</p></div>';
 }
 
 /* ============ Router ============ */
-function route(){
+async function route(){
+ if(!_session) return;
  const h=(location.hash||'#/resumen').replace(/^#\//,'');
  const [view,param]=h.split('/');
  const app=$('#app');
  document.querySelectorAll('.side a').forEach(a=>a.classList.toggle('active',a.dataset.r===view));
- if(view==='leads'&&param)app.innerHTML=vLeadDetail(param);
- else if(view==='leads')app.innerHTML=vLeads();
- else if(view==='advisory'&&param)app.innerHTML=vAdvDetail(param);
- else if(view==='advisory')app.innerHTML=vAdvisory();
- else if(view==='muestras')app.innerHTML=vMuestras();
- else if(view==='suscriptores')app.innerHTML=vSuscriptores();
- else if(view==='contenido')app.innerHTML=vContenido();
- else app.innerHTML=vResumen();
- reveal();window.scrollTo(0,0);
+
+ if(view==='leads'&&param){
+  app.innerHTML='<div class="empty">Cargando ficha…</div>';
+  try{ DETAIL=await api('/admin-leads?id='+encodeURIComponent(param)); }
+  catch(e){ app.innerHTML='<div class="empty">No se pudo cargar la ficha: '+esc(e.message)+'</div>'; return }
+  app.innerHTML=vLeadDetail();
+ }
+ else if(view==='leads')        app.innerHTML=vLeads();
+ else if(view==='advisory'&&param) app.innerHTML=vAdvDetail(param);
+ else if(view==='advisory')     app.innerHTML=vAdvisory();
+ else if(view==='muestras')     app.innerHTML=vMuestras();
+ else if(view==='suscriptores') app.innerHTML=vSuscriptores();
+ else                           app.innerHTML=vResumen();
+ reveal(); window.scrollTo(0,0);
 }
 addEventListener('hashchange',route);
 
-/* ============ Acciones simuladas ============ */
+/* ============ Acciones ============ */
 window.A={
- fLeadQ(v){LF.q=v;const app=$('#app');app.innerHTML=vLeads();reveal();const inp=app.querySelector('.f-input');inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)},
+ scope(v){SCOPE=v;route()},
+ fLeadQ(v){LF.q=v;const app=$('#app');app.innerHTML=vLeads();reveal();const inp=app.querySelector('.f-input');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}},
  fLeadSt(v){LF.st=v;$('#app').innerHTML=vLeads();reveal()},
  fLeadSrc(v){LF.src=v;$('#app').innerHTML=vLeads();reveal()},
- leadStatus(id,st){const l=leadById(id);l.estado=st;l.eventos.unshift({tipo:'Nota',texto:'Estado cambiado a '+LEAD_ESTADOS[st],fecha:'hoy'});$('#app').innerHTML=vLeadDetail(id);reveal();toast('Lead '+id+' movido a '+LEAD_ESTADOS[st])},
- saveNote(id){const l=leadById(id);l.notas=$('#note-'+id).value;toast('Nota guardada en '+id)},
- addEvent(id,tipo){const l=leadById(id);l.eventos.unshift({tipo,texto:'Nuevo evento de tipo '+tipo.toLowerCase()+' (borrador)',fecha:'hoy'});$('#app').innerHTML=vLeadDetail(id);reveal();toast('Evento de seguimiento añadido a '+id)},
- advStage(id,st){const a=advById(id);a.etapa=st;$('#app').innerHTML=vAdvDetail(id);reveal();toast('Encargo '+id+' movido a '+ADV_ETAPAS.find(x=>x[0]===st)[1])},
- genDeliv(id){const a=advById(id);a.entregable={estado:'draft',nombre:'Borrador v1 · '+a.tipo.toLowerCase()+' · '+a.empresa};$('#app').innerHTML=vAdvDetail(id);reveal();toast('Borrador de entregable generado para '+id)},
- uploadDeliv(id){const a=advById(id);a.entregable={estado:'final',nombre:a.tipo+' · '+a.empresa+' · vFinal.pdf'};$('#app').innerHTML=vAdvDetail(id);reveal();toast('Entregable final registrado para '+id)},
- prevDeliv(id){toast('Previsualización del entregable de '+id)},
- downloadDeliv(id){toast('Descarga del PDF de '+id)},
- emailClient(id){const a=advById(id);a.etapa='entregado';$('#app').innerHTML=vAdvDetail(id);reveal();toast('Entregable enviado al cliente de '+id)},
- closeAdv(id){const a=advById(id);a.etapa='cerrado';$('#app').innerHTML=vAdvDetail(id);reveal();toast('Encargo '+id+' cerrado')},
- prevSample(id){toast('Brief de muestra '+id+' abierto en el visor')},
- retrySample(id){const s=D.samples.find(x=>x.id===id);s.estado='cola';$('#app').innerHTML=vMuestras();reveal();toast('Muestra '+id+' recolocada en la cola de generación')},
- resendSample(id){toast('Email de muestra '+id+' reenviado al lead')},
- stripeSub(id){toast('Ficha de Stripe de '+id+' (cuenta en modo prueba)')},
- toggleSub(id){const u=D.subs.find(x=>x.id===id);u.estado=u.estado==='activo'?'impago':'activo';$('#app').innerHTML=vSuscriptores();reveal();toast('Suscripción de '+id+' '+(u.estado==='activo'?'activada':'desactivada')+' manualmente')},
- genVars(){const t=$('#gentype').value;VARIATIONS=[
-  {t:t==='weekly'?'Weekly Signals — 17 de septiembre de 2026':'Brief Mensual — septiembre 2026',d:'Enfoque A: tres señales con más tracción de la semana, con lectura corta y mapa de actores por señal.'},
-  {t:t==='weekly'?'Las señales que importan esta semana':'Septiembre en contexto: el mes en señales',d:'Enfoque B: una señal principal a fondo y dos secundarias, con comparables y valoraciones de referencia.'},
-  {t:t==='weekly'?'Edición semanal: rotación hacia servicios industriales':'Panorama mensual: rotación hacia servicios industriales',d:'Enfoque C: edición temática monográfica con un solo sector protagonista y tres operaciones comentadas.'}];
-  $('#app').innerHTML=vContenido();reveal();toast('Tres variaciones generadas para revisión')},
- saveDraft(i){D.pubs.unshift({id:'P'+(D.pubs.length+1),titulo:VARIATIONS[i].t,tipo:$('#gentype')?$('#gentype').value:'weekly',estado:'borrador',fecha:'hoy',enviada:null});VARIATIONS=null;$('#app').innerHTML=vContenido();reveal();toast('Borrador guardado en la lista de publicaciones')},
- pubAct(id,act){const p=D.pubs.find(x=>x.id===id);
-  if(act==='publicar'){p.estado='publicada';p.enviada='pendiente de envío'}
-  if(act==='despublicar'){p.estado='borrador';p.enviada=null}
-  $('#app').innerHTML=vContenido();reveal();
-  const msg={previsualizar:'Previsualización de la publicación',publicar:'Publicación publicada (notificación automática a Pro)',despublicar:'Publicación retirada a borrador',enviar:'Envío por email a suscriptores Pro',linkedin:'Borrador de post de LinkedIn generado'}[act];
-  toast(msg)}
+
+ async leadStatus(st){
+  if(!DETAIL)return;
+  try{
+   await api('/admin-leads',{method:'PATCH',body:JSON.stringify({id:DETAIL.lead.id,status:st})});
+   DETAIL.lead.status=st;
+   const row=DATA.leads.find(l=>l.id===DETAIL.lead.id); if(row) row.status=st;
+   $('#app').innerHTML=vLeadDetail(); reveal();
+   toast('Lead movido a '+LEAD_ESTADOS[st]);
+  }catch(e){ toast(e.message,true) }
+ },
+ async saveNote(){
+  if(!DETAIL)return;
+  const val=$('#note-box').value;
+  try{
+   await api('/admin-leads',{method:'PATCH',body:JSON.stringify({id:DETAIL.lead.id,notes:val})});
+   DETAIL.lead.notes=val;
+   toast('Nota guardada');
+  }catch(e){ toast(e.message,true) }
+ },
+ /* Marcar un lead como real es la acción con más consecuencias del panel:
+    saca la fila del ámbito de prueba. Siempre con confirmación (D3). */
+ async toggleTest(){
+  if(!DETAIL)return;
+  const l=DETAIL.lead, next=!l.is_test;
+  const msg=next
+   ? '¿Devolver este lead a DATO DE PRUEBA?\n\nDejará de contar como negocio real.'
+   : '¿Marcar este lead como DATO REAL?\n\nSaldrá del ámbito de prueba y contará como negocio de verdad en el Resumen.';
+  if(!confirm(msg)) return;
+  try{
+   await api('/admin-leads',{method:'PATCH',body:JSON.stringify({id:l.id,is_test:next})});
+   l.is_test=next;
+   const row=DATA.leads.find(x=>x.id===l.id); if(row) row.is_test=next;
+   $('#app').innerHTML=vLeadDetail(); reveal();
+   toast(next?'Lead devuelto a dato de prueba':'Lead marcado como real');
+  }catch(e){ toast(e.message,true) }
+ },
+ async advStatus(id,st){
+  try{
+   await api('/admin-advisory',{method:'PATCH',body:JSON.stringify({id:id,status:st})});
+   const a=DATA.advisory.find(x=>x.id===id); if(a) a.status=st;
+   $('#app').innerHTML=vAdvDetail(id); reveal();
+   const f=ADV_ETAPAS.find(x=>x[0]===st);
+   toast('Solicitud movida a '+(f?f[1]:st));
+  }catch(e){ toast(e.message,true) }
+ }
 };
 
+/* ============ Acceso ============ */
+function showGate(msg,cls){
+ $('#shell-wrap').style.display='none';
+ $('#gate').style.display='block';
+ if(msg){const m=$('#gate-msg');m.textContent=msg;m.className='msg '+(cls||'')}
+}
+async function handleSession(session){
+ if(!session){ showGate(); return }
+ if(session.user.email!==ADMIN_EMAIL){
+  await client.auth.signOut();
+  showGate('Esa cuenta no tiene acceso al Admin.','err');
+  return;
+ }
+ _session=session;
+ $('#gate').style.display='none';
+ $('#shell-wrap').style.display='block';
+ $('#app').innerHTML='<div class="empty">Cargando datos…</div>';
+ try{ await loadAll(); }
+ catch(e){ $('#app').innerHTML='<div class="empty">No se pudieron cargar los datos: '+esc(e.message)+'</div>'; return }
+ route();
+}
+$('#gate-send').addEventListener('click',async()=>{
+ const email=$('#gate-email').value.trim();
+ if(!email){ $('#gate-msg').textContent='Introduce tu email.'; $('#gate-msg').className='msg err'; return }
+ $('#gate-msg').textContent='Enviando enlace…'; $('#gate-msg').className='msg';
+ const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});
+ if(error){ $('#gate-msg').textContent='No se pudo enviar: '+error.message; $('#gate-msg').className='msg err' }
+ else{ $('#gate-msg').textContent='Enlace enviado. Revisa tu bandeja.'; $('#gate-msg').className='msg ok' }
+});
+$('#signout').addEventListener('click',async e=>{ e.preventDefault(); await client.auth.signOut(); _session=null; location.hash=''; showGate() });
+client.auth.onAuthStateChange((_e,session)=>handleSession(session));
+
 /* loader + arranque */
-addEventListener('load',()=>setTimeout(()=>document.querySelector('.load-screen').classList.add('done'),650));
-setTimeout(()=>document.querySelector('.load-screen').classList.add('done'),3200);
-route();
+addEventListener('load',()=>setTimeout(()=>document.querySelector('.load-screen').classList.add('done'),450));
+setTimeout(()=>document.querySelector('.load-screen').classList.add('done'),2500);
+client.auth.getSession().then(({data})=>handleSession(data.session));
 </script>
 </body>
 </html>
