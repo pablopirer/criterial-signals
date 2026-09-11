@@ -98,7 +98,7 @@
           <textarea id="notes" name="notes" rows="4"></textarea>
 
           <div class="cta-group">
-            <button type="submit" class="btn-dark" style="padding:13px 30px;font-size:13px;font-weight:500;background:#0D1F3C;color:#fff;border:none;font-family:Inter,sans-serif;cursor:pointer;">Solicitar muestra</button>
+            <button type="submit" id="sample-submit-btn" class="btn-dark" style="padding:13px 30px;font-size:13px;font-weight:500;background:#0D1F3C;color:#fff;border:none;font-family:Inter,sans-serif;cursor:pointer;">Solicitar muestra</button>
             <a href="https://buy.stripe.com/test_6oU4gy8vW9GU6tMfFc8g001" target="_blank" rel="noopener" style="padding:13px 30px;font-size:13px;font-weight:400;color:#0D1F3C;border:0.5px solid #C0BDB8;text-decoration:none;display:inline-block;font-family:Inter,sans-serif;">Ir a Pro</a>
           </div>
 
@@ -118,24 +118,66 @@
 
     const form = document.getElementById("sample-form");
     const statusEl = document.getElementById("form-status");
+    const submitBtn = document.getElementById("sample-submit-btn");
+    const submitBtnDefaultText = submitBtn.textContent;
+
+    // Checkpoint 2 · Fase 1, defecto 2: company_name y website son
+    // obligatorios (atributo required en el HTML) pero no había ningún
+    // aviso visible si faltaban. Se valida aquí, antes de intentar el
+    // envío, con un mensaje que nombra exactamente qué falta.
+    const REQUIRED_FIELDS = [
+      { id: "full_name", label: "Nombre" },
+      { id: "email", label: "Email" },
+      { id: "company_name", label: "Empresa" },
+      { id: "website", label: "Website" },
+      { id: "interest_type", label: "Temática" }
+    ];
+
+    function findMissingRequiredFields() {
+      const missing = [];
+      let firstInvalid = null;
+      for (const field of REQUIRED_FIELDS) {
+        const el = document.getElementById(field.id);
+        if (!el.value || !el.value.trim() || !el.checkValidity()) {
+          missing.push(field.label);
+          if (!firstInvalid) firstInvalid = el;
+        }
+      }
+      return { missing, firstInvalid };
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      const { missing, firstInvalid } = findMissingRequiredFields();
+      if (missing.length) {
+        statusEl.style.color = '#c0392b';
+        statusEl.textContent = "Completa estos campos antes de enviar: " + missing.join(", ") + ".";
+        if (firstInvalid) firstInvalid.focus();
+        return;
+      }
+
       const payload = {
-        full_name: document.getElementById("full_name").value,
-        email: document.getElementById("email").value,
-        company_name: document.getElementById("company_name").value,
-        website: document.getElementById("website").value,
+        full_name: document.getElementById("full_name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        company_name: document.getElementById("company_name").value.trim(),
+        website: document.getElementById("website").value.trim(),
         interest_type: document.getElementById("interest_type").value,
         sector: document.getElementById("sector").value,
         notes: document.getElementById("notes").value
       };
 
       statusEl.style.color = 'var(--navy)';
-      statusEl.textContent = "Solicitud enviada. Generando tu brief...";
+      statusEl.textContent = "Enviando solicitud...";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando…";
+
+      // Checkpoint 2 · Fase 1, defecto 1: antes esto era fire-and-forget
+      // (.catch(()=>{}) tragaba cualquier fallo) y redirigía a los 800ms
+      // pasara lo que pasara. Ahora se espera la respuesta real y solo se
+      // redirige si el servidor confirma que la solicitud se registró.
       try {
-        fetch(webhookUrl, {
+        const res = await fetch(webhookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -143,13 +185,27 @@
             "x-criterial-signal": "596394206a475b401e93639148407dd7b4c8ce7fffd36ccaa204aca73b527dcb"
           },
           body: JSON.stringify(payload)
-        }).catch(() => {});
-        setTimeout(() => {
-          window.location.href = "request-received.html";
-        }, 800);
+        });
+
+        if (!res.ok) {
+          let message = "No se pudo enviar la solicitud. Inténtalo de nuevo.";
+          try {
+            const errBody = await res.json();
+            if (errBody && errBody.error) message = errBody.error;
+          } catch (_) {}
+          statusEl.style.color = '#c0392b';
+          statusEl.textContent = message;
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitBtnDefaultText;
+          return;
+        }
+
+        window.location.href = "request-received.html";
       } catch (err) {
         statusEl.style.color = '#c0392b';
-        statusEl.textContent = "Error de conexión al enviar la solicitud.";
+        statusEl.textContent = "Error de conexión al enviar la solicitud. Comprueba tu conexión e inténtalo de nuevo.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtnDefaultText;
       }
     });
   </script>
