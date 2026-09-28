@@ -26,7 +26,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 rm -rf public
 mkdir public
 
-# --- Site pages (13) -------------------------------------------------------
+# --- Site pages (14) -------------------------------------------------------
 cp -t public/ \
   index.html \
   about.html \
@@ -40,7 +40,8 @@ cp -t public/ \
   request-received.html \
   success.html \
   cancel.html \
-  admin.html
+  admin.html \
+  admin-v2.html
 
 # --- Assets (2) ----------------------------------------------------------
 # When styles.vN is bumped (cache-bust dance, CLAUDE.md §7) update this line.
