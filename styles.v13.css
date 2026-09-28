@@ -1179,3 +1179,172 @@ button.btn-dark {
 /* ── Mapa: el acento de trayectoria pasa a cobre ───────────────────────────── */
 .pub-content .pub-map-quad { color: var(--pub-soft); }
 .pub-content .pub-map-axis { color: var(--pub-soft); }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Marco de lectura — identidad de Preview en signals.html y archive.html
+   ──────────────────────────────────────────────────────────────────────────────
+   El bloque anterior viste el CONTENIDO de la publicación. Este viste el MARCO
+   que lo rodea en las dos páginas donde se lee: cabecera, navegación, tarjetas
+   del listado y cromo del lector. Así el lector no salta de un marco con una
+   identidad a un contenido con otra.
+
+   Acotado a `body.ed-frame`, que sólo llevan signals.html y archive.html. Las
+   otras 11 páginas comparten `.site-header`, `.nav` y `.pub-card-*`, y no
+   cambian: la clase en el body es lo único que decide quién recibe esto.
+
+   La especificidad no es decorativa. Las dos páginas definen su marco en un
+   `<style>` inline que va DESPUÉS del `<link>` a esta hoja, así que a igualdad
+   de especificidad ganarían ellas. `body.ed-frame .x` (0,2,1) supera a `.x`
+   (0,1,0) y se impone sin `!important` y sin tocar los estilos de la página.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.ed-frame {
+  --pub-paper:  #F4F0E8;
+  --pub-white:  #FFFDF8;
+  --pub-ink:    #191814;
+  --pub-navy:   #15263B;
+  --pub-copper: #C2551B;
+  --pub-rule:   #C9C1B3;
+  --pub-soft:   #706D65;
+  background: var(--pub-paper);
+  color: var(--pub-ink);
+}
+
+/* ── Holgura bajo la cabecera fija ─────────────────────────────────────────── */
+/* La regla global de la línea ~75 da 72px de padding-top al primer hermano de
+   una cabecera clara, pero esa cabecera mide 78px: el eyebrow quedaba 6px por
+   DEBAJO de ella. No es un fallo del breakpoint de .sg-intro — cualquier regla
+   escrita ahí pierde, porque los tres :not() de la global le dan especificidad
+   (0,5,0) frente a (0,1,0).
+   Se corrige sólo para estas dos páginas, replicando la cadena para empatar en
+   especificidad y ganar por orden. El mismo desfase de 6px existe en el resto
+   del sitio y merece su propio arreglo, fuera de este checkpoint. */
+body.ed-frame .site-header.light-header ~ *:not(.cursor-dot):not(.cursor-ring):not(.page-transition) {
+  padding-top: 96px;
+}
+
+/* ── Cabecera y navegación ─────────────────────────────────────────────────── */
+body.ed-frame .site-header { border-bottom: 1px solid var(--pub-rule); }
+body.ed-frame .site-header.light-header { background: var(--pub-paper); }
+body.ed-frame .brand { font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-ink); }
+body.ed-frame .nav a { color: var(--pub-soft); }
+body.ed-frame .nav a:hover,
+body.ed-frame .nav a[aria-current="page"] { color: var(--pub-copper); }
+/* El acceso Pro es la acción de la cabecera: la marca el cobre, no un relleno.
+   La cadena de selectores replica la del original (.site-header.light-header
+   .nav a.nav-access, especificidad 0-4-1): con `body.ed-frame .nav-access`
+   (0-2-1) la regla base ganaba y el botón se quedaba gris. */
+body.ed-frame .nav a.nav-access,
+body.ed-frame .site-header.light-header .nav a.nav-access {
+  border-color: var(--pub-copper); color: var(--pub-copper);
+}
+body.ed-frame .nav a.nav-access:hover,
+body.ed-frame .site-header.light-header .nav a.nav-access:hover,
+body.ed-frame .nav a.nav-access[aria-current="page"],
+body.ed-frame .site-header.light-header .nav a.nav-access[aria-current="page"] {
+  background: var(--pub-copper); border-color: var(--pub-copper); color: var(--pub-white);
+}
+
+/* ── Entradilla de signals.html ────────────────────────────────────────────── */
+body.ed-frame .sg-intro { border-bottom-color: var(--pub-rule); }
+body.ed-frame .sg-eyebrow { color: var(--pub-copper); }
+body.ed-frame .sg-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif;
+  color: var(--pub-navy); letter-spacing: -0.015em;
+}
+body.ed-frame .sg-sub { color: var(--pub-soft); }
+body.ed-frame .sg-section-head { border-bottom-color: var(--pub-rule); }
+body.ed-frame .sg-section-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-navy);
+}
+body.ed-frame .sg-section-meta { color: var(--pub-soft); }
+
+/* ── Tarjetas del listado ──────────────────────────────────────────────────── */
+body.ed-frame .pub-grid { border-color: var(--pub-rule); background: var(--pub-white); }
+body.ed-frame .pub-card-archive { border-color: var(--pub-rule); }
+body.ed-frame .pub-card-archive:hover { background: var(--pub-paper); }
+/* El filete superior que aparece al pasar por encima pasa a cobre: es la única
+   señal de interacción de la tarjeta y conviene que sea la del acento. */
+body.ed-frame .pub-card-archive::before { background: var(--pub-copper); }
+body.ed-frame .pub-type-badge { color: var(--pub-copper); }
+body.ed-frame .pub-type-dot { background: var(--pub-copper); }
+body.ed-frame .pub-card-date { color: var(--pub-soft); }
+body.ed-frame .pub-card-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif;
+  color: var(--pub-navy); line-height: 1.28;
+}
+body.ed-frame .pub-card-excerpt { color: var(--pub-soft); }
+body.ed-frame .pub-read-link { color: var(--pub-copper); border-bottom-color: var(--pub-copper); }
+
+/* ── Estado vacío ──────────────────────────────────────────────────────────── */
+body.ed-frame .sg-empty { border-color: var(--pub-rule); background: var(--pub-white); }
+body.ed-frame .sg-empty-label { color: var(--pub-soft); }
+body.ed-frame .sg-empty-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-rule);
+}
+
+/* ── Banda de upsell: tinta, no azul marino, y el CTA en cobre ─────────────── */
+body.ed-frame .sg-cta { background: var(--pub-ink); }
+body.ed-frame .sg-cta-label { color: rgba(244,240,232,0.45); }
+body.ed-frame .sg-cta-title { font-family: 'Fraunces', 'EB Garamond', Georgia, serif; }
+body.ed-frame .sg-cta-body { color: rgba(244,240,232,0.72); }
+body.ed-frame .sg-cta .btn-light { background: var(--pub-copper); color: var(--pub-white); }
+body.ed-frame .sg-cta .btn-ghostw { border-color: rgba(244,240,232,0.38); color: var(--pub-paper); }
+
+/* ── Cromo del lector (mismo patrón en las dos páginas) ────────────────────── */
+body.ed-frame .pub-modal { background: var(--pub-paper); }
+body.ed-frame .pub-modal-topbar {
+  background: var(--pub-paper); border-bottom-color: var(--pub-rule);
+}
+body.ed-frame .pub-modal-topbar .brand,
+body.ed-frame .pub-modal-brand {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-ink);
+}
+body.ed-frame .pub-modal-close,
+body.ed-frame .pub-modal-back { color: var(--pub-copper); }
+
+/* ── Cromo propio de archive.html ──────────────────────────────────────────── */
+/* La barra de usuario y la banda de próxima publicación son superficies
+   oscuras: pasan del azul marino antiguo a la tinta, para no dejar dos azules
+   distintos en la misma pantalla. */
+body.ed-frame .user-bar { background: var(--pub-ink); border-bottom: none; }
+body.ed-frame .user-avatar { background: var(--pub-copper); color: var(--pub-white); }
+body.ed-frame .user-plan { color: var(--pub-copper); }
+body.ed-frame .user-email-bar { color: var(--pub-paper); }
+body.ed-frame .upcoming-strip { background: var(--pub-ink); }
+body.ed-frame .upcoming-label { color: var(--pub-copper); }
+body.ed-frame .upcoming-title { font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-paper); }
+body.ed-frame .upcoming-status { color: rgba(244,240,232,0.55); }
+
+body.ed-frame .archive-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif;
+  color: var(--pub-navy); letter-spacing: -0.015em;
+}
+body.ed-frame .archive-tabs { border-bottom-color: var(--pub-rule); }
+body.ed-frame .archive-tab { color: var(--pub-soft); }
+body.ed-frame .archive-tab.active { color: var(--pub-copper); border-bottom-color: var(--pub-copper); }
+body.ed-frame .tab-count { background: var(--pub-paper); color: var(--pub-soft); }
+body.ed-frame .stats-row { border-color: var(--pub-rule); background: var(--pub-white); }
+body.ed-frame .stat-label { color: var(--pub-soft); }
+body.ed-frame .stat-value {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-navy);
+}
+body.ed-frame .stat-sub { color: var(--pub-soft); }
+body.ed-frame .archive-section-header { border-bottom-color: var(--pub-rule); }
+body.ed-frame .archive-section-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-navy);
+}
+body.ed-frame .archive-bar { border-color: var(--pub-rule); }
+body.ed-frame .archive-bar p,
+body.ed-frame .archive-section-meta { color: var(--pub-soft); }
+body.ed-frame .pub-modal-date { color: var(--pub-soft); }
+body.ed-frame .empty-state { border-color: var(--pub-rule); background: var(--pub-white); }
+body.ed-frame .empty-state-label { color: var(--pub-copper); }
+body.ed-frame .empty-state-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-navy);
+}
+body.ed-frame .empty-state-sub { color: var(--pub-soft); }
+
+/* ── Pie ───────────────────────────────────────────────────────────────────── */
+body.ed-frame .site-footer { border-top-color: var(--pub-rule); }
+body.ed-frame .footer-brand { font-family: 'Fraunces', 'EB Garamond', Georgia, serif; color: var(--pub-ink); }
