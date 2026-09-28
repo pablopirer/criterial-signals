@@ -235,7 +235,22 @@
       div.innerHTML = html || "";
       // Drop the interactive map placeholder from the excerpt text.
       div.querySelectorAll(".pub-map").forEach(el => el.remove());
-      const text = (div.textContent || "").replace(/\s+/g, " ").trim();
+      // Prefer the opening paragraph: it is the edition's own summary, and it
+      // reads far better than a flattened dump of the whole body.
+      const apertura = div.querySelector(".pub-apertura-new");
+      let text;
+      if (apertura && (apertura.textContent || "").trim().length > 40) {
+        text = apertura.textContent;
+      } else {
+        // Fallback: flatten the body. textContent joins block elements with NO
+        // separator, which ran words together across tags ("SignalsNº 1",
+        // "2026Buyout"). Insert a space between blocks before extracting.
+        div.querySelectorAll("div,p,h1,h2,h3,li,tr,br,span").forEach(el => {
+          el.insertAdjacentText("beforebegin", " ");
+        });
+        text = div.textContent || "";
+      }
+      text = text.replace(/\s+/g, " ").trim();
       return text.length > 170 ? text.slice(0, 170) + "…" : text;
     }
 
