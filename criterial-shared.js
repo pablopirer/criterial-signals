@@ -381,7 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
       detM.style.color = mom.color;
       detB.textContent = n.cuerpo || "";
       const chips = Array.isArray(n.chips) ? n.chips.slice(0, 4) : [];
-      detC.innerHTML = chips.map(c => `<span class="pub-map-chip">${esc(c)}</span>`).join("");
+      // Join on whitespace, not "". The chips are separated visually by their
+      // own margin, but with no text node between the spans the panel's
+      // textContent ran them together ("Fondo Meridiano IIICerámicas Duero"):
+      // that is what a screen reader announces and what a copy-paste yields.
+      detC.innerHTML = chips.map(c => `<span class="pub-map-chip">${esc(c)}</span>`).join(" ");
       detS.textContent = n.fuente ? "Fuente: " + n.fuente : "";
     }
     container.querySelectorAll(".pub-map-bub").forEach(g => {
