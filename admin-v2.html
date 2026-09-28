@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Criterial. Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4f0e8;--paper2:#ebe5d9;--ink:#191814;--soft:#706d65;--rule:#c9c1b3;--copper:#c2551b;--navy:#15263b;--green:#406756;--white:#fffdf8;--amber:#a26b1f}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit}::selection{background:var(--copper);color:#fff9ee}
+/* load screen */
+.load-screen{position:fixed;inset:0;background:var(--paper);z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease,visibility .5s}
+.load-screen.done{opacity:0;visibility:hidden;pointer-events:none}
+.load-mark{font:600 30px/1 Fraunces,serif;letter-spacing:-.02em}
+.load-mark em{color:var(--copper);font-style:italic}
+.load-line{width:120px;height:1px;background:var(--rule);position:relative;overflow:hidden}
+.load-line span{position:absolute;left:0;top:0;height:100%;width:40%;background:var(--copper);animation:loadslide 1s ease-in-out infinite}
+@keyframes loadslide{0%{left:-40%}100%{left:100%}}
+.load-caption{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft)}
+/* banner + header */
+.proto-banner{padding:9px 20px;background:var(--ink);color:var(--paper);font-size:10px;letter-spacing:.13em;text-transform:uppercase;text-align:center}
+.proto-banner b{color:var(--copper);font-weight:600}
+.header{height:74px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);max-width:1440px;margin:auto}
+.logo{font:600 25px/1 Fraunces,serif;text-decoration:none}
+.logo .adm{font:600 11px/1 Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--copper);margin-left:10px;vertical-align:2px}
+.hnav{display:flex;align-items:center;gap:22px;font-size:12px}
+.hnav a{text-decoration:none;color:var(--soft)}
+.hnav a:hover{color:var(--ink)}
+.hnav .access{padding:10px 16px;border:1px solid var(--ink);border-radius:999px;color:var(--ink)}
+/* layout */
+.shell{max-width:1440px;margin:auto;border-left:1px solid var(--rule);border-right:1px solid var(--rule);min-height:calc(100vh - 120px)}
+.admin-layout{display:grid;grid-template-columns:236px 1fr;min-height:inherit}
+.side{border-right:1px solid var(--rule);padding:34px 0}
+.side-label{padding:0 26px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft)}
+.side a{display:flex;align-items:baseline;gap:12px;padding:11px 26px;text-decoration:none;font-size:13.5px;border-left:2px solid transparent;color:#46443f}
+.side a .m{font-size:10px;color:var(--soft);letter-spacing:.08em}
+.side a:hover{background:var(--white)}
+.side a.active{border-left-color:var(--copper);color:var(--ink);background:var(--white);font-weight:500}
+.main{padding:44px 48px 90px}
+/* type */
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--soft)}
+.eyebrow:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--copper);box-shadow:0 0 0 5px rgba(194,85,27,.13)}
+h1{font:500 clamp(34px,3.6vw,50px)/1 Fraunces,serif;letter-spacing:-.03em;margin:18px 0 10px}
+.sub{font-size:14.5px;line-height:1.55;color:#55534c;max-width:640px;margin:0 0 34px}
+h2{font:500 22px/1.15 Fraunces,serif;letter-spacing:-.015em;margin:0 0 16px}
+.block{margin-top:44px}
+/* components */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--white);border:1px solid var(--rule);padding:22px 24px}
+.kpi-num{font:500 46px/1 Fraunces,serif;letter-spacing:-.02em;margin:6px 0 4px}
+.kpi-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.kpi-note{font-size:12px;color:var(--soft)}
+.kpi-note b{color:var(--copper);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:1px solid var(--rule);border-radius:999px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;background:transparent}
+.chip i{width:6px;height:6px;border-radius:50%;background:var(--soft);flex:none}
+.chip.c-copper{color:var(--copper);border-color:rgba(194,85,27,.4)}.chip.c-copper i{background:var(--copper)}
+.chip.c-navy{color:var(--navy);border-color:rgba(21,38,59,.4)}.chip.c-navy i{background:var(--navy)}
+.chip.c-green{color:var(--green);border-color:rgba(64,103,86,.45)}.chip.c-green i{background:var(--green)}
+.chip.c-gray{color:var(--soft)}.chip.c-gray i{background:#a8a296}
+.chip.c-amber{color:var(--amber);border-color:rgba(162,107,31,.45)}.chip.c-amber i{background:var(--amber)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:999px;text-decoration:none;font-size:12.5px;border:1px solid transparent;cursor:pointer;background:none;font-family:inherit}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-secondary{border-color:var(--rule);color:var(--ink);background:transparent}
+.btn-copper{background:var(--copper);color:#fff9ee}
+.btn-mini{padding:7px 13px;font-size:11px}
+.btn:hover{filter:brightness(.94)}
+.rows{border-top:1px solid var(--rule)}
+.row{display:grid;grid-template-columns:1.6fr 1.2fr .9fr .9fr .7fr 24px;gap:14px;align-items:center;padding:15px 6px;border-bottom:1px solid var(--rule);text-decoration:none;font-size:13px}
+.row:hover{background:var(--white)}
+.row .t{font-weight:500;font-size:13.5px}
+.row .d{color:var(--soft);font-size:12px;margin-top:2px}
+.row .arr{color:var(--soft);text-align:right}
+/* funnel */
+.funnel-row{display:grid;grid-template-columns:170px 1fr 90px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.funnel-bar{height:10px;background:var(--paper2);position:relative}
+.funnel-bar span{position:absolute;left:0;top:0;bottom:0;background:var(--copper)}
+.funnel-bar.navy span{background:var(--navy)}.funnel-bar.green span{background:var(--green)}
+.funnel-num{font:500 20px/1 Fraunces,serif;text-align:right}
+/* feed + health */
+.feed-item{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13px;align-items:baseline}
+.feed-item .when{flex:none;width:92px;color:var(--soft);font-size:11.5px}
+.feed-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--copper);align-self:center}
+.feed-dot.g{background:var(--green)}.feed-dot.n{background:var(--navy)}.feed-dot.a{background:var(--amber)}
+.health-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.health-row .tag{margin-left:auto}
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px}
+.f-input,.f-select{padding:11px 15px;border:1px solid var(--rule);background:var(--white);font:400 13px Inter,sans-serif;color:var(--ink);border-radius:999px;outline:none}
+.f-input{width:230px}
+.f-input:focus,.f-select:focus{border-color:var(--ink)}
+.f-chip{cursor:pointer;transition:all .15s}
+.f-chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.f-chip.on i{background:var(--paper)}
+/* detail */
+.back{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);text-decoration:none;margin-bottom:22px}
+.back:hover{color:var(--ink)}
+.detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.detail-head h1{margin-bottom:6px}
+.meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0}
+.meta-cell{padding:13px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.meta-cell .l{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--soft);margin-bottom:4px}
+/* stepper */
+.stepper{display:flex;align-items:center;margin:26px 0 8px;flex-wrap:wrap;gap:4px}
+.step{display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 13px;border:1px solid var(--rule);border-radius:999px;font-size:11.5px;background:var(--white)}
+.step i{width:7px;height:7px;border-radius:50%;background:transparent;border:1px solid var(--soft)}
+.step.done{border-color:var(--copper);color:var(--copper)}
+.step.done i{background:var(--copper);border-color:var(--copper)}
+.step.current{border-color:var(--ink);font-weight:600}
+.step.current i{background:var(--ink);border-color:var(--ink)}
+.step-sep{width:14px;height:1px;background:var(--rule)}
+/* notes + timeline */
+textarea.f-textarea{width:100%;min-height:96px;padding:14px;border:1px solid var(--rule);background:var(--white);font:400 13px/1.5 Inter,sans-serif;color:var(--ink);resize:vertical;outline:none}
+textarea.f-textarea:focus{border-color:var(--ink)}
+.tl-item{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.tl-item .when{flex:none;width:92px;color:var(--soft);font-size:11.5px}
+.tl-kind{flex:none}
+/* kanban */
+.kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;margin:0 -48px;padding-left:48px;padding-right:48px}
+.kcol{flex:0 0 238px;background:var(--paper2);border:1px solid var(--rule);padding:14px}
+.kcol-head{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--soft);margin-bottom:12px}
+.kcol-head b{font:600 12px Inter;color:var(--ink)}
+.kcard{background:var(--white);border:1px solid var(--rule);padding:14px 15px;margin-bottom:10px;text-decoration:none;display:block;cursor:pointer}
+.kcard:hover{border-color:var(--ink)}
+.kcard .t{font-weight:500;font-size:13px;margin:7px 0 3px}
+.kcard .d{font-size:11.5px;color:var(--soft);line-height:1.45}
+.kcard .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11px;color:var(--soft)}
+.kcard .foot b{color:var(--copper);font-weight:600}
+/* tables */
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--soft);font-weight:500;padding:10px 10px 10px 0;border-bottom:1px solid var(--rule)}
+.tbl td{padding:13px 10px 13px 0;border-bottom:1px solid var(--rule);vertical-align:middle}
+.tbl tr:hover td{background:var(--white)}
+.tbl .t{font-weight:500}
+/* generator */
+.gen-var{border:1px solid var(--rule);background:var(--white);padding:18px 20px;margin-bottom:12px}
+.gen-var .t{font:500 17px/1.3 Fraunces,serif;margin:6px 0 5px}
+.gen-var .d{font-size:12.5px;color:#55534c;line-height:1.5}
+/* toast */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:var(--ink);color:var(--paper);padding:13px 22px;border-radius:999px;font-size:12.5px;z-index:70;opacity:0;transition:all .35s ease;pointer-events:none;max-width:88vw;text-align:center}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.toast b{color:var(--copper)}
+.empty{padding:34px;border:1px dashed var(--rule);text-align:center;color:var(--soft);font-size:13px}
+.observe{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.observe.in-view{opacity:1;transform:none}
+@media (max-width:1000px){
+  .detail-head{display:block}
+  .detail-head>.chip{margin-top:14px}
+  .funnel-row{grid-template-columns:118px 1fr 54px;font-size:12px}
+  .admin-layout{grid-template-columns:1fr}
+  .side{border-right:0;border-bottom:1px solid var(--rule);padding:14px 0;display:flex;overflow-x:auto;align-items:center}
+  .side-label{display:none}
+  .side a{flex:none;border-left:0;border-bottom:2px solid transparent;padding:10px 16px}
+  .side a.active{border-bottom-color:var(--copper)}
+  .main{padding:32px 22px 70px}
+  .grid4{grid-template-columns:1fr 1fr}
+  .grid2{grid-template-columns:1fr}
+  .kanban{margin:0 -22px;padding-left:22px;padding-right:22px}
+  .header{padding:0 22px}
+  .hnav .lbl{display:none}
+  .row{grid-template-columns:1.5fr 1fr 24px}
+  .row .hide-m{display:none}
+  .meta-grid{grid-template-columns:1fr}
+}
+@media (max-width:640px){.grid4{grid-template-columns:1fr 1fr}.kpi-num{font-size:36px}}
+
+/* ===== Checkpoint 3: separación test / real ===== */
+/* Badge de dato de prueba. Va en cada fila, tarjeta y ficha cuyo is_test
+   sea true, para que nunca haya duda de qué es real y qué no. */
+.t-badge{display:inline-flex;align-items:center;gap:5px;font-family:Inter,sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--amber);background:#f7efdf;border:1px solid #e4d2ae;
+  border-radius:2px;padding:2px 6px;white-space:nowrap;vertical-align:middle}
+.t-badge.real{color:var(--green);background:#e6efe9;border-color:#bcd3c5}
+/* Toggle de vista todo / real / test */
+.scope{display:flex;align-items:center;gap:0;border:1px solid var(--rule);border-radius:3px;overflow:hidden;background:var(--white)}
+.scope button{font-family:Inter,sans-serif;font-size:11.5px;font-weight:500;color:var(--soft);background:transparent;
+  border:0;border-right:1px solid var(--rule);padding:7px 13px;cursor:pointer;transition:background .15s,color .15s}
+.scope button:last-child{border-right:0}
+.scope button.on{background:var(--navy);color:var(--white)}
+.scope button:hover:not(.on){background:var(--paper2);color:var(--ink)}
+.scope-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 20px}
+.scope-note{font-size:11.5px;color:var(--soft)}
+/* Aviso de ámbito vacío: explica por qué no hay nada, en vez de dejar la vista en blanco */
+.scope-empty{border:1px dashed var(--rule);background:var(--white);padding:26px 22px;text-align:center;border-radius:3px}
+.scope-empty .h{font-family:Fraunces,serif;font-size:17px;color:var(--ink);margin:0 0 6px}
+.scope-empty .p{font-size:13px;color:var(--soft);line-height:1.6;margin:0}
+/* Barra de contadores de cabecera, con desglose test/real por tabla */
+.counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 24px}
+.counters .c{background:var(--white);border:1px solid var(--rule);border-radius:3px;padding:11px 13px}
+.counters .c .k{font-family:Inter,sans-serif;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--soft)}
+.counters .c .v{font-family:Fraunces,serif;font-size:23px;color:var(--ink);line-height:1.15;margin-top:3px}
+.counters .c .s{font-size:11px;color:var(--soft);margin-top:2px}
+@media (max-width:900px){.counters{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.counters{grid-template-columns:repeat(2,1fr)}}
+/* Pantalla de acceso */
+.gate{max-width:420px;margin:90px auto;background:var(--white);border:1px solid var(--rule);border-radius:3px;padding:34px 32px}
+.gate h1{font-family:Fraunces,serif;font-size:26px;margin:0 0 8px}
+.gate p{font-size:13.5px;color:var(--soft);line-height:1.65;margin:0 0 20px}
+.gate input{width:100%;font-family:Inter,sans-serif;font-size:14px;padding:11px 12px;border:1px solid var(--rule);
+  border-radius:3px;background:var(--paper);color:var(--ink);margin-bottom:12px}
+.gate .msg{font-size:12.5px;margin-top:14px;min-height:18px}
+.gate .msg.err{color:var(--copper)}
+.gate .msg.ok{color:var(--green)}
+</style>
+</head>
+<body data-sections="1">
+<div class="load-screen"><div class="load-mark">Criterial. <em>Admin</em></div><div class="load-line"><span></span></div><div class="load-caption">Cargando</div></div>
+
+<!-- Pantalla de acceso. El gate real es server-side en cada Edge Function
+     (JWT + ADMIN_EMAIL); esta comprobación en cliente solo evita enseñar
+     una interfaz vacía a quien no ha entrado. -->
+<div class="gate" id="gate" style="display:none">
+  <h1>Criterial. Admin</h1>
+  <p>Acceso restringido. Introduce el email de administración y te enviamos un enlace de acceso.</p>
+  <input type="email" id="gate-email" placeholder="tu@correo.com" autocomplete="email" />
+  <button class="btn btn-primary" id="gate-send" style="width:100%">Enviar enlace de acceso</button>
+  <div class="msg" id="gate-msg"></div>
+</div>
+
+<div id="shell-wrap" style="display:none">
+<header class="header">
+  <a class="logo" href="#/resumen">Criterial.<span class="adm">Admin</span></a>
+  <nav class="hnav">
+    <a class="lbl" href="index.html">Web pública</a>
+    <a class="lbl" href="admin.html">Publicaciones</a>
+    <a class="access" href="#" id="signout">Salir</a>
+  </nav>
+</header>
+<div class="shell">
+  <div class="admin-layout">
+    <aside class="side" id="sidenav">
+      <div class="side-label">Módulos</div>
+      <a href="#/resumen" data-r="resumen"><span class="m">M6</span>Resumen</a>
+      <a href="#/leads" data-r="leads"><span class="m">M2</span>Leads</a>
+      <a href="#/advisory" data-r="advisory"><span class="m">M4</span>Advisory</a>
+      <a href="#/muestras" data-r="muestras"><span class="m">M3</span>Muestras</a>
+      <a href="#/suscriptores" data-r="suscriptores"><span class="m">M5</span>Suscriptores</a>
+      <div class="side-label" style="margin-top:22px">Otros</div>
+      <a href="admin.html"><span class="m">M1</span>Contenido ↗</a>
+    </aside>
+    <main class="main" id="app"></main>
+  </div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============================================================
+   Criterial Admin — datos reales (Checkpoint 3 · Fase 1)
+
+   Diseño: prototipo admin-v2 aprobado, intacto en CSS y estructura.
+   Lo que cambia respecto al prototipo es la capa de datos: se sustituyen
+   los objetos mock por llamadas a las Edge Functions admin-*, y se añade
+   la separación test/real que es el objeto de este checkpoint.
+
+   El gate real de acceso está en el servidor (JWT + ADMIN_EMAIL en cada
+   Edge Function). La comprobación de email de aquí abajo es cosmética:
+   evita enseñar una interfaz vacía, no protege nada por sí sola.
+   ============================================================ */
+const SUPABASE_URL      = "https://epmltqhtxkmfboaxdois.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
+const ADMIN_EMAIL       = "pablopirer@gmail.com";
+const EF_BASE           = SUPABASE_URL + "/functions/v1";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let _session = null;
+
+/* ---- Vocabularios (decisión D5).
+   Los VALORES son los que viven en la base de datos; las ETIQUETAS y los
+   colores son los del prototipo aprobado. Las columnas son texto libre
+   (sin CHECK), así que quien valida de verdad es la Edge Function. ---- */
+const LEAD_ESTADOS = {new:'Nuevo',contacted:'Contactado',qualified:'Cualificado',customer:'Cliente',discarded:'Descartado'};
+const LEAD_COLOR   = {new:'c-copper',contacted:'c-navy',qualified:'c-green',customer:'c-green',discarded:'c-gray'};
+const LEAD_ORDEN   = ['new','contacted','qualified','customer'];
+const ADV_ETAPAS   = [['new','Nueva solicitud'],['in_progress','En evaluación'],['quoted','Propuesta enviada'],['won','Ganado'],['lost','Perdido']];
+const ADV_COLOR    = {new:'c-copper',in_progress:'c-navy',quoted:'c-amber',won:'c-green',lost:'c-gray'};
+const FUENTES      = {sample_form:'Muestra',advisory_form:'Advisory',signals_open:'Newsletter',stripe_pro:'Stripe Pro',manual:'Manual'};
+const SAMPLE_EST   = {queued:['En cola','c-navy'],generated:['Generada','c-green'],generation_failed:['Fallida','c-copper'],cancelled:['Cancelada','c-gray'],skipped_test:['Omitida · test','c-gray']};
+const TIPO_ENCARGO = {valoracion:'Valoración de empresa',sectorial:'Análisis sectorial',pitch_deck:'Pitch deck',otro:'Otro'};
+
+/* ---- Estado en memoria ---- */
+let DATA   = {leads:[],advisory:[],samples:[],pro:[],signals:[]};
+let SCOPE  = 'all';                          // all | real | test
+let LF     = {q:'',st:'todos',src:'todas'};  // filtros de la lista de leads
+let DETAIL = null;                           // detalle de lead cargado
+
+/* ---- Helpers ---- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+let toastT = null;
+function toast(msg,isErr){const t=$('#toast');t.innerHTML=(isErr?'<b>No se pudo completar</b><br>':'')+esc(msg);t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200)}
+function chip(txt,color){return '<span class="chip '+color+'"><i></i>'+txt+'</span>'}
+function leadChip(st){return chip(LEAD_ESTADOS[st]||esc(st),LEAD_COLOR[st]||'c-gray')}
+function advChip(st){const f=ADV_ETAPAS.find(x=>x[0]===st);return chip(f?f[1]:esc(st),ADV_COLOR[st]||'c-gray')}
+function sampleChip(st){const m=SAMPLE_EST[st]||[esc(st),'c-gray'];return chip(m[0],m[1])}
+/* El badge es el corazón del checkpoint: toda fila dice siempre si es test o real. */
+function tBadge(isTest){return isTest?'<span class="t-badge">test</span>':'<span class="t-badge real">real</span>'}
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function fdate(iso){if(!iso)return '—';const d=new Date(iso);return d.getDate()+' '+MES[d.getMonth()]+' '+d.getFullYear()}
+function frel(iso){if(!iso)return '—';const s=(Date.now()-new Date(iso).getTime())/1000;
+ if(s<3600)return 'hace '+Math.max(1,Math.round(s/60))+' min';
+ if(s<86400)return 'hace '+Math.round(s/3600)+' h';
+ const d=Math.round(s/86400);return d===1?'ayer':'hace '+d+' días'}
+function reveal(){document.querySelectorAll('.observe').forEach(el=>el.classList.add('in-view'))}
+
+/* ---- Ámbito test/real ---- */
+function inScope(r){return SCOPE==='all' || (SCOPE==='test' ? !!r.is_test : !r.is_test)}
+function scopeBar(note){
+ const b=(k,l)=>'<button class="'+(SCOPE===k?'on':'')+'" onclick="A.scope(\''+k+'\')">'+l+'</button>';
+ return '<div class="scope-bar"><div class="scope">'+b('all','Todo')+b('real','Solo real')+b('test','Solo test')+'</div>'
+  +(note?'<span class="scope-note">'+note+'</span>':'')+'</div>';
+}
+/* Un ámbito vacío explica POR QUÉ está vacío, en vez de dejar una vista en blanco. */
+function scopeEmpty(what){
+ if(SCOPE==='real')return '<div class="scope-empty"><p class="h">Todavía no hay '+what+' reales.</p>'
+  +'<p class="p">Todo lo que existe ahora mismo está marcado como dato de prueba. Es lo esperado antes del lanzamiento: '
+  +'cada fila nueva nace como <b>test</b> y se marca como real a mano desde la ficha del lead.</p></div>';
+ if(SCOPE==='test')return '<div class="scope-empty"><p class="h">No hay '+what+' de prueba.</p>'
+  +'<p class="p">Cambia el ámbito a «Todo» para ver el resto.</p></div>';
+ return '<div class="scope-empty"><p class="h">Todavía no hay '+what+'.</p><p class="p">Aparecerán aquí en cuanto lleguen.</p></div>';
+}
+
+/* ---- Acceso a las Edge Functions ---- */
+async function api(path,opts){
+ if(!_session) throw new Error('Sin sesión');
+ const res = await fetch(EF_BASE+path, Object.assign({},opts,{
+   headers: Object.assign({'Content-Type':'application/json','Authorization':'Bearer '+_session.access_token},(opts&&opts.headers)||{})
+ }));
+ let body=null;
+ try{ body = await res.json() }catch(_){}
+ if(!res.ok) throw new Error((body&&body.error)||('HTTP '+res.status));
+ return body;
+}
+
+async function loadAll(){
+ const [l,a,s,u] = await Promise.all([
+   api('/admin-leads'), api('/admin-advisory'), api('/admin-samples'), api('/admin-subscribers')
+ ]);
+ DATA.leads    = l.leads    || [];
+ DATA.advisory = a.requests || [];
+ DATA.samples  = s.samples  || [];
+ DATA.pro      = u.pro      || [];
+ DATA.signals  = u.signals  || [];
+}
+
+/* ---- Contadores de cabecera con desglose test/real por tabla ---- */
+function counters(){
+ const c=(k,rows)=>{
+  const t=rows.filter(r=>r.is_test).length, r=rows.length-t;
+  return '<div class="c"><div class="k">'+k+'</div><div class="v">'+rows.length+'</div>'
+   +'<div class="s">'+r+' real · '+t+' test</div></div>';
+ };
+ return '<div class="counters">'
+  +c('Leads',DATA.leads)+c('Muestras',DATA.samples)+c('Advisory',DATA.advisory)
+  +c('Newsletter',DATA.signals)+c('Pro',DATA.pro)+'</div>';
+}
+
+/* ============ Vistas ============ */
+function vResumen(){
+ const L=DATA.leads.filter(inScope), S=DATA.samples.filter(inScope), AD=DATA.advisory.filter(inScope);
+ const nuevos=L.filter(l=>l.status==='new').length;
+ const cola=S.filter(s=>s.status==='queued').length;
+ const fallidas=S.filter(s=>s.status==='generation_failed').length;
+ const proAct=DATA.pro.filter(inScope).filter(s=>s.status==='active').length;
+ const sigAct=DATA.signals.filter(inScope).filter(s=>s.status==='active').length;
+ const advAbiertos=AD.filter(a=>!['won','lost'].includes(a.status)).length;
+ const porFuente={};L.forEach(l=>{porFuente[l.source]=(porFuente[l.source]||0)+1});
+ const maxF=Math.max(1,...Object.values(porFuente));
+
+ return '<div class="observe"><div class="eyebrow">M6 · Métricas y salud operativa</div><h1>Resumen</h1>'
+ +'<p class="sub">Visión general del negocio con separación explícita entre datos reales y de prueba. Los contadores de arriba son siempre del total; el resto de la vista responde al ámbito seleccionado.</p>'
+ +counters()
+ +scopeBar('Ámbito aplicado a las tarjetas y al embudo')
+ +'<div class="grid4">'
+ +'<div class="card"><div class="kpi-label">Leads</div><div class="kpi-num">'+L.length+'</div><div class="kpi-note"><b>'+nuevos+'</b> sin contactar</div></div>'
+ +'<div class="card"><div class="kpi-label">Suscriptores Pro activos</div><div class="kpi-num">'+proAct+'</div><div class="kpi-note">'+sigAct+' en la lista abierta</div></div>'
+ +'<div class="card"><div class="kpi-label">Muestras en cola</div><div class="kpi-num">'+cola+'</div><div class="kpi-note">'+(fallidas?'<b>'+fallidas+' fallidas</b> en el histórico':'sin fallos pendientes')+'</div></div>'
+ +'<div class="card"><div class="kpi-label">Advisory abiertos</div><div class="kpi-num">'+advAbiertos+'</div><div class="kpi-note">de '+AD.length+' solicitudes</div></div>'
+ +'</div>'
+ +'<div class="block grid2">'
+ +'<div class="card observe"><h2>Captación por fuente</h2>'
+ +(L.length?Object.keys(porFuente).sort((a,b)=>porFuente[b]-porFuente[a]).map(k=>
+    '<div class="funnel-row"><div>'+(FUENTES[k]||esc(k))+'</div><div class="funnel-bar navy"><span style="width:'+Math.round(porFuente[k]/maxF*100)+'%"></span></div><div class="funnel-num">'+porFuente[k]+'</div></div>').join('')
+   :'<div class="empty">Sin leads en este ámbito.</div>')
+ +'<p style="font-size:12px;color:var(--soft);margin:14px 0 0">Cada lead conserva la fuente con la que llegó la primera vez, aunque después entre por otro canal.</p></div>'
+ +'<div class="card observe"><h2>Salud de los flujos</h2>'
+ +'<div class="health-row"><span class="feed-dot '+(fallidas?'a':'g')+'"></span>Generación de muestras<span class="tag">'+(fallidas?chip(fallidas+' fallidas','c-copper'):chip('Sin fallos','c-green'))+'</span></div>'
+ +'<div class="health-row"><span class="feed-dot a"></span>Stripe<span class="tag">'+chip('Modo prueba','c-amber')+'</span></div>'
+ +'<div class="health-row"><span class="feed-dot '+(DATA.leads.some(l=>!l.is_test)?'g':'a')+'"></span>Datos reales<span class="tag">'+(DATA.leads.some(l=>!l.is_test)?chip('Hay leads reales','c-green'):chip('Todo es test','c-amber'))+'</span></div>'
+ +'<div class="health-row"><span class="feed-dot g"></span>Supabase<span class="tag">'+chip('Operativo','c-green')+'</span></div>'
+ +'<p style="font-size:12px;color:var(--soft);margin:14px 0 0">Mientras Stripe siga en modo prueba nadie puede suscribirse de verdad, y toda fila nueva nace marcada como test.</p></div>'
+ +'</div>'
+ +'<div class="block card observe"><h2>Actividad reciente</h2>'+actividad()+'</div></div>';
+}
+
+/* La actividad se DERIVA de hechos reales (altas, muestras, solicitudes),
+   no de una tabla de eventos: outreach_events existe pero está vacía y
+   queda fuera del alcance de este checkpoint. */
+function actividad(){
+ const ev=[];
+ DATA.leads.filter(inScope).forEach(l=>ev.push({at:l.created_at,dot:'n',txt:'Nuevo lead '+(FUENTES[l.source]||l.source).toLowerCase()+': '+esc(l.full_name||l.email),test:l.is_test}));
+ DATA.samples.filter(inScope).forEach(s=>ev.push({at:s.created_at,dot:s.status==='generation_failed'?'a':'g',txt:'Muestra '+(SAMPLE_EST[s.status]?SAMPLE_EST[s.status][0].toLowerCase():s.status)+' · '+esc((s.lead&&(s.lead.company_name||s.lead.email))||'—'),test:s.is_test}));
+ DATA.advisory.filter(inScope).forEach(a=>ev.push({at:a.created_at,dot:'n',txt:'Solicitud Advisory: '+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+' · '+esc((a.lead&&(a.lead.company_name||a.lead.email))||'—'),test:a.is_test}));
+ ev.sort((x,y)=>new Date(y.at)-new Date(x.at));
+ if(!ev.length)return '<div class="empty">Sin actividad en este ámbito.</div>';
+ return ev.slice(0,12).map(e=>'<div class="feed-item"><span class="feed-dot '+e.dot+'"></span><span class="when">'+frel(e.at)+'</span><span>'+e.txt+' '+tBadge(e.test)+'</span></div>').join('');
+}
+
+function vLeads(){
+ const base=DATA.leads.filter(inScope);
+ const counts={};base.forEach(l=>counts[l.status]=(counts[l.status]||0)+1);
+ const list=base.filter(l=>
+   (LF.st==='todos'||l.status===LF.st) &&
+   (LF.src==='todas'||l.source===LF.src) &&
+   (!LF.q||((l.full_name||'')+' '+(l.company_name||'')+' '+(l.email||'')+' '+(l.interest_type||'')).toLowerCase().includes(LF.q.toLowerCase())));
+
+ const chips='<button class="chip f-chip '+(LF.st==='todos'?'on':'')+'" onclick="A.fLeadSt(\'todos\')"><i></i>Todos · '+base.length+'</button>'
+  +Object.keys(LEAD_ESTADOS).map(k=>'<button class="chip f-chip '+(LF.st===k?'on':'')+' '+LEAD_COLOR[k]+'" onclick="A.fLeadSt(\''+k+'\')"><i></i>'+LEAD_ESTADOS[k]+' · '+(counts[k]||0)+'</button>').join('');
+
+ let rows=list.map(l=>'<a class="row" href="#/leads/'+l.id+'">'
+  +'<div><div class="t">'+esc(l.full_name||l.email)+' '+tBadge(l.is_test)+'</div><div class="d">'+esc(l.company_name||l.email)+'</div></div>'
+  +'<div class="hide-m" style="font-size:12px;color:#55534c">'+esc(l.interest_type||'—')+'</div>'
+  +'<div class="hide-m">'+chip(FUENTES[l.source]||esc(l.source),'c-gray')+'</div>'
+  +'<div>'+leadChip(l.status)+'</div>'
+  +'<div class="hide-m" style="font-size:11.5px;color:var(--soft)">'+frel(l.last_contact_at||l.created_at)+'</div>'
+  +'<div class="arr">→</div></a>').join('');
+
+ if(!rows) rows = base.length ? '<div class="empty">Ningún lead coincide con estos filtros.</div>' : scopeEmpty('leads');
+
+ return '<div class="observe"><div class="eyebrow">M2 · Control de tráfico de leads</div><h1>Leads</h1>'
+ +'<p class="sub">Gestión individual: estado, notas y rastro completo. Cada fila indica si es un dato real o de prueba.</p>'
+ +scopeBar(base.length+' de '+DATA.leads.length+' leads en este ámbito')
+ +'<div class="filters"><input class="f-input" placeholder="Buscar nombre, empresa, email…" value="'+esc(LF.q)+'" oninput="A.fLeadQ(this.value)">'
+ +'<select class="f-select" onchange="A.fLeadSrc(this.value)"><option value="todas"'+(LF.src==='todas'?' selected':'')+'>Todas las fuentes</option>'
+ +Object.keys(FUENTES).map(k=>'<option value="'+k+'"'+(LF.src===k?' selected':'')+'>'+FUENTES[k]+'</option>').join('')+'</select>'
+ +chips+'</div>'
+ +'<div class="rows">'+rows+'</div></div>';
+}
+
+function vLeadDetail(){
+ if(!DETAIL) return '<div class="empty">Cargando ficha…</div>';
+ const l=DETAIL.lead;
+ const idx=LEAD_ORDEN.indexOf(l.status);
+ let steps=LEAD_ORDEN.map((k,i)=>'<div class="step '+(i<idx?'done ':'')+(k===l.status?'current':'')+'" onclick="A.leadStatus(\''+k+'\')"><i></i>'+LEAD_ESTADOS[k]+'</div>'+(i<LEAD_ORDEN.length-1?'<div class="step-sep"></div>':'')).join('');
+ steps+='<div class="step-sep"></div><div class="step '+(l.status==='discarded'?'current':'')+'" onclick="A.leadStatus(\'discarded\')"><i></i>Descartado</div>';
+
+ /* Rastro derivado de hechos reales, ordenado del más reciente al más antiguo. */
+ const tl=[];
+ tl.push({at:l.created_at,kind:'Alta',txt:'Lead creado desde '+(FUENTES[l.source]||l.source)});
+ DETAIL.samples.forEach(s=>{
+  tl.push({at:s.created_at,kind:'Muestra',txt:'Solicitud de muestra · '+esc(s.topic||'—')+' ('+(SAMPLE_EST[s.status]?SAMPLE_EST[s.status][0]:s.status)+')'});
+  if(s.sent_at) tl.push({at:s.sent_at,kind:'Email',txt:'Muestra enviada'+(s.publication?': '+esc(s.publication.title):'')});
+ });
+ DETAIL.advisory.forEach(a=>tl.push({at:a.created_at,kind:'Advisory',txt:'Solicitud: '+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))}));
+ if(DETAIL.signals_subscription) tl.push({at:DETAIL.signals_subscription.created_at,kind:'Newsletter',txt:'Alta en la lista abierta de Signals'});
+ if(DETAIL.pro_subscription) tl.push({at:DETAIL.pro_subscription.created_at,kind:'Pro',txt:'Suscripción Pro ('+esc(DETAIL.pro_subscription.plan)+'/'+esc(DETAIL.pro_subscription.status)+')'});
+ tl.sort((a,b)=>new Date(b.at)-new Date(a.at));
+ const kindColor=k=>k==='Email'?'c-gray':k==='Advisory'?'c-amber':k==='Pro'?'c-green':k==='Alta'?'c-copper':'c-navy';
+
+ return '<div class="observe"><a class="back" href="#/leads">← Volver a Leads</a>'
+ +'<div class="detail-head"><div><div class="eyebrow">M2 · Ficha de lead</div><h1>'+esc(l.full_name||l.email)+'</h1>'
+ +'<div style="font-size:14px;color:#55534c">'+esc(l.company_name||'—')+'</div></div><div style="display:flex;gap:8px;align-items:center">'+tBadge(l.is_test)+leadChip(l.status)+'</div></div>'
+ +'<div class="grid2">'
+ +'<div class="card"><h2>Ficha</h2><div class="meta-grid">'
+ +'<div class="meta-cell"><div class="l">Email</div>'+esc(l.email)+'</div>'
+ +'<div class="meta-cell"><div class="l">Web</div>'+esc(l.website||'—')+'</div>'
+ +'<div class="meta-cell"><div class="l">Fuente</div>'+(FUENTES[l.source]||esc(l.source))+'</div>'
+ +'<div class="meta-cell"><div class="l">Alta</div>'+fdate(l.created_at)+'</div>'
+ +'<div class="meta-cell"><div class="l">Último contacto</div>'+fdate(l.last_contact_at)+'</div>'
+ +'<div class="meta-cell"><div class="l">Interés</div>'+esc(l.interest_type||'—')+'</div>'
+ +'</div>'
+ +'<h2 style="margin-top:26px">Estado</h2><div class="stepper">'+steps+'</div>'
+ +'<p style="font-size:11.5px;color:var(--soft);margin:6px 0 0">Toca un estado para mover el lead por el pipeline.</p>'
+ +'<h2 style="margin-top:26px">Clasificación</h2>'
+ +'<p style="font-size:12.5px;color:var(--soft);margin:0 0 10px">Este lead está marcado como <b>'+(l.is_test?'dato de prueba':'dato real')+'</b>. '
+ +'Mientras Criterial esté en validación, todo lo que entra nace como prueba; marca como real solo lo que sea negocio de verdad.</p>'
+ +'<button class="btn '+(l.is_test?'btn-copper':'btn-secondary')+' btn-mini" onclick="A.toggleTest()">'
+ +(l.is_test?'Marcar como real':'Devolver a dato de prueba')+'</button></div>'
+ +'<div class="card"><h2>Notas</h2><textarea class="f-textarea" id="note-box">'+esc(l.notes||'')+'</textarea>'
+ +'<div style="margin-top:12px;text-align:right"><button class="btn btn-secondary btn-mini" onclick="A.saveNote()">Guardar nota</button></div>'
+ +'<h2 style="margin-top:26px">Seguimiento</h2>'
+ +tl.map(e=>'<div class="tl-item"><span class="when">'+fdate(e.at)+'</span><span class="tl-kind">'+chip(e.kind,kindColor(e.kind))+'</span><span>'+e.txt+'</span></div>').join('')
+ +'<p style="font-size:11.5px;color:var(--soft);margin:12px 0 0">El seguimiento se deriva de hechos registrados (altas, muestras, solicitudes, suscripciones). Todavía no hay registro manual de llamadas o emails.</p></div>'
+ +'</div>'
+ +'<div class="block card"><h2>Muestras vinculadas</h2>'
+ +(DETAIL.samples.length?'<table class="tbl"><tr><th>Tema</th><th>Estado</th><th>Fecha</th><th>Publicación</th><th></th></tr>'
+  +DETAIL.samples.map(s=>'<tr><td class="t">'+esc(s.topic||'—')+' '+tBadge(s.is_test)+'</td><td>'+sampleChip(s.status)+'</td><td>'+fdate(s.created_at)+'</td>'
+   +'<td style="font-size:12px">'+(s.publication?esc(s.publication.title):'—')+'</td>'
+   +'<td>'+(s.publication?'<a href="muestra.html?token='+encodeURIComponent(s.publication.public_token)+'" target="_blank" rel="noopener" style="font-size:12px">Abrir muestra →</a>':'')+'</td></tr>').join('')+'</table>'
+  :'<div class="empty">Este lead todavía no ha pedido ninguna muestra.</div>')
+ +'</div>'
+ +(DETAIL.advisory.length?'<div class="block card"><h2>Solicitudes Advisory</h2><table class="tbl"><tr><th>Tipo</th><th>Estado</th><th>Fecha</th><th></th></tr>'
+  +DETAIL.advisory.map(a=>'<tr><td class="t">'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+' '+tBadge(a.is_test)+'</td><td>'+advChip(a.status)+'</td><td>'+fdate(a.created_at)+'</td>'
+   +'<td><a href="#/advisory" style="font-size:12px">Ver en Advisory →</a></td></tr>').join('')+'</table></div>':'')
+ +'</div>';
+}
+
+function vAdvisory(){
+ const base=DATA.advisory.filter(inScope);
+ const cols=ADV_ETAPAS.map(([k,lbl])=>{
+  const items=base.filter(a=>a.status===k);
+  const cards=items.map(a=>'<a class="kcard" href="#/advisory/'+a.id+'">'
+   +'<span class="chip c-gray"><i></i>'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+'</span> '+tBadge(a.is_test)
+   +'<div class="t">'+esc((a.lead&&(a.lead.company_name||a.lead.full_name))||'—')+'</div>'
+   +'<div class="d">'+esc((a.lead&&a.lead.email)||'')+' · '+frel(a.created_at)+'</div></a>').join('');
+  return '<div class="kcol"><div class="kcol-head"><span>'+lbl+'</span><b>'+items.length+'</b></div>'
+   +(cards||'<div style="font-size:11.5px;color:var(--soft);padding:6px 2px">Sin solicitudes</div>')+'</div>';
+ }).join('');
+ const abiertos=base.filter(a=>!['won','lost'].includes(a.status)).length;
+ return '<div class="observe"><div class="eyebrow">M4 · Encargos</div><h1>Advisory</h1>'
+ +'<p class="sub">Pipeline de encargos. Antes estas solicitudes solo llegaban por email y no dejaban rastro; ahora se guardan y tienen estado. <b>'+abiertos+' abiertos.</b></p>'
+ +scopeBar(base.length+' de '+DATA.advisory.length+' solicitudes en este ámbito')
+ +(base.length?'<div class="kanban">'+cols+'</div>':scopeEmpty('solicitudes Advisory'))+'</div>';
+}
+
+function vAdvDetail(id){
+ const a=DATA.advisory.find(x=>x.id===id);
+ if(!a) return '<div class="empty">Solicitud no encontrada.</div>';
+ const orden=ADV_ETAPAS.map(x=>x[0]);
+ const idx=orden.indexOf(a.status);
+ const steps=orden.map((k,i)=>'<div class="step '+(i<idx?'done ':'')+(k===a.status?'current':'')+'" onclick="A.advStatus(\''+id+'\',\''+k+'\')"><i></i>'+ADV_ETAPAS[i][1]+'</div>'+(i<orden.length-1?'<div class="step-sep"></div>':'')).join('');
+ return '<div class="observe"><a class="back" href="#/advisory">← Volver a Advisory</a>'
+ +'<div class="detail-head"><div><div class="eyebrow">M4 · Solicitud</div><h1>'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+'</h1>'
+ +'<div style="font-size:14px;color:#55534c">'+esc((a.lead&&(a.lead.company_name||a.lead.full_name))||'—')+'</div></div>'
+ +'<div style="display:flex;gap:8px;align-items:center">'+tBadge(a.is_test)+advChip(a.status)+'</div></div>'
+ +'<div class="grid2">'
+ +'<div class="card"><h2>Solicitud</h2><div class="meta-grid">'
+ +'<div class="meta-cell"><div class="l">Contacto</div>'+esc((a.lead&&a.lead.full_name)||'—')+'</div>'
+ +'<div class="meta-cell"><div class="l">Email</div>'+esc((a.lead&&a.lead.email)||'—')+'</div>'
+ +'<div class="meta-cell"><div class="l">Recibida</div>'+fdate(a.created_at)+'</div>'
+ +'<div class="meta-cell"><div class="l">Tipo</div>'+(TIPO_ENCARGO[a.tipo_encargo]||esc(a.tipo_encargo))+'</div>'
+ +'<div class="meta-cell" style="grid-column:1/-1"><div class="l">Mensaje</div>'+esc(a.descripcion||'(sin descripción)')+'</div>'
+ +'</div>'
+ +(a.lead?'<div style="margin-top:16px"><a class="btn btn-secondary btn-mini" href="#/leads/'+a.lead.id+'">Ver ficha del lead →</a></div>':'')
+ +'</div>'
+ +'<div class="card"><h2>Pipeline</h2><div class="stepper">'+steps+'</div>'
+ +'<p style="font-size:11.5px;color:var(--soft);margin:6px 0 0">Toca una etapa para mover la solicitud.</p>'
+ +'<h2 style="margin-top:26px">Entregable</h2>'
+ +'<p style="font-size:12.5px;color:var(--soft);margin:0">Importe, fecha de entrega y fichero del entregable todavía no existen en el esquema: se añadirán con su propia migración cuando el pipeline de Advisory lo justifique.</p></div>'
+ +'</div></div>';
+}
+
+function vMuestras(){
+ const base=DATA.samples.filter(inScope);
+ const rows=base.map(s=>'<tr>'
+  +'<td class="t">'+esc(s.topic||'—')+' '+tBadge(s.is_test)+'<div style="font-size:11.5px;color:var(--soft);font-weight:400">'+esc((s.lead&&(s.lead.company_name||s.lead.email))||'—')+'</div></td>'
+  +'<td>'+(s.lead?'<a href="#/leads/'+s.lead.id+'">'+esc(s.lead.full_name||s.lead.email)+'</a>':'—')+'</td>'
+  +'<td>'+sampleChip(s.status)+'</td><td>'+fdate(s.created_at)+'</td>'
+  +'<td>'+(s.publication?'<a href="muestra.html?token='+encodeURIComponent(s.publication.public_token)+'" target="_blank" rel="noopener" style="font-size:12px">Abrir muestra →</a>':'<span style="font-size:12px;color:var(--soft)">—</span>')+'</td></tr>').join('');
+ return '<div class="observe"><div class="eyebrow">M3 · Flujo de muestras</div><h1>Muestras</h1>'
+ +'<p class="sub">Circuito automático de muestras: cada una enlaza con su lead y con la publicación generada. Vista de solo lectura.</p>'
+ +scopeBar(base.length+' de '+DATA.samples.length+' muestras en este ámbito')
+ +(base.length?'<div class="card" style="padding:8px 22px"><table class="tbl"><tr><th>Muestra</th><th>Lead</th><th>Estado</th><th>Fecha</th><th>Entregable</th></tr>'+rows+'</table></div>':scopeEmpty('muestras'))
+ +'<p style="font-size:11.5px;color:var(--soft);margin:14px 0 0">Reintentar o reenviar una muestra gasta dinero real (Anthropic y Resend) en cada clic, así que esas acciones no están cableadas todavía.</p></div>';
+}
+
+function vSuscriptores(){
+ const pro=DATA.pro.filter(inScope), sig=DATA.signals.filter(inScope);
+ const proRows=pro.map(u=>'<tr><td class="t">'+esc(u.full_name||u.email)+' '+tBadge(u.is_test)
+  +'<div style="font-size:11.5px;color:var(--soft);font-weight:400">'+esc(u.company_name||'')+' · '+esc(u.email)+'</div></td>'
+  +'<td>'+esc(u.plan)+'</td>'
+  +'<td>'+chip(esc(u.status),u.status==='active'?'c-green':'c-copper')+'</td>'
+  +'<td>'+fdate(u.subscription_start||u.created_at)+'</td></tr>').join('');
+ const sigRows=sig.map(s=>'<tr><td class="t">'+esc(s.email)+' '+tBadge(s.is_test)+'</td>'
+  +'<td>'+chip(esc(s.source),'c-gray')+'</td>'
+  +'<td>'+chip(s.status==='active'?'Activo':'Baja',s.status==='active'?'c-green':'c-gray')+'</td>'
+  +'<td>'+fdate(s.created_at)+'</td></tr>').join('');
+ return '<div class="observe"><div class="eyebrow">M5 · Suscriptores</div><h1>Suscriptores</h1>'
+ +'<p class="sub">Las dos listas: suscriptores Pro de pago (los escribe el webhook de Stripe) y la lista abierta de la newsletter. Solo lectura.</p>'
+ +scopeBar((pro.length+sig.length)+' de '+(DATA.pro.length+DATA.signals.length)+' suscriptores en este ámbito')
+ +'<div class="card" style="padding:8px 22px"><div style="padding:14px 0 4px"><h2 style="display:inline">Pro</h2> '+chip('Stripe en modo prueba','c-amber')+'</div>'
+ +(pro.length?'<table class="tbl"><tr><th>Suscriptor</th><th>Plan</th><th>Estado</th><th>Desde</th></tr>'+proRows+'</table>':'<div class="empty">Sin suscriptores Pro en este ámbito.</div>')+'</div>'
+ +'<div class="block card" style="padding:8px 22px"><div style="padding:14px 0 4px"><h2 style="display:inline">Newsletter · edición abierta</h2></div>'
+ +(sig.length?'<table class="tbl"><tr><th>Email</th><th>Fuente</th><th>Estado</th><th>Alta</th></tr>'+sigRows+'</table>':'<div class="empty">Sin suscriptores de newsletter en este ámbito.</div>')+'</div>'
+ +'<p style="font-size:11.5px;color:var(--soft);margin:14px 0 0">Activar o desactivar una suscripción Pro desde aquí desincronizaría la base de datos de Stripe, que es donde vive el estado real del cobro. La baja de la newsletter es acción del lector, por el enlace de cada email.</p></div>';
+}
+
+/* ============ Router ============ */
+async function route(){
+ if(!_session) return;
+ const h=(location.hash||'#/resumen').replace(/^#\//,'');
+ const [view,param]=h.split('/');
+ const app=$('#app');
+ document.querySelectorAll('.side a').forEach(a=>a.classList.toggle('active',a.dataset.r===view));
+
+ if(view==='leads'&&param){
+  app.innerHTML='<div class="empty">Cargando ficha…</div>';
+  try{ DETAIL=await api('/admin-leads?id='+encodeURIComponent(param)); }
+  catch(e){ app.innerHTML='<div class="empty">No se pudo cargar la ficha: '+esc(e.message)+'</div>'; return }
+  app.innerHTML=vLeadDetail();
+ }
+ else if(view==='leads')        app.innerHTML=vLeads();
+ else if(view==='advisory'&&param) app.innerHTML=vAdvDetail(param);
+ else if(view==='advisory')     app.innerHTML=vAdvisory();
+ else if(view==='muestras')     app.innerHTML=vMuestras();
+ else if(view==='suscriptores') app.innerHTML=vSuscriptores();
+ else                           app.innerHTML=vResumen();
+ reveal(); window.scrollTo(0,0);
+}
+addEventListener('hashchange',route);
+
+/* ============ Acciones ============ */
+window.A={
+ scope(v){SCOPE=v;route()},
+ fLeadQ(v){LF.q=v;const app=$('#app');app.innerHTML=vLeads();reveal();const inp=app.querySelector('.f-input');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}},
+ fLeadSt(v){LF.st=v;$('#app').innerHTML=vLeads();reveal()},
+ fLeadSrc(v){LF.src=v;$('#app').innerHTML=vLeads();reveal()},
+
+ async leadStatus(st){
+  if(!DETAIL)return;
+  try{
+   await api('/admin-leads',{method:'PATCH',body:JSON.stringify({id:DETAIL.lead.id,status:st})});
+   DETAIL.lead.status=st;
+   const row=DATA.leads.find(l=>l.id===DETAIL.lead.id); if(row) row.status=st;
+   $('#app').innerHTML=vLeadDetail(); reveal();
+   toast('Lead movido a '+LEAD_ESTADOS[st]);
+  }catch(e){ toast(e.message,true) }
+ },
+ async saveNote(){
+  if(!DETAIL)return;
+  const val=$('#note-box').value;
+  try{
+   await api('/admin-leads',{method:'PATCH',body:JSON.stringify({id:DETAIL.lead.id,notes:val})});
+   DETAIL.lead.notes=val;
+   toast('Nota guardada');
+  }catch(e){ toast(e.message,true) }
+ },
+ /* Marcar un lead como real es la acción con más consecuencias del panel:
+    saca la fila del ámbito de prueba. Siempre con confirmación (D3). */
+ async toggleTest(){
+  if(!DETAIL)return;
+  const l=DETAIL.lead, next=!l.is_test;
+  const msg=next
+   ? '¿Devolver este lead a DATO DE PRUEBA?\n\nDejará de contar como negocio real.'
+   : '¿Marcar este lead como DATO REAL?\n\nSaldrá del ámbito de prueba y contará como negocio de verdad en el Resumen.';
+  if(!confirm(msg)) return;
+  try{
+   await api('/admin-leads',{method:'PATCH',body:JSON.stringify({id:l.id,is_test:next})});
+   l.is_test=next;
+   const row=DATA.leads.find(x=>x.id===l.id); if(row) row.is_test=next;
+   $('#app').innerHTML=vLeadDetail(); reveal();
+   toast(next?'Lead devuelto a dato de prueba':'Lead marcado como real');
+  }catch(e){ toast(e.message,true) }
+ },
+ async advStatus(id,st){
+  try{
+   await api('/admin-advisory',{method:'PATCH',body:JSON.stringify({id:id,status:st})});
+   const a=DATA.advisory.find(x=>x.id===id); if(a) a.status=st;
+   $('#app').innerHTML=vAdvDetail(id); reveal();
+   const f=ADV_ETAPAS.find(x=>x[0]===st);
+   toast('Solicitud movida a '+(f?f[1]:st));
+  }catch(e){ toast(e.message,true) }
+ }
+};
+
+/* ============ Acceso ============ */
+function showGate(msg,cls){
+ $('#shell-wrap').style.display='none';
+ $('#gate').style.display='block';
+ if(msg){const m=$('#gate-msg');m.textContent=msg;m.className='msg '+(cls||'')}
+}
+async function handleSession(session){
+ if(!session){ showGate(); return }
+ if(session.user.email!==ADMIN_EMAIL){
+  await client.auth.signOut();
+  showGate('Esa cuenta no tiene acceso al Admin.','err');
+  return;
+ }
+ _session=session;
+ $('#gate').style.display='none';
+ $('#shell-wrap').style.display='block';
+ $('#app').innerHTML='<div class="empty">Cargando datos…</div>';
+ try{ await loadAll(); }
+ catch(e){ $('#app').innerHTML='<div class="empty">No se pudieron cargar los datos: '+esc(e.message)+'</div>'; return }
+ route();
+}
+$('#gate-send').addEventListener('click',async()=>{
+ const email=$('#gate-email').value.trim();
+ if(!email){ $('#gate-msg').textContent='Introduce tu email.'; $('#gate-msg').className='msg err'; return }
+ $('#gate-msg').textContent='Enviando enlace…'; $('#gate-msg').className='msg';
+ const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});
+ if(error){ $('#gate-msg').textContent='No se pudo enviar: '+error.message; $('#gate-msg').className='msg err' }
+ else{ $('#gate-msg').textContent='Enlace enviado. Revisa tu bandeja.'; $('#gate-msg').className='msg ok' }
+});
+$('#signout').addEventListener('click',async e=>{ e.preventDefault(); await client.auth.signOut(); _session=null; location.hash=''; showGate() });
+client.auth.onAuthStateChange((_e,session)=>handleSession(session));
+
+/* loader + arranque */
+addEventListener('load',()=>setTimeout(()=>document.querySelector('.load-screen').classList.add('done'),450));
+setTimeout(()=>document.querySelector('.load-screen').classList.add('done'),2500);
+client.auth.getSession().then(({data})=>handleSession(data.session));
+</script>
+</body>
+</html>
