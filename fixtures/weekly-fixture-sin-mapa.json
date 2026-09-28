@@ -1,0 +1,183 @@
+{
+  "titulo": "Fixture sin mapa: solo dos nodos, por debajo del umbral",
+  "period": "22 al 28 de septiembre de 2026",
+  "apertura": "La semana deja una lectura incómoda para quien mide el mercado por titulares: el volumen agregado cae un <strong>12% interanual</strong>, pero el número de operaciones cerradas sube. Se firma más y por menos. El capital sigue ahí; lo que se ha estrechado es la banda de precio que compradores y vendedores aceptan sin pelear.",
+  "senales": [
+    {
+      "tipo": "Buyout",
+      "badge_class": "buyout",
+      "titulo": "Fondo Meridiano III toma el control de Cerámicas Duero",
+      "temporalidad": "Esta semana",
+      "hecho": "[HECHO-1] Fondo Meridiano III adquiere el <strong>71% de Cerámicas Duero</strong> por 84 M€, valorando la compañía en 8,2x EBITDA. Asesora Gabinete Arenal en el lado vendedor.",
+      "patron": "[PRO-PATRON-1] Es el tercer buyout industrial del trimestre que se cierra por debajo de 9x, cuando la banda de 2024 estaba en 11-12x.",
+      "implicacion": "[PRO-IMPL-1] Para un vendedor industrial sin urgencia, esperar seis meses ya no es una estrategia neutra: el suelo de valoración se está consolidando, no rebotando."
+    },
+    {
+      "tipo": "Deuda Privada",
+      "badge_class": "deuda",
+      "titulo": "Arrecife Capital cierra un unitranche de 45 M€",
+      "temporalidad": "Esta semana",
+      "hecho": "[HECHO-2] Arrecife Capital financia con <strong>45 M€</strong> la compra de NovaSalud Levante. Según Moody's & Standard & Poor's, el margen se sitúa en E+625.",
+      "patron": "[PRO-PATRON-2] El direct lending cubre ya el hueco que la banca dejó en tickets de 30-60 M€, y lo cobra: 150 pb por encima del bancario comparable.",
+      "implicacion": "[PRO-IMPL-2] El coste de la deuda deja de ser residual en el modelo: a estos márgenes, dos vueltas de tuerca en el precio de entrada se comen el retorno."
+    },
+    {
+      "tipo": "Salida",
+      "badge_class": "salida",
+      "titulo": "Grupo Aliseda Verde: la salida que no llegó",
+      "temporalidad": "Septiembre 2026",
+      "hecho": "[HECHO-3] El proceso de venta de <strong>Grupo Aliseda Verde</strong> se suspende tras dos rondas sin ofertas vinculantes. La compañía llevaba \"en escaparate\" desde marzo, según Crónica Mercantil.",
+      "patron": "[PRO-PATRON-3] Es la cuarta salida abortada del año en agroalimentario, todas con la misma causa declarada: diferencial de precio irreconciliable.",
+      "implicacion": "[PRO-IMPL-3] Los fondos con activos de 2019-2020 en cartera entran en el tramo en que extender el holding period cuesta más que aceptar el descuento."
+    },
+    {
+      "tipo": "Growth Equity",
+      "badge_class": "growth",
+      "titulo": "Fintech Arrecife levanta 22 M€ en Serie B",
+      "temporalidad": "Esta semana",
+      "hecho": "[HECHO-4] <script>alert('xss')</script> Fintech Arrecife cierra una Serie B de 22 M€ liderada por Meridiano Ventures, con una valoración post-money de 130 M€.",
+      "patron": "[PRO-PATRON-4] Las Series B españolas de fintech vuelven a levantarse, pero con un 40% menos de dilución que en 2022: el fundador conserva más y el fondo exige más gobierno.",
+      "implicacion": "[PRO-IMPL-4] La negociación se ha desplazado del precio a los derechos políticos. Quien solo mire la valoración de titular leerá mal la ronda."
+    },
+    {
+      "tipo": "Fundraising",
+      "badge_class": "fund",
+      "titulo": "Meridiano IV alcanza el primer cierre en 180 M€",
+      "temporalidad": "Contexto",
+      "hecho": "[HECHO-5] Meridiano Partners anuncia el primer cierre de su cuarto fondo en <strong>180 M€</strong>, con objetivo de 300 M€. El 60% procede de inversores institucionales nacionales.",
+      "patron": "[PRO-PATRON-5] El peso del LP doméstico sube por tercer año consecutivo, en un mercado donde el capital internacional se ha vuelto selectivo con España.",
+      "implicacion": "[PRO-IMPL-5] Un fondo con base de LPs local tiene más margen para sostener una tesis a cinco años sin presión de reasignación geográfica."
+    }
+  ],
+  "operaciones": [
+    {
+      "nombre": "Cerámicas Duero",
+      "tipo": "Buyout",
+      "sector": "Industrial",
+      "tesis": "Consolidación de un fabricante regional"
+    },
+    {
+      "nombre": "NovaSalud Levante",
+      "tipo": "M&A",
+      "sector": "Sanidad",
+      "tesis": "Plataforma de clínicas en el arco mediterráneo"
+    },
+    {
+      "nombre": "Fintech Arrecife",
+      "tipo": "Growth Equity",
+      "sector": "Tecnología",
+      "tesis": "Escalado de pagos B2B en Iberia"
+    },
+    {
+      "nombre": "Grupo Aliseda Verde",
+      "tipo": "Salida",
+      "sector": "Agroalimentario",
+      "tesis": "Proceso suspendido por precio"
+    },
+    {
+      "nombre": "Talgo Nórdica SL",
+      "tipo": "M&A",
+      "sector": "Industrial",
+      "tesis": "Integración vertical de componentes"
+    },
+    {
+      "nombre": "Meridiano IV",
+      "tipo": "Fundraising",
+      "sector": "Financiero",
+      "tesis": "Primer cierre con LP doméstico"
+    }
+  ],
+  "vigilar": [
+    {
+      "titulo": "El calendario de Aliseda Verde",
+      "contexto": "Si el proceso se reabre antes de diciembre, marcará el suelo de precio del sector. Si no, la señal es que los vendedores prefieren esperar a 2027."
+    },
+    {
+      "titulo": "Margen del direct lending",
+      "contexto": "E+625 es el techo de los últimos dieciocho meses. Que se sostenga o ceda dirá si la competencia entre fondos de deuda ha vuelto."
+    },
+    {
+      "titulo": "Segundo cierre de Meridiano IV",
+      "contexto": "El salto de 180 a 300 M€ depende de dos LPs institucionales aún no comprometidos. Es el termómetro del apetito doméstico."
+    },
+    {
+      "titulo": "Múltiplos industriales bajo 9x",
+      "contexto": "Tres operaciones no hacen tendencia, pero una cuarta en el trimestre convertiría la banda 8-9x en la nueva referencia."
+    }
+  ],
+  "readthrough": {
+    "origination": "[PRO-RT-ORIG] El origen está en carteras 2019-2020 que agotan holding period, no en procesos competitivos abiertos.",
+    "financiacion": "[PRO-RT-FIN] Estructurar con unitranche a E+625 exige entrar por debajo de 9x para que el retorno aguante.",
+    "salidas": "[PRO-RT-SAL] Sacar un activo al mercado sin comprador ancla identificado tiene hoy una probabilidad alta de proceso fallido."
+  },
+  "dato": {
+    "cifra": "+41%",
+    "texto": "Las operaciones cerradas por debajo de 9x EBITDA suben un 41% interanual en el mid-market industrial español. El volumen agregado, en cambio, cae. Se firma más y por menos: el mercado ha encontrado precio, no confianza."
+  },
+  "mapa": {
+    "tipo": "posicionamiento",
+    "eje_x": "Actividad transaccional",
+    "eje_y": "Tensión de valoración",
+    "cuadrantes": {
+      "tr": "Caro y activo",
+      "br": "Activo con precio hecho",
+      "tl": "Caro y parado",
+      "bl": "Parado y descontado"
+    },
+    "nodos": [
+      {
+        "id": "ind",
+        "label": "Industrial",
+        "x": 0.78,
+        "y": 0.34,
+        "x2": 0.82,
+        "y2": 0.3,
+        "size": 3,
+        "momentum": "creciente",
+        "cuerpo": "[MAPA-CUERPO-1] Tres buyouts cerrados por debajo de 9x EBITDA. La banda de precio se ha desplazado de forma estable, no puntual.",
+        "chips": [
+          "Fondo Meridiano III",
+          "Cerámicas Duero"
+        ],
+        "fuente": "Boletín Meridiano · 26 sep 2026"
+      },
+      {
+        "id": "san",
+        "label": "Sanidad",
+        "x": 0.66,
+        "y": 0.71,
+        "x2": 0.7,
+        "y2": 0.68,
+        "size": 2,
+        "momentum": "estable",
+        "cuerpo": "[MAPA-CUERPO-2] Las plataformas de clínicas sostienen múltiplos de doble dígito gracias a la competencia entre compradores industriales.",
+        "chips": [
+          "NovaSalud Levante"
+        ],
+        "fuente": "Crónica Mercantil · 24 sep 2026"
+      }
+    ]
+  },
+  "fuentes": [
+    {
+      "medio": "Boletín Meridiano",
+      "titulo": "[PRO-FUENTE-1] El mid-market industrial encuentra precio por debajo de 9x — 26 de septiembre de 2026"
+    },
+    {
+      "medio": "Crónica Mercantil",
+      "titulo": "[PRO-FUENTE-2] Aliseda Verde suspende su venta tras dos rondas sin vinculantes — 27 de septiembre de 2026"
+    },
+    {
+      "medio": "Registro de Capital Privado",
+      "titulo": "[PRO-FUENTE-3] Meridiano IV anuncia primer cierre en 180 M€ — 25 de septiembre de 2026"
+    },
+    {
+      "medio": "Gaceta Financiera del Levante",
+      "titulo": "[PRO-FUENTE-4] Arrecife financia NovaSalud con un unitranche de 45 M€ — 23 de septiembre de 2026"
+    },
+    {
+      "medio": "Observatorio Mercantil",
+      "titulo": "[PRO-FUENTE-5] Las Series B de fintech vuelven con menos dilución — 24 de septiembre de 2026"
+    }
+  ]
+}
