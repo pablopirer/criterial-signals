@@ -43,7 +43,8 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - 1 active Pro subscriber — verify in Stripe before using for commercial claims
 - 2 publications published: Weekly Signals nº1 (`995ddce5-42f8-479f-87f3-717ca198ba97`, 2026-06-13) and "Weekly Signals — 28 de junio de 2026" (`f5bbbf6b-345e-4006-b939-6bc4d302098a`, published + sent to Pro 2026-06-28); 5 sample drafts (per-lead, addressable by token — their natural resting state)
 - 46 sample requests total: 7 `generation_failed` (users did not receive email; all predate the Day 22 fix), 0 queued — verified against live DB 2026-06-28
-- Active CSS is **`styles.v11.css`** and `criterial-shared.js` is at **`?v=8`** across all active HTML files. CSS renamed v10→v11 in Day 29 for the Monthly Brief "El Informe" **v6 solidity pass** (heavy `mb-*` revision: break-out layout, framed data panel, pull-quote, drop cap). `criterial-shared.js` UNCHANGED since v5 (buildMetrics/buildMap reused) → `?v=8` stays.
+- Deployed Edge Functions (verified 2026-09-28): **`generate-content` v13**, `sample-request` v26, `admin-publications` v7, `welcome-subscriber` v12, `advisory-request` v10, `stripe-webhook` v6, `get-publications` v7, `subscribe-signals` v2, and v1 for `send-weekly`, `get-sample`, `get-public-editions`, `generate-linkedin`, `unsubscribe-signals`, `send-open-edition`, `admin-leads`, `admin-advisory`, `admin-samples`, `admin-subscribers` — 18 active in total.
+- Active CSS is **`styles.v12.css`** and `criterial-shared.js` is at **`?v=10`** across all active HTML files. Verified against the repo and all 14 HTML pages on 2026-09-28. (History: v10→v11 in Day 29 for the Monthly "El Informe" v6 solidity pass; later bumped to v12. The `?v=N` on the shared JS moved to 10 in the same period.)
 
 > **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
@@ -54,7 +55,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
 - Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `signals.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22). `signals.html` is the **public** free-edition reader ("Signals · Edición abierta"), added Day 27 — no login; fetches `get-public-editions`. The public nav "Signals" points to `signals.html` (was `sample.html`).
-- Active CSS: **`styles.v11.css`** — loaded by all HTML pages (renamed from `styles.v10.css` in Day 29 to bust GitHub Pages cache). `styles.css` remains in the repo but is not loaded by any page.
+- Active CSS: **`styles.v12.css`** — loaded by all HTML pages. `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
 
@@ -120,7 +121,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, muestra, archive, encargos,
 │                                  advisory-received, request-received, success, cancel, admin
-├── styles.v11.css              ← active CSS (styles.css present in repo but not loaded)
+├── styles.v12.css              ← active CSS (styles.css present in repo but not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
@@ -143,7 +144,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Publication content system
 - El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
 - El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
-- Las clases `pub-*` están definidas en `styles.v11.css` bajo el bloque `Publication content — Weekly & Monthly`. Las clases `pub-map-*` (mapa) y `pub-metrics-*` (barras) están ahí; las clases **`mb-*`** son la identidad de informe del Brief Mensual ("El Informe", v6) en el mismo archivo — layout break-out, panel enmarcado, pull-quote, capitular.
+- Las clases `pub-*` están definidas en `styles.v12.css` bajo el bloque `Publication content — Weekly & Monthly`. Las clases `pub-map-*` (mapa) y `pub-metrics-*` (barras) están ahí; las clases **`mb-*`** son la identidad de informe del Brief Mensual ("El Informe", v6) en el mismo archivo — layout break-out, panel enmarcado, pull-quote, capitular.
 - El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
 - `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
 - `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
@@ -219,7 +220,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 
 ### 3.6 Manual content generation (terminal script)
 - **Entry point:** developer runs script locally.
-- **Scripts:** `scripts/generate-content.sh weekly|monthly` (generates 1 Anthropic variation with web search, prompts for confirmation, saves as draft); `scripts/publish-draft.sh <id>` (sets status=published).
+- **Scripts:** `scripts/generate-content.sh weekly|monthly [YYYY-MM]` (generates 1 Anthropic variation with web search, prompts for confirmation, saves as draft); `scripts/publish-draft.sh <id>` (sets status=published). The optional `YYYY-MM` applies to `monthly` only and generates a **closed** month (e.g. `monthly 2026-07` run in August covers 1-31 July, not a partial August). Without it the period is derived from today. The Edge Function has no equivalent - see §7, "the Monthly is terminal-only".
 - **Services touched:** Anthropic API (web search + HTML generation), Supabase.
 - **Side effects:** new publication record inserted in `publications`; after publish, appears in archive for Pro subscribers.
 - **Preview:** `admin.html` has a "Previsualizar" button on each card that opens a modal with the rendered HTML content. Allows review before publishing.
@@ -253,7 +254,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
 14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
-15. **`pub-*`/`mb-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v11.css` classes.
+15. **`pub-*`/`mb-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v12.css` classes.
 
 ---
 
@@ -304,7 +305,8 @@ git push                                  # pushes to remote / triggers GitHub P
 ### Production side effects — confirm scope carefully
 ```bash
 scripts/generate-content.sh weekly        # calls Anthropic API; writes DB record
-scripts/generate-content.sh monthly       # calls Anthropic API; writes DB record
+scripts/generate-content.sh monthly       # calls Anthropic API; writes DB record (period = current month)
+scripts/generate-content.sh monthly 2026-07   # same, for a CLOSED month - the normal way to write the Monthly
 scripts/publish-draft.sh <id>             # sets publication status=published; immediately visible to Pro subscribers
 ```
 
@@ -316,10 +318,10 @@ scripts/publish-draft.sh <id>             # sets publication status=published; i
 GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (the active file is now `styles.v8.css`; next bump it to `styles.v9.css`), update all HTML references, then commit and push. This was last done in Day 25 (`styles.v7.css` → `styles.v8.css`). Note: a plain `sed` over `*.html` normalizes CRLF→LF on the files that use CRLF (currently `admin.html`, `archive.html`, `sample.html`) — restore them with `sed -i 's/$/\r/'` after the bump to keep the diff clean.
 
 ### Active CSS file ambiguity
-The active CSS file is **`styles.v11.css`** (renamed from `styles.v10.css` in Day 29). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
+The active CSS file is **`styles.v12.css`**. `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
-When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: `?v=8` — bumped in Day 29 (map temporal-tracker relabel in `buildMap`: "Ahora"/"Hace un mes" via `xprev/yprev`, for the Monthly v5); `?v=7` added `buildMetrics`; previously `?v=6` in Day 26. Verified consistent across all active HTML files. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=8` AND `styles.v10.css` — bump the query (or load with a unique param) to force a fresh copy; a stale CSS is why widget styles can appear unstyled locally.
+When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: **`?v=10`** — verified consistent across all 14 active HTML files on 2026-09-28. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=10` AND `styles.v12.css` — bump the query (or load with a unique param) to force a fresh copy; a stale CSS is why widget styles can appear unstyled locally.
 
 ### Weekly interactive map — base64 in HTML, hydrated client-side
 The Weekly positioning map (Day 25) travels as a `<div class="pub-map" data-mapa="<base64>">` placeholder inside `body_markdown` (base64 of the `mapa` JSON, UTF-8-safe). Base64 has no quotes/apostrophes, so it survives `archive.html`'s attribute-escaping round-trip (`safeBody` → `data-body` → `innerHTML`) untouched. The renderer `window.hydratePubWidgets(root)` (in `criterial-shared.js`) decodes it and builds the interactive SVG (quadrant labels rendered OUTSIDE the plot frame; bubble centres clamped inside; a light de-overlap relax with anchor pull-back). It is called by `archive.html` `openPubModal` and `admin.html` `previewPublication` after setting innerHTML — scripts inside innerHTML do NOT execute, so hydration must be driven by the host page. A malformed map hides its own section and never breaks the publication. No DB schema change: the data rides in `body_markdown`, not `body_data`.
@@ -330,6 +332,19 @@ The Weekly positioning map (Day 25) travels as a `<div class="pub-map" data-mapa
 - **Wall-clock/gateway timeout → HTTP without `{error}` body → admin shows "Error desconocido":** a 5-search run exceeded the Edge Function wall-clock limit and the gateway killed it (the function's own errors always carry `{error}`; a bare gateway failure does not). Fix: web search `max_uses` reduced 5→3.
 
 **The Brief Mensual does NOT fit reliably (Day 30).** The v6/v7 Monthly (~16000 output tokens + web search) sits right on the wall-clock ceiling: it succeeds sometimes and 504s others (verified `execution_time_ms: 150888`). **Async does NOT fix this** — contrary to an earlier note here. Supabase's wall-clock limit (Free: **150s**, Paid: 400s) is the duration a worker stays active *including* background tasks, and `EdgeRuntime.waitUntil()` prevents early retirement but does **not** extend the hard limit. Moving generation to background would only hide the timeout (silent death at 150s) instead of surfacing it. So: **the Monthly is generated from the terminal** (`scripts/generate-content.sh monthly`, no gateway ceiling locally); the admin "Generar Brief Mensual" button now shows a `confirm()` warning + the terminal command before attempting, and `generate()` maps 504/546 to a diagnosable error. Async remains the right fix for `sample-request` (30-90s, fits easily); it is NOT the fix for the Monthly. Real headroom for the button would require Supabase Pro (400s) — a business call, not a technical one. See memory `project_monthly_generation_wallclock`.
+
+**Decision (2026-09-28): the Monthly is terminal-only, and the script is allowed to diverge from the Edge Function.**
+`scripts/generate-content.sh monthly` takes an optional `YYYY-MM` argument that generates a **closed** month
+(period runs to the last calendar day, and the model is told to cover the whole month and not drift into later
+news). The Monthly is written *after* the month ends, so without it a run on 10-Aug would produce a partial
+"agosto, 1-10". The `generate-content` Edge Function does **not** implement this: it derives the period from
+`new Date()` and takes no target month. That divergence is deliberate, not an oversight — the EF path for the
+Monthly is already unreliable (150s wall-clock, verified `execution_time_ms: 150888`), so the terminal is the
+real path and is the only one that needs the closed-month argument. Consequence to keep in mind: **script and
+EF are NOT in parity for the Monthly period.** They remain in parity for the Weekly and for the prompt contract
+(`prompts/monthly-brief.es.md` and `_shared/prompts.ts` must stay identical). If the Monthly ever moves back to
+the button — which would need Supabase Pro for the 400s ceiling — the closed-month argument must be ported to
+the EF first.
 
 ### Web search wraps JSON output in prose — use `extractJsonObject`
 When Anthropic web search is enabled, the model frequently prefixes conversational prose before the JSON (e.g. "Con los datos recopilados, genero ahora el brief…") and wraps it in a ```json fence. A parser that only strips the fence leaves the prose and `JSON.parse` throws on the first non-JSON char — this was the confirmed root cause of silent `generation_failed` sample requests. The fix is the `extractJsonObject` helper (in `sample-request` and `generate-content`): it prefers a fenced block, then bounds to the outermost `{ … }`. Any new JSON-returning path that uses web search must parse through this helper, never raw `JSON.parse`. Since Day 30 the single copy lives in `_shared/json.ts`, imported by `sample-request`, `generate-content` and `generate-linkedin` (the inline duplicates were removed). Note: the monthly path is NOT exempt — since the Day 29 "El Informe" redesign it also emits JSON and parses through this helper (an older note here claimed it emitted HTML directly; that is obsolete).
