@@ -1085,3 +1085,97 @@ button.btn-dark {
   .pub-ops-table td:nth-of-type(4)::before { content: "Tesis — "; }
   .pub-ops-table td:not(:first-child)::before { color: var(--label); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Publication identity — Preview palette, scoped to publication content only
+   ──────────────────────────────────────────────────────────────────────────────
+   Phase 2 · Checkpoint 1 (scope B). The identity approved in Preview — ivory
+   paper, ink, analytical blue, copper accent, Fraunces for display + Inter for
+   text — applies to what the READER receives: the Weekly, the Monthly and the
+   sample. It deliberately does NOT reach the rest of the site, which keeps its
+   EB Garamond masthead and existing palette.
+
+   Everything below is scoped under .pub-content (which wraps both `pub-*` and
+   the Monthly's `mb-*`, since the report root is `.pub-content.mb-report`), so
+   no global rule changes. Tokens are redeclared locally rather than on :root
+   for the same reason.
+
+   Placed at the end of the file on purpose: same specificity as the base
+   publication rules, so source order decides and the base block stays readable
+   as the structural layer.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.pub-content {
+  --pub-paper:  #F4F0E8;   /* marfil — fondo de página del contenido */
+  --pub-white:  #FFFDF8;   /* blanco cálido — paneles y tarjetas */
+  --pub-ink:    #191814;   /* tinta — texto principal */
+  --pub-navy:   #15263B;   /* azul analítico — titulares y cifras */
+  --pub-copper: #C2551B;   /* cobre — acento, uno por bloque como máximo */
+  --pub-rule:   #C9C1B3;   /* filetes y bordes */
+  --pub-soft:   #706D65;   /* texto secundario */
+}
+
+/* ── Texto y color ─────────────────────────────────────────────────────────── */
+.pub-content { color: var(--pub-ink); }
+.pub-content .pub-sec-label,
+.pub-content .mb-sec-label { color: var(--pub-copper); }
+.pub-content .pub-brand-label,
+.pub-content .mb-kicker { color: var(--pub-copper); }
+.pub-content .pub-brand-num,
+.pub-content .mb-num { color: var(--pub-soft); }
+.pub-content .pub-period-new,
+.pub-content .mb-dek { color: var(--pub-soft); }
+
+/* ── Display: Fraunces para lo que se compone en grande ───────────────────── */
+.pub-content .pub-title-new,
+.pub-content .mb-title,
+.pub-content .pub-dato-num,
+.pub-content .mb-stat-num,
+.pub-content .mb-quote,
+.pub-content .pub-vigilar-title-new,
+.pub-content .pub-signal-title {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif;
+  color: var(--pub-navy);
+}
+.pub-content .pub-title-new,
+.pub-content .mb-title { letter-spacing: -0.015em; }
+
+/* La cifra del dato y los números del panel son el acento de su bloque. */
+.pub-content .pub-dato-num,
+.pub-content .mb-stat-num { color: var(--pub-copper); }
+
+/* ── Prosa: Inter, salvo el cuerpo largo del informe ───────────────────────── */
+.pub-content .pub-apertura-new,
+.pub-content .pub-signal-fact,
+.pub-content .pub-signal-row-text,
+.pub-content .pub-dato-text { font-family: 'Inter', system-ui, sans-serif; }
+.pub-content .mb-prose {
+  font-family: 'Fraunces', 'EB Garamond', Georgia, serif;
+  color: var(--pub-ink);
+}
+
+/* ── Filetes, bordes y superficies ─────────────────────────────────────────── */
+.pub-content .pub-section-new,
+.pub-content .pub-header-new,
+.pub-content .pub-footer-new,
+.pub-content .mb-masthead,
+.pub-content .pub-sources-new { border-color: var(--pub-rule); }
+.pub-content .pub-vigilar-card,
+.pub-content .pub-dato-new,
+.pub-content .mb-data { background: var(--pub-white); border-color: var(--pub-rule); }
+.pub-content .pub-ops-table th { color: var(--pub-copper); border-color: var(--pub-rule); }
+.pub-content .pub-ops-table td { border-color: var(--pub-rule); }
+
+/* El read-through es el bloque de mayor valor del Weekly Pro: lo marca el
+   cobre en el filete, no un fondo, para que no compita con el dato. */
+.pub-content .pub-readthrough { border-left: 2px solid var(--pub-copper); }
+.pub-content .pub-rt-cat { color: var(--pub-copper); }
+
+/* ── Fuentes y pie ─────────────────────────────────────────────────────────── */
+.pub-content .pub-source-medio { color: var(--pub-navy); }
+.pub-content .pub-source-titulo,
+.pub-content .pub-footer-text { color: var(--pub-soft); }
+
+/* ── Mapa: el acento de trayectoria pasa a cobre ───────────────────────────── */
+.pub-content .pub-map-quad { color: var(--pub-soft); }
+.pub-content .pub-map-axis { color: var(--pub-soft); }
