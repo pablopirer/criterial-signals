@@ -160,6 +160,8 @@ Antes de generar el JSON, realiza búsquedas verificables sobre el mercado espa�
 ### La tabla de operaciones es la ESPINA de datos (REGLA CRÍTICA)
 El bloque "operaciones" es la lista de operaciones notables del mid-market español que has seguido este mes, CADA UNA con su fuente real. El panel de datos del informe se CALCULA a partir de esta lista (nº de operaciones, desglose por sector, volumen divulgado), así que debe ser sólida: MÍNIMO 8 operaciones reales y citadas (idealmente 8-12). 'n_importe' es el importe en millones de euros como NÚMERO (p.ej. 180) SOLO si es público; si no se ha divulgado, omite 'n_importe' y pon 'importe': "n.d.". NUNCA inventes importes.
 
+**Taxonomía de sectores (OBLIGATORIO).** El campo 'sector' alimenta el desglose por sector del panel de datos, así que su función es AGRUPAR, no describir. Usa una lista corta y canónica, y repite EXACTAMENTE la misma etiqueta en todas las operaciones del mismo sector. Etiquetas admitidas: Sanidad, Tecnología, Industrial, Servicios, Consumo, Agroalimentario, Energía, Infraestructura, Financiero, Deuda privada. Elige siempre la más cercana en vez de inventar una etiqueta nueva o encadenar dos con barras ('Salud digital' → Sanidad; 'Tecnología / Ciberseguridad' → Tecnología; 'Ingeniería / Servicios profesionales' → Servicios; 'Infraestructura logística / Tecnología' → Infraestructura). Un desglose con diez sectores distintos de una operación cada uno no informa: agrupa.
+
 El bloque "macro" es OPCIONAL: solo agregados de mercado que encuentres con fuente real (p.ej. volumen total del trimestre según un informe). Si no encuentras ninguno con fuente, devuelve "macro": []. NUNCA inventes agregados macro.
 
 ### Formato de salida — OBLIGATORIO
@@ -169,7 +171,7 @@ Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Si
 
 \`\`\`json
 {
-  "titulo": "string — titular editorial del mes, con criterio (no descriptivo plano)",
+  "titulo": "string — titular editorial del mes, con criterio (no descriptivo plano). MÁXIMO 12 palabras: es un titular de portada que se compone en cuerpo grande, no un resumen del mes.",
   "dek": "string — subtítulo/standfirst de una frase que resume la tesis",
   "period": "string — el mes, p.ej. '{{period}}'",
   "resumen": [
