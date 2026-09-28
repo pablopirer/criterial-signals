@@ -134,8 +134,33 @@ function esc(s: unknown): string {
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
+            // The single quote MUST be escaped here too. The CLI builder in
+            // scripts/generate-content.sh uses Python's html.escape(), which
+            // escapes it as &#x27; by default — without this line the two
+            // paths emit different bytes for any text with an apostrophe
+            // ("Moody's", "L'Oréal"), and the CLI↔function parity check fails.
+            .replace(/'/g, "&#x27;")
     )
     .join("");
+}
+
+/** The open edition carries the map, but not its analysis. Each node's
+ * `cuerpo` is the read of WHY a sector sits where it sits — that is Pro
+ * depth, same as `patron`/`implicacion`. Positions, labels, chips, momentum
+ * and source stay, so the free reader still gets the picture of the week;
+ * the interpretation is what Pro pays for. Mirrored in the CLI builder. */
+function stripMapaCuerpo(mapa: unknown): unknown {
+  if (!mapa || typeof mapa !== "object") return mapa;
+  const m = mapa as Record<string, unknown>;
+  if (!Array.isArray(m.nodos)) return mapa;
+  return {
+    ...m,
+    nodos: m.nodos.map((n) => {
+      if (!n || typeof n !== "object") return n;
+      const { cuerpo: _drop, ...rest } = n as Record<string, unknown>;
+      return rest;
+    }),
+  };
 }
 
 function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
@@ -348,11 +373,15 @@ function weeklyJsonToPublicHtml(d: WeeklyJson, numero: number): string {
   }
   parts.push("</div>");
 
-  // Mapa de posicionamiento (interactive — same base64 placeholder as the full
-  // version; the map is part of the free "what happened" layer).
+  // Mapa de posicionamiento — mapa sí, análisis no. The open edition gets the
+  // same interactive placeholder, but the nodes are serialized WITHOUT their
+  // `cuerpo`: the reader sees where each sector sits and can compare, while the
+  // reading of why it sits there stays Pro, alongside patrón/implicación/
+  // read-through. (Until 2026-09-28 the whole map travelled to the free layer,
+  // analysis included.) See stripMapaCuerpo.
   const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
   if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
-    const encoded = toBase64Utf8(JSON.stringify(d.mapa));
+    const encoded = toBase64Utf8(JSON.stringify(stripMapaCuerpo(d.mapa)));
     parts.push('<div class="pub-section-new">');
     parts.push('<p class="pub-sec-label">Mapa de posicionamiento</p>');
     parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);

@@ -299,7 +299,10 @@ out.append('</div></div>')
 # Mapa de posicionamiento (interactive — hydrated client-side from base64 data)
 mapa = d.get('mapa')
 if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.get('nodos')) >= 3:
-    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    # separators=(',', ':') matches JavaScript's JSON.stringify, which inserts no
+    # spaces. Without it Python emits '{"tipo": "..."}' and the EF '{"tipo":"..."}',
+    # producing DIFFERENT base64 for the same map and breaking CLI<->function parity.
+    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False, separators=(',', ':')).encode('utf-8')).decode('ascii')
     out.append('<div class=\"pub-section-new\">')
     out.append('<p class=\"pub-sec-label\">Mapa de posicionamiento</p>')
     out.append(f'<div class=\"pub-map\" data-mapa=\"{encoded}\"></div>')
@@ -602,7 +605,16 @@ for s in d.get('senales', []):
 out.append('</div>')
 mapa = d.get('mapa')
 if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.get('nodos')) >= 3:
-    encoded = base64.b64encode(json.dumps(mapa, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    # Mapa si, analisis no: the open edition keeps positions, labels, chips,
+    # momentum and source, but drops each node's 'cuerpo' (the reading of WHY a
+    # sector sits there), which is Pro depth like patron/implicacion.
+    # Mirrors stripMapaCuerpo in generate-content/index.ts.
+    mapa_publico = dict(mapa)
+    mapa_publico['nodos'] = [
+        {k: v for k, v in n.items() if k != 'cuerpo'} if isinstance(n, dict) else n
+        for n in mapa['nodos']
+    ]
+    encoded = base64.b64encode(json.dumps(mapa_publico, ensure_ascii=False, separators=(',', ':')).encode('utf-8')).decode('ascii')
     out.append('<div class="pub-section-new">')
     out.append('<p class="pub-sec-label">Mapa de posicionamiento</p>')
     out.append(f'<div class="pub-map" data-mapa="{encoded}"></div>')
