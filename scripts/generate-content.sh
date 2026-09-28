@@ -10,9 +10,24 @@
 set -uo pipefail
 
 TYPE="${1:-}"
+# Optional YYYY-MM (monthly only): generate the brief for a CLOSED month instead of
+# the running one. The Monthly is normally written once the month is over, from the
+# first days of the next one — without this the period would be derived from today
+# and produce a partial current month (e.g. running on 10-ago yields "agosto, 1-10").
+TARGET_MONTH="${2:-}"
 if [[ "$TYPE" != "weekly" && "$TYPE" != "monthly" ]]; then
-  echo "Usage: bash scripts/generate-content.sh [weekly|monthly]"
+  echo "Usage: bash scripts/generate-content.sh [weekly|monthly] [YYYY-MM]"
   exit 1
+fi
+if [[ -n "$TARGET_MONTH" ]]; then
+  if [[ "$TYPE" != "monthly" ]]; then
+    echo "The YYYY-MM argument only applies to 'monthly'."
+    exit 1
+  fi
+  if [[ ! "$TARGET_MONTH" =~ ^[0-9]{4}-(0[1-9]|1[0-2])$ ]]; then
+    echo "Invalid month '$TARGET_MONTH'. Expected format: YYYY-MM (e.g. 2026-07)."
+    exit 1
+  fi
 fi
 
 : "${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY is not set. Run: source .env.local}"
@@ -44,11 +59,22 @@ if [[ "$TYPE" == "weekly" ]]; then
   PERIOD_END=$(date '+%Y-%m-%d')
   TITLE="Weekly Signals — $(date '+%-d') de $(mes_es "$(date '+%m')") de $(date '+%Y')"
   PROMPT_FILE="prompts/weekly-digest.es.md"
+  M_YEAR="$(date '+%Y')"
+  M_MONTH="$(date '+%m')"
 else
-  PERIOD="$(mes_es "$(date '+%m')") de $(date '+%Y')"
-  PERIOD_START="$(date '+%Y-%m-01')"
-  PERIOD_END="$(date '+%Y-%m-%d')"
-  TITLE="Brief Mensual — $(mes_es "$(date '+%m')") $(date '+%Y')"
+  if [[ -n "$TARGET_MONTH" ]]; then
+    M_YEAR="${TARGET_MONTH%%-*}"
+    M_MONTH="${TARGET_MONTH##*-}"
+    # Closed month: the period runs to the last calendar day, not to today.
+    PERIOD_END=$(python3 -c "import calendar,sys; y,m=int(sys.argv[1]),int(sys.argv[2]); print('%04d-%02d-%02d' % (y, m, calendar.monthrange(y, m)[1]))" "$M_YEAR" "$M_MONTH")
+  else
+    M_YEAR="$(date '+%Y')"
+    M_MONTH="$(date '+%m')"
+    PERIOD_END="$(date '+%Y-%m-%d')"
+  fi
+  PERIOD="$(mes_es "$M_MONTH") de $M_YEAR"
+  PERIOD_START="${M_YEAR}-${M_MONTH}-01"
+  TITLE="Brief Mensual — $(mes_es "$M_MONTH") $M_YEAR"
   PROMPT_FILE="prompts/monthly-brief.es.md"
 fi
 
@@ -87,11 +113,20 @@ fi
 # temporal-tag rule ({{mes_actual}}) and the monthly "period" schema example live
 # in the System section. Leaving them unsubstituted would ship a literal
 # "{{mes_actual}}" to the model. Keep in sync with the generate-content EF.
-MES_ACTUAL="$(mes_es "$(date '+%m')") $(date '+%Y')"
+MES_ACTUAL="$(mes_es "$M_MONTH") $M_YEAR"
 MES_ACTUAL="$(tr '[:lower:]' '[:upper:]' <<< "${MES_ACTUAL:0:1}")${MES_ACTUAL:1}"   # "Julio 2026"
 
 SYSTEM_PROMPT=$(awk '/^## System/{found=1; next} found && /^## /{found=0} found{print}' "$PROMPT_PATH" | sed '/^[[:space:]]*$/d; s/^[[:space:]]*//; s/{{mes_actual}}/'"$MES_ACTUAL"'/g; s/{{period}}/'"$PERIOD"'/g')
 USER_PROMPT=$(awk '/^## User/{found=1; next} found && /^## /{found=0} found{print}' "$PROMPT_PATH" | sed "s/{{period}}/$PERIOD/g")
+
+# Closed-month run: the brief is written after the month ended, so the model must
+# cover it whole and not drift into the current (later) month's news.
+if [[ -n "$TARGET_MONTH" ]]; then
+  LAST_DAY=$((10#${PERIOD_END##*-}))
+  USER_PROMPT="$USER_PROMPT
+
+IMPORTANTE — el mes ya está CERRADO: cubre ${PERIOD} completo, del 1 al ${LAST_DAY}. Busca y recoge las operaciones de TODO el mes, no solo las de una parte. No incluyas operaciones de meses posteriores."
+fi
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 echo ""
