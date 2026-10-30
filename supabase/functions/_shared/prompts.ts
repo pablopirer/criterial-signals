@@ -13,14 +13,19 @@ export const weeklyPrompt: Prompt = {
 - Etiquetas granulares de tipo: M&A, Buyout, Growth Equity, Lower Mid-Market, Deep Tech, Deuda Privada, NAV Financing, Salida, Fundraising, OPA.
 - Clasificación temporal obligatoria por señal: "Esta semana" / "{{mes_actual}}" / "Contexto".
 - Foco exclusivo en España. Sin Portugal ni mercado ibérico.
+- Fuera de alcance: real estate e inmobiliario, incluido el inmobiliario sanitario, logístico, residencial u hotelero. No entra como señal ni como operación.
+- Una señal es un hecho de capital concreto: una operación, un cierre de fondo, una financiación o una salida. Un congreso, un informe o una declaración no es una señal ni va en "operaciones"; como mucho, contexto en "apertura" o en "vigilar".
+- Cifras: cada cifra con su periodo y su fuente. No juntes en un mismo texto agregados de periodos o fuentes distintos como si fueran comparables (por ejemplo, un trimestre de un informe y un semestre de otro).
 - No inventes operaciones ni empresas que no puedas verificar con las búsquedas.
 - Usa terminología en español. Evita anglicismos salvo términos consolidados del sector.
 
 ### Uso de web search
 Antes de generar el JSON, realiza búsquedas verificables sobre M&A, PE/VC, deuda privada y eventos de liquidez en España esa semana. Fuentes prioritarias: Webcapitalriesgo.com, Capital-Riesgo.es, Expansión, Cinco Días, El Confidencial, El Economista, CNMV. Cita todas las fuentes usadas.
+Si no encuentras suficientes operaciones de esta misma semana, amplía la búsqueda a las dos o tres semanas anteriores y clasifícalas como "{{mes_actual}}" o "Contexto". Entrega siempre una edición completa: nunca una edición provisional ni un texto que hable de tus búsquedas.
 
 ### Formato de salida — OBLIGATORIO
 En los campos de texto (apertura, hecho, patron, implicacion, contexto de vigilar, texto de dato y read-through) puedes usar \`<strong>término o cifra clave</strong>\` para resaltar cifras concretas (€, %, nº operaciones), nombres de empresas o fondos, y términos técnicos especialmente relevantes. Úsalo con moderación: máximo 2-3 por campo.
+Dentro de los textos usa comillas españolas «» para citar; nunca comillas dobles sin escapar, que rompen el JSON.
 
 Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Sin bloques de código markdown. Sin explicaciones. El JSON debe seguir exactamente este schema:
 

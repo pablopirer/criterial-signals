@@ -23,11 +23,11 @@ import { weeklyPrompt, monthlyPrompt } from "../_shared/prompts.ts";
 import { extractJsonObject } from "../_shared/json.ts";
 
 const ADMIN_EMAIL = "pablopirer@gmail.com";
-// max_uses reduced 5->3: the Weekly+map generation runs synchronously (the admin
-// waits), so it's exposed to the Edge Function wall-clock limit. Fewer web
-// searches keep generation under that ceiling (a 5-search run timed out at the
-// gateway → "Error desconocido"). 3 searches still cite real, verifiable sources.
-const WEB_SEARCH_TOOLS = [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }];
+// max_uses: 3 was set when a 5-search run on Sonnet 4.6 hit the 150s gateway
+// limit. On Sonnet 5.5 a full Weekly took ~40s, and 3 searches were not enough
+// to find the week's deals (the model returned a "provisional" edition), so it
+// is back up to 6. Watch execution_time_ms if this changes again.
+const WEB_SEARCH_TOOLS = [{ type: "web_search_20260209", name: "web_search", max_uses: 6 }];
 // Weekly and Monthly run on Claude Sonnet 5.5 (2026-10-30). Passed explicitly so
 // sample-request and generate-linkedin keep the shared default until they are
 // moved on purpose; this also means the ANTHROPIC_MODEL secret no longer
@@ -659,6 +659,34 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number, periodLabel?: string)
   return parts.join("");
 }
 
+// ── JSON parse with one repair pass ───────────────────────────────────────────
+
+/** Parse the model's JSON. If it is malformed (typically an unescaped quote
+ * inside a text field), ask the model once, without tools, to return the same
+ * content as valid JSON. Throws if the repaired text still does not parse. */
+async function parseWithRepair<T>(text: string, label: string): Promise<T> {
+  try {
+    return JSON.parse(extractJsonObject(text)) as T;
+  } catch (firstErr) {
+    console.error(`${label} JSON parse failed, trying one repair pass:`, firstErr);
+    console.error("Raw model output (first 800 chars):", text.slice(0, 800));
+  }
+  const repaired = await generateBrief({
+    interestType: "",
+    prompt: {
+      system:
+        "Recibes un objeto JSON mal formado. Devuélvelo como JSON válido con exactamente " +
+        "el mismo contenido, las mismas claves y el mismo texto: corrige solo la sintaxis " +
+        "(comillas sin escapar, comas, llaves). Responde únicamente con el JSON.",
+      user: extractJsonObject(text),
+    },
+    model: CONTENT_MODEL,
+    effort: "low",
+    maxTokens: 16000,
+  });
+  return JSON.parse(extractJsonObject(repaired.text)) as T;
+}
+
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
 
 const CORS_HEADERS = {
@@ -760,10 +788,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (type === "weekly") {
       let parsed: WeeklyJson;
       try {
-        parsed = JSON.parse(extractJsonObject(result.text)) as WeeklyJson;
+        parsed = await parseWithRepair<WeeklyJson>(result.text, "Weekly");
       } catch (parseErr) {
-        console.error("Weekly JSON parse failed:", parseErr);
-        console.error("Raw model output (first 800 chars):", result.text.slice(0, 800));
+        console.error("Weekly JSON still invalid after repair:", parseErr);
         return jsonResponse(
           {
             error:
@@ -780,10 +807,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // convert to pub-* HTML. publicHtml stays null: the Brief is Pro-only.
       let parsed: MonthlyJson;
       try {
-        parsed = JSON.parse(extractJsonObject(result.text)) as MonthlyJson;
+        parsed = await parseWithRepair<MonthlyJson>(result.text, "Monthly");
       } catch (parseErr) {
-        console.error("Monthly JSON parse failed:", parseErr);
-        console.error("Raw model output (first 800 chars):", result.text.slice(0, 800));
+        console.error("Monthly JSON still invalid after repair:", parseErr);
         return jsonResponse(
           {
             error:
