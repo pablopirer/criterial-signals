@@ -1,4 +1,6 @@
-// Criterial Shared JS — cursor, parallax, scroll reveal, page transition
+// Criterial Shared JS — cabecera Ledger (menú, progreso), widgets de publicación
+// e índice del lector. El cursor, el parallax y la transición de página solo
+// actúan si la página trae sus elementos (hoy, admin.html).
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -93,6 +95,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── CABECERA LEDGER: menú móvil y progreso de lectura ──
+  const hdr = document.querySelector('.hdr');
+  const menuBtn = hdr ? hdr.querySelector('.menu-btn') : null;
+  if (menuBtn) {
+    const setMenu = (open) => {
+      hdr.classList.toggle('open', open);
+      menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    menuBtn.addEventListener('click', () => setMenu(!hdr.classList.contains('open')));
+    hdr.querySelectorAll('.nav a').forEach((a) => a.addEventListener('click', () => setMenu(false)));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+  }
+  const progress = hdr ? hdr.querySelector('.progress') : null;
+  if (progress) {
+    const upd = () => {
+      const h = document.documentElement, max = h.scrollHeight - h.clientHeight;
+      progress.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', upd, { passive: true });
+    window.addEventListener('resize', upd);
+    upd();
+  }
+
   // ── MOBILE NAV (hamburger) ───────────────────
   const navHeader = document.getElementById('siteHeader');
   const navMenu = navHeader ? navHeader.querySelector('.nav') : null;
@@ -135,9 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const MOMENTUM = {
-    creciente:   { label: "Creciente",   bg: "#e1efe9", color: "#1d7a5f" },
-    estable:     { label: "Estable",     bg: "#efedea", color: "#9a958a" },
-    enfriandose: { label: "Enfriándose", bg: "#f3e7e1", color: "#b06a4e" }
+    creciente:   { label: "Creciente",   bg: "#E6F2EB", color: "#1D7A4C" },
+    estable:     { label: "Estable",     bg: "#EEEFF1", color: "#8A8F97" },
+    enfriandose: { label: "Enfriándose", bg: "#F6E6E3", color: "#B23A2E" }
   };
 
   function esc(s) {
@@ -260,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let ctx = null;
       try {
         ctx = document.createElement("canvas").getContext("2d");
-        ctx.font = "500 10.5px Inter, Helvetica, Arial, sans-serif";
+        ctx.font = "500 11px Inter, Helvetica, Arial, sans-serif";
       } catch (e) { ctx = null; }
       return (s) => ctx ? ctx.measureText(String(s)).width : String(s).length * 5.8;
     })();
@@ -334,9 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const svg =
       `<svg viewBox="0 0 ${W} ${H}" width="100%" role="group" aria-label="Mapa de posicionamiento de sectores por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}">` +
       `<desc>Sectores situados por ${ejeX.toLowerCase()} y ${ejeY.toLowerCase()}; tamaño por volumen, color por momentum.</desc>` +
-      `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" fill="#fff" stroke="#E2DED8"></rect>` +
-      `<line x1="${midX}" y1="${top}" x2="${midX}" y2="${bottom}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
-      `<line x1="${left}" y1="${midY}" x2="${right}" y2="${midY}" stroke="#ECE7DE" stroke-dasharray="4 4"></line>` +
+      `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" fill="#fff" stroke="#D5D5D0"></rect>` +
+      `<line x1="${midX}" y1="${top}" x2="${midX}" y2="${bottom}" stroke="#E7E7E3" stroke-dasharray="3 4"></line>` +
+      `<line x1="${left}" y1="${midY}" x2="${right}" y2="${midY}" stroke="#E7E7E3" stroke-dasharray="3 4"></line>` +
       corners +
       `<text class="pub-map-axb" x="${midX}" y="${H - 10}" text-anchor="middle">${ejeX} →</text>` +
       `<text class="pub-map-axb" x="14" y="${midY}" text-anchor="middle" transform="rotate(-90 14 ${midY})">${ejeY} →</text>` +
@@ -351,10 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML =
       `<div class="pub-map-bar">` +
         `<div class="pub-map-legend">` +
-          `<span><span class="pub-map-sw" style="background:#1d7a5f"></span>Creciente</span>` +
-          `<span><span class="pub-map-sw" style="background:#9a958a"></span>Estable</span>` +
-          `<span><span class="pub-map-sw" style="background:#b06a4e"></span>Enfriándose</span>` +
-          `<span style="color:#a59f93">· tamaño = volumen</span>` +
+          `<span><span class="pub-map-sw" style="background:#1D7A4C"></span>Creciente</span>` +
+          `<span><span class="pub-map-sw" style="background:#8A8F97"></span>Estable</span>` +
+          `<span><span class="pub-map-sw" style="background:#B23A2E"></span>Enfriándose</span>` +
+          `<span>Tamaño = volumen</span>` +
         `</div>` + toggleHtml +
       `</div>` +
       svg +
@@ -363,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `<p class="pub-map-detail-b"></p><div class="pub-map-detail-c"></div>` +
         `<p class="pub-map-src"></p>` +
       `</div>` +
-      `<p class="pub-map-note">Pasa el cursor o toca un sector` + (hasTrajectory ? " · alterna la trayectoria prevista" : "") + `</p>`;
+      `<p class="pub-map-note">Pasa el cursor, toca o recorre con el teclado un sector` + (hasTrajectory ? (isTracker ? " · compara con hace un mes" : " · alterna la trayectoria prevista") : "") + `</p>`;
 
     const byId = {};
     nodos.forEach(n => { byId[n.id] = n; });
@@ -375,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showDetail(id) {
       const n = byId[id];
       if (!n) return;
+      container.querySelectorAll(".pub-map-bub").forEach(g => g.classList.toggle("sel", g.getAttribute("data-k") === String(id)));
       const mom = MOMENTUM[n.momentum] || MOMENTUM.estable;
       detT.textContent = n.label || "";
       detM.textContent = mom.label;
@@ -447,6 +473,46 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = `<div class="pub-metrics-inner">${rows}</div>`;
     return true;
   }
+
+  // muestra.html pinta el mapa de body_data con el mismo renderer.
+  window.renderPubMap = function (container, mapa) {
+    try { return buildMap(container, mapa); } catch (e) { return false; }
+  };
+
+  // Índice lateral del lector: una entrada por sección del cuerpo inyectado.
+  // Las secciones del Weekly se numeran aquí (el Brief ya trae su número).
+  window.buildReaderToc = function (body, toc, scroller) {
+    if (!body || !toc) return;
+    toc.innerHTML = "";
+    if (toc._io) { toc._io.disconnect(); toc._io = null; }
+    const heads = [].slice.call(body.querySelectorAll(".pub-sec-label, .mb-sec-title, .mb-sources-label"))
+      .filter(h => (h.textContent || "").trim() && h.offsetParent !== null);
+    if (heads.length < 2) return;
+    const ol = document.createElement("ol");
+    const links = heads.map((h, i) => {
+      const target = h.closest(".mb-section, .pub-section-new, .pub-sources-new, .mb-sources") || h;
+      target.id = target.id || "sec-" + (i + 1);
+      if (h.classList.contains("pub-sec-label")) h.setAttribute("data-n", String(i + 1).padStart(2, "0"));
+      const li = document.createElement("li"), a = document.createElement("a");
+      a.href = "#" + target.id;
+      a.textContent = (h.textContent || "").trim();
+      a.addEventListener("click", (e) => { e.preventDefault(); target.scrollIntoView({ behavior: "smooth", block: "start" }); });
+      li.appendChild(a); ol.appendChild(li);
+      return { a, target };
+    });
+    const label = document.createElement("span");
+    label.className = "eyebrow"; label.textContent = "Contenido";
+    toc.appendChild(label); toc.appendChild(ol);
+    if ("IntersectionObserver" in window) {
+      toc._io = new IntersectionObserver((es) => {
+        es.forEach((e) => {
+          if (!e.isIntersecting) return;
+          links.forEach((l) => l.a.classList.toggle("on", l.target === e.target));
+        });
+      }, { root: scroller || null, rootMargin: "-12% 0px -75% 0px" });
+      links.forEach((l) => toc._io.observe(l.target));
+    }
+  };
 
   window.hydratePubWidgets = function (root) {
     if (!root || !root.querySelectorAll) return;

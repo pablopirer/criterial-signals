@@ -3,384 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230D1F3C'/><text x='3' y='26' font-family='Georgia,serif' font-size='22' font-weight='400' fill='white' letter-spacing='-1'>C.</text></svg>" />
-  <title>Archivo | Criterial. — v2</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.v14.css" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <style>
-    .user-bar {
-      padding: 14px 64px;
-      background: var(--navy);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .user-info { display: flex; align-items: center; gap: 16px; }
-    .user-avatar {
-      width: 32px; height: 32px;
-      background: rgba(255,255,255,0.12); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 14px; color: rgba(255,255,255,0.8);
-    }
-    .user-plan {
-      font-size: 9px; letter-spacing: 0.14em;
-      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 2px;
-    }
-    .user-email-bar { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 300; }
-    .btn-signout-bar {
-      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-      color: rgba(255,255,255,0.4); background: none; border: none;
-      transition: color 0.2s; font-family: 'Inter', sans-serif;
-    }
-    .btn-signout-bar:hover { color: rgba(255,255,255,0.8); }
-    .archive-header {
-      padding: 52px 64px 0;
-      border-bottom: 0.5px solid var(--border);
-    }
-    .archive-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 42px; font-weight: 400; color: var(--navy);
-      margin-bottom: 28px; line-height: 1.1;
-    }
-    .archive-tabs {
-      display: flex; border-top: 0.5px solid var(--border); margin-top: 8px;
-    }
-    .archive-tab {
-      padding: 14px 28px;
-      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--label); background: none; border: none;
-      font-family: 'Inter', sans-serif;
-      border-right: 0.5px solid var(--border);
-      position: relative; transition: color 0.2s;
-    }
-    .archive-tab::after {
-      content: ''; position: absolute;
-      bottom: -1px; left: 0; right: 0; height: 2px;
-      background: var(--navy);
-      transform: scaleX(0); transition: transform 0.3s ease;
-    }
-    .archive-tab:hover { color: var(--navy); }
-    .archive-tab.active { color: var(--navy); font-weight: 500; }
-    .archive-tab.active::after { transform: scaleX(1); }
-    .tab-count {
-      display: inline-block; margin-left: 6px;
-      background: var(--border); color: var(--label);
-      font-size: 9px; padding: 1px 6px;
-    }
-    .archive-tab.active .tab-count { background: var(--navy); color: #fff; }
-    .archive-body { padding: 48px 64px; }
-    .stats-row {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      border: 0.5px solid var(--border); margin-bottom: 48px;
-    }
-    .stat-cell {
-      padding: 24px 28px; border-right: 0.5px solid var(--border);
-    }
-    .stat-cell:last-child { border-right: none; }
-    .stat-label {
-      font-size: 9px; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--label); margin-bottom: 8px;
-    }
-    .stat-value {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 32px; color: var(--navy); font-weight: 400;
-      line-height: 1; margin-bottom: 4px;
-    }
-    .stat-sub { font-size: 11px; color: #BBB; font-weight: 300; }
-    .upcoming-strip {
-      background: var(--navy); padding: 28px 40px;
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 48px;
-    }
-    .upcoming-label {
-      font-size: 9px; letter-spacing: 0.14em;
-      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 6px;
-    }
-    .upcoming-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 18px; color: #fff; font-weight: 400;
-    }
-    .upcoming-status {
-      font-size: 9px; letter-spacing: 0.14em;
-      text-transform: uppercase; color: rgba(255,255,255,0.3);
-    }
-    .archive-section-header {
-      display: flex; justify-content: space-between; align-items: baseline;
-      margin-bottom: 24px; padding-bottom: 12px;
-      border-bottom: 0.5px solid var(--border);
-    }
-    .archive-section-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 22px; color: var(--navy); font-weight: 400;
-    }
-    .archive-section-meta {
-      font-size: 10px; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--label);
-    }
-    .pub-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      border: 0.5px solid var(--border); margin-bottom: 48px;
-    }
-    .pub-card-archive {
-      padding: 28px 28px 32px;
-      border-right: 0.5px solid var(--border);
-      border-bottom: 0.5px solid var(--border);
-      position: relative; overflow: hidden;
-      transition: background 0.3s;
-    }
-    .pub-card-archive::before {
-      content: ''; position: absolute;
-      top: 0; left: 0; right: 0; height: 2px;
-      background: var(--navy);
-      transform: scaleX(0); transform-origin: left;
-      transition: transform 0.4s cubic-bezier(0.77,0,0.18,1);
-    }
-    .pub-card-archive:hover { background: #FAFAF8; }
-    .pub-card-archive:hover::before { transform: scaleX(1); }
-    .pub-card-archive:nth-child(3n) { border-right: none; }
-    .pub-type-badge {
-      font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--label); margin-bottom: 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .pub-type-dot {
-      width: 5px; height: 5px; border-radius: 50%; background: var(--border);
-    }
-    .pub-type-dot.sample { background: #A8B8C8; }
-    .pub-type-dot.weekly { background: var(--navy); }
-    .pub-type-dot.monthly { background: #4A6741; }
-    .pub-card-date { font-size: 11px; color: #BBB; font-weight: 300; margin-bottom: 10px; }
-    .pub-card-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 18px; color: var(--navy); font-weight: 400;
-      line-height: 1.3; margin-bottom: 10px;
-    }
-    .pub-card-excerpt {
-      font-size: 12px; line-height: 1.7; color: var(--muted); font-weight: 300;
-      display: -webkit-box; -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .pub-read-link {
-      display: inline-block; margin-top: 16px;
-      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--navy); text-decoration: none;
-      border-bottom: 0.5px solid var(--navy);
-      padding-bottom: 2px; transition: opacity 0.2s;
-    }
-    .pub-read-link:hover { opacity: 0.6; }
-    .empty-state {
-      padding: 64px 40px; text-align: center;
-      border: 0.5px solid var(--border); margin-bottom: 48px;
-    }
-    .empty-state-label {
-      font-size: 10px; letter-spacing: 0.16em;
-      text-transform: uppercase; color: #CCC; margin-bottom: 12px;
-    }
-    .empty-state-title {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 22px; color: #CCC; font-weight: 400; margin-bottom: 8px;
-    }
-    .empty-state-sub { font-size: 13px; color: #DDD; font-weight: 300; }
-    .pub-modal {
-      display: none; position: fixed; inset: 0;
-      background: #FAFAF8; z-index: 500;
-      flex-direction: column;
-    }
-    .pub-modal.open { display: flex; }
-    .pub-modal-topbar {
-      flex-shrink: 0;
-      background: #FAFAF8;
-      border-bottom: 0.5px solid var(--border);
-      padding: 0 64px; height: 52px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .pub-modal-scroll { flex: 1; overflow-y: auto; }
-    .pub-modal-topbar-brand {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 20px; color: var(--navy); letter-spacing: -0.01em;
-    }
-    .pub-modal-close {
-      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--label); background: none; border: none;
-      font-family: 'Inter', sans-serif; transition: color 0.2s;
-    }
-    .pub-modal-close:hover { color: var(--navy); }
-    .pub-modal-type, .pub-modal-title, .pub-modal-date { display: none; }
-    .pub-modal-inner {
-      max-width: 1100px; width: 100%;
-      margin: 0 auto; padding: 56px 48px 120px;
-    }
-    .pub-modal-body { font-size: 15px; line-height: 1.85; color: #333; font-weight: 300; }
-    .pub-modal-body p { margin-bottom: 16px; }
-    @media (max-width: 900px) {
-      .user-bar, .archive-header, .archive-body { padding-left: 32px; padding-right: 32px; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      .pub-grid { grid-template-columns: 1fr; }
-      .pub-card-archive { border-right: none; }
-      .pub-card-archive:nth-child(3n) { border-right: none; }
-      .pub-modal-topbar { padding: 0 24px; }
-      .pub-modal-inner { padding: 40px 24px 80px; }
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230B0D10'/%3E%3Ctext x='7' y='23' font-family='Georgia' font-size='19' fill='white'%3EC%3C/text%3E%3Ccircle cx='23.5' cy='21.5' r='2' fill='%232F5BA8'/%3E%3C/svg%3E" />
+  <title>Archivo Pro | Criterial.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.v15.css" />
 </head>
-<body class="ed-frame">
+<body>
+<header class="hdr"><div class="wrap">
+  <a class="brand" href="index.html">Criterial<i>.</i></a>
+  <nav class="nav" aria-label="Principal"><a href="signals.html">Signals</a><a href="encargos.html">Advisory</a><a href="pricing.html">Planes</a><a href="about.html">Nosotros</a><a class="nav-m" href="archive.html" aria-current="page">Acceso Pro</a></nav>
+  <div class="hdr-cta"><a class="btn btn--ghost" href="archive.html" aria-current="page">Acceso Pro</a><a class="btn" href="pricing.html">Suscribirse</a></div>
+  <button class="menu-btn" type="button" aria-expanded="false" aria-label="Menú">☰</button>
+</div></header>
+<main>
+<!-- LOADING -->
+<div id="loading-section" class="wrap"><p class="state">Cargando…</p></div>
 
+<!-- AUTH -->
+<div id="auth-section" style="display:none;">
+<section class="page-hd"><div class="wrap form-grid">
+<div><span class="eyebrow">Archivo Pro</span>
+<h1>Acceder al archivo</h1>
+<p class="lede">Introduce tu email de suscripción y te enviamos un enlace de acceso directo. Sin contraseñas.</p></div>
+<div class="form form--card">
+<label for="auth-email">Email de suscripción<input id="auth-email" type="email" placeholder="tu@empresa.com" autocomplete="email" /></label>
+<div class="form-ft"><button id="send-magic-link" class="btn btn--lg" type="button">Enviar enlace de acceso</button></div>
+<p id="auth-status" class="form-msg" role="status"></p>
+</div>
+</div></section>
+<section class="band band--tint"><div class="wrap"><div class="cols cols--2">
+<div class="col"><span class="eyebrow">Acceso exclusivo</span><h3>Archivo completo de publicaciones</h3><p>Señales semanales y briefs mensuales sobre M&amp;A, private equity y deuda privada en España. Disponible para suscriptores Pro.</p></div>
+<div class="col"><span class="eyebrow">¿Aún no eres Pro?</span><h3>Empieza por una muestra gratuita</h3><p>Solicita una muestra para entender el formato y el nivel de síntesis antes de suscribirte.</p><a class="more" href="sample.html">Solicitar muestra →</a> <a class="more" href="pricing.html">Ver planes →</a></div>
+</div></div></section>
+</div>
 
-  <header class="site-header light-header" id="siteHeader">
-    <a href="index.html" class="brand">Criterial.</a>
-    <nav class="nav">
-      <a href="signals.html">Signals</a>
-      <a href="encargos.html">Advisory</a>
-      <a href="about.html">Nosotros</a>
-        <a href="archive.html" class="nav-access" aria-current="page">Acceso Pro</a>
-    </nav>
-  </header>
-
-  <!-- LOADING -->
-  <div id="loading-section" style="padding:140px 64px;text-align:center;">
-    <p style="font-size:13px;color:#CCC;letter-spacing:0.08em;text-transform:uppercase;">Cargando</p>
-  </div>
-
-  <!-- AUTH -->
-  <div id="auth-section" style="display:none;">
-    <div style="padding:100px 64px 80px;border-bottom:0.5px solid var(--border);max-width:640px;">
-      <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--label);margin-bottom:24px;">Archivo de publicaciones</p>
-      <h1 style="font-family:'EB Garamond',Georgia,serif;font-size:52px;font-weight:400;color:var(--navy);line-height:1.1;margin-bottom:20px;">Acceder al archivo</h1>
-      <p style="font-size:16px;line-height:1.75;color:var(--muted);font-weight:300;margin-bottom:48px;max-width:480px;">Introduce tu email de suscripción y te enviamos un enlace de acceso directo.</p>
-      <div style="border:0.5px solid var(--border);padding:40px;max-width:480px;">
-        <label for="auth-email" style="display:block;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--label);margin-bottom:10px;">Email de suscripción</label>
-        <input id="auth-email" type="email" placeholder="tu@email.com"
-          style="width:100%;padding:12px 14px;border:0.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--navy);background:#fff;outline:none;margin-bottom:16px;display:block;-webkit-appearance:none;appearance:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--navy)'"
-          onblur="this.style.borderColor='var(--border)'" />
-        <button id="send-magic-link"
-          style="background:var(--navy);color:#fff;padding:13px 30px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;border:none;cursor:none;width:100%;transition:background 0.22s;"
-          onmouseover="this.style.background='#162d57'"
-          onmouseout="this.style.background='var(--navy)'">Enviar enlace de acceso</button>
-        <p id="auth-status" style="margin-top:16px;font-size:12px;color:var(--label);letter-spacing:0.02em;"></p>
-      </div>
-    </div>
-    <div class="lower-grid">
-      <div class="lower-cell">
-        <p class="cell-label">Acceso exclusivo</p>
-        <h2 class="cell-title">Archivo completo de publicaciones.</h2>
-        <p class="cell-body">Señales semanales y briefs mensuales sobre M&amp;A, private equity y deuda privada en España. Disponible para suscriptores Pro.</p>
-      </div>
-      <div class="lower-cell cream">
-        <p class="cell-label">¿Aún no eres Pro?</p>
-        <h2 class="cell-title">Empieza por una muestra gratuita.</h2>
-        <p class="cell-body">Solicita una muestra para entender el formato y el nivel de síntesis antes de suscribirte.</p>
-        <div style="margin-top:24px;display:flex;gap:12px;">
-          <a href="sample.html" class="btn-dark">Solicitar muestra</a>
-          <a href="pricing.html" class="btn-outline">Ver planes</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTENT -->
-  <div id="content-section" style="display:none;">
-
-    <!-- USER BAR -->
-    <div class="user-bar">
-      <div class="user-info">
-        <div class="user-avatar" id="user-avatar">P</div>
-        <div>
-          <p class="user-plan">Plan Pro · Activo</p>
-          <p class="user-email-bar" id="user-email"></p>
-        </div>
-      </div>
-      <button id="sign-out" class="btn-signout-bar">Cerrar sesión</button>
-    </div>
-
-    <!-- ARCHIVE HEADER + TABS -->
-    <div class="archive-header">
-      <h1 class="archive-title">Tu archivo</h1>
-      <div class="archive-tabs">
-        <button class="archive-tab active" data-filter="all">
-          Todo <span class="tab-count" id="count-all">0</span>
-        </button>
-        <button class="archive-tab" data-filter="weekly">
-          Weekly Signals <span class="tab-count" id="count-weekly">0</span>
-        </button>
-        <button class="archive-tab" data-filter="monthly">
-          Brief Mensual <span class="tab-count" id="count-monthly">0</span>
-        </button>
-        <button class="archive-tab" data-filter="sample">
-          Muestras <span class="tab-count" id="count-sample">0</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ARCHIVE BODY -->
-    <div class="archive-body">
-
-      <!-- STATS -->
-      <div class="stats-row">
-        <div class="stat-cell">
-          <p class="stat-label">Publicaciones</p>
-          <p class="stat-value" id="stat-total">—</p>
-          <p class="stat-sub">en el archivo</p>
-        </div>
-        <div class="stat-cell">
-          <p class="stat-label">Weekly Signals</p>
-          <p class="stat-value" id="stat-weekly">—</p>
-          <p class="stat-sub" id="stat-weekly-sub">próximamente</p>
-        </div>
-        <div class="stat-cell">
-          <p class="stat-label">Briefs mensuales</p>
-          <p class="stat-value" id="stat-monthly">—</p>
-          <p class="stat-sub" id="stat-monthly-sub">próximamente</p>
-        </div>
-        <div class="stat-cell">
-          <p class="stat-label">Plan</p>
-          <p class="stat-value" style="font-size:20px;">Pro</p>
-          <p class="stat-sub">Activo</p>
-        </div>
-      </div>
-
-      <!-- UPCOMING -->
-      <div class="upcoming-strip">
-        <div>
-          <p class="upcoming-label">Próxima publicación</p>
-          <p class="upcoming-title">Weekly Signals — Semana del 19 al 23 de mayo</p>
-        </div>
-        <span class="upcoming-status">En preparación</span>
-      </div>
-
-      <!-- PUBLICATIONS LIST -->
-      <div id="publications-list"></div>
-
-    </div>
-  </div>
-
-  <!-- MODAL -->
-  <div class="pub-modal" id="pubModal">
-    <div class="pub-modal-topbar">
-      <span class="pub-modal-topbar-brand">Criterial.</span>
-      <button class="pub-modal-close" id="modalClose">← Volver al archivo</button>
-    </div>
-    <div class="pub-modal-scroll" id="pubModalScroll">
-      <div class="pub-modal-inner">
-        <p class="pub-modal-type" id="modalType"></p>
-        <h2 class="pub-modal-title" id="modalTitle"></h2>
-        <p class="pub-modal-date" id="modalDate"></p>
-        <div class="pub-modal-body pub-content" id="modalBody"></div>
-      </div>
-    </div>
-  </div>
-
-  <footer class="site-footer">
-    <span class="footer-brand">Criterial.</span>
-    <span class="footer-right">Inteligencia de mercado para España</span>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
+<!-- CONTENT -->
+<div id="content-section" style="display:none;">
+<div class="acct"><div class="wrap"><span class="live">Sesión iniciada · <b id="user-email"></b></span><span class="grow"></span><span class="tag tag--pro">Pro · activo</span><button id="sign-out" class="acct-out" type="button">Cerrar sesión</button></div></div>
+<section class="page-hd page-hd--tight"><div class="wrap"><span class="eyebrow">Archivo Pro</span><h1>Tu biblioteca</h1></div></section>
+<div class="wrap">
+<div id="arch-hero"></div>
+<div class="arch-tools">
+<div class="tabs" role="tablist" aria-label="Tipo de publicación">
+<button role="tab" aria-selected="true" data-k="all">Todo <span class="num" id="count-all">0</span></button>
+<button role="tab" aria-selected="false" data-k="weekly">Weekly <span class="num" id="count-weekly">0</span></button>
+<button role="tab" aria-selected="false" data-k="monthly">Brief Mensual <span class="num" id="count-monthly">0</span></button>
+<button role="tab" aria-selected="false" data-k="sample">Muestras <span class="num" id="count-sample">0</span></button></div>
+<label class="search"><span class="sr">Buscar</span><input id="arch-q" type="search" placeholder="Buscar en el archivo" /></label>
+</div>
+<div class="eds" id="publications-list"></div>
+<div class="section-gap"></div>
+</div>
+</div>
+</main>
+<div class="rd" id="pubModal" role="dialog" aria-modal="true" aria-labelledby="modalType">
+<div class="rd-top"><div class="wrap"><span class="brand">Criterial<i>.</i></span><span class="eyebrow grow" id="modalType">Archivo Pro</span><button class="rd-close rd-print" id="modalPrint" type="button">Imprimir</button><button class="rd-close" id="modalClose" type="button">← Volver al archivo</button></div><div class="progress" id="pubProgress"></div></div>
+<div class="rd-scroll" id="pubModalScroll"><div class="wrap rd-grid"><nav class="toc" id="pubToc" aria-label="Contenido"></nav><div>
+<div class="pub-content" id="modalBody"></div>
+</div></div></div>
+</div>
+<footer class="ftr"><div class="wrap"><span>Criterial<i>.</i> — Inteligencia de capital privado · España</span>
+<nav aria-label="Pie"><a href="signals.html">Signals</a><a href="encargos.html">Advisory</a><a href="pricing.html">Planes</a><a href="archive.html">Acceso Pro</a><a href="mailto:hola@criterialsignals.com">Contacto</a></nav></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
     const SUPABASE_URL = "https://epmltqhtxkmfboaxdois.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwbWx0cWh0eGttZmJvYXhkb2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTM2NTksImV4cCI6MjA5MjUyOTY1OX0.uBaMbfr_efiatUSuQnRKH_q85Wm_8fih_fGmb674nBI";
 
@@ -409,7 +99,7 @@
 
       if (!res.ok || !data || data.length === 0) {
         publicationsList.innerHTML =
-          '<p style="padding:40px 0;color:#AAAAAA;font-size:14px;">No hay publicaciones disponibles todavía.</p>';
+          '<p class="state">No hay publicaciones disponibles todavía.</p>';
         return;
       }
 
@@ -467,7 +157,7 @@
         try {
           await loadPublications(session.access_token);
         } catch (err) {
-          publicationsList.innerHTML = '<p style="color: #AAAAAA; font-size: 14px;">Error al cargar publicaciones.</p>';
+          publicationsList.innerHTML = '<p class="state">Error al cargar publicaciones.</p>';
         }
         showSection("content");
       } else {
@@ -485,141 +175,139 @@
       handleSession(session);
     });
   </script>
-  <script src="criterial-shared.js?v=11"></script>
+<script>
+  // Archivo: listado filtrable, ficha destacada y lector. Los datos los carga
+  // el script anterior (get-publications) en window._pubs y llama a renderArchive.
+  (function () {
+    const KIND = { weekly: "Weekly", monthly: "Brief Mensual", sample: "Muestra" };
+    let filter = "all", query = "";
+    const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const fmt = (d, o) => new Date(d).toLocaleDateString("es-ES", o || { day: "numeric", month: "long", year: "numeric" });
+    const pubDate = (p, o) => {
+      // El Brief cubre un mes: se fecha por mes, no por su primer día.
+      if (p.type === "monthly" && p.period_start) o = o ? { month: "short", year: "numeric" } : { month: "long", year: "numeric" };
+      return p.period_start ? fmt(p.period_start + "T12:00:00", o) : fmt(p.created_at, o);
+    };
+    // DOMParser no ejecuta scripts ni carga imágenes: lectura inerte del cuerpo.
+    const meta = (p) => {
+      if (p._m) return p._m;
+      const doc = new DOMParser().parseFromString(p.body_markdown || "", "text/html");
+      const numEl = doc.querySelector(".pub-brand-num, .mb-num");
+      const num = numEl ? ((numEl.textContent || "").match(/Nº\s*\d+/) || [""])[0] : "";
+      const tags = [...new Set([].slice.call(doc.querySelectorAll(".pub-badge-new")).map((b) => (b.textContent || "").trim()).filter(Boolean))].slice(0, 3);
+      const leadEl = doc.querySelector(".mb-dek, .pub-apertura-new, .pub-tesis");
+      doc.querySelectorAll(".pub-map, .pub-metrics").forEach((e) => e.remove());
+      const words = ((doc.body && doc.body.textContent) || "").split(/\s+/).filter(Boolean).length;
+      p._m = {
+        num, tags,
+        lead: leadEl ? (leadEl.textContent || "").replace(/\s+/g, " ").trim() : "",
+        mins: Math.max(1, Math.round(words / 220)),
+        signals: doc.querySelectorAll(".pub-signal-new").length,
+        ops: doc.querySelectorAll(".pub-ops-table tbody tr, .mb-ops tbody tr").length,
+        stats: [].slice.call(doc.querySelectorAll(".mb-stat")).slice(0, 2).map((s) => ({
+          v: ((s.querySelector(".mb-stat-val") || {}).textContent || "").trim(),
+          l: ((s.querySelector(".mb-stat-label") || {}).textContent || "").trim()
+        }))
+      };
+      return p._m;
+    };
 
-  <script>
-    // Archive UI enhancements
-
-    // Avatar initial from email
-    function setAvatar(email) {
-      const el = document.getElementById('user-avatar');
-      if (el && email) el.textContent = email[0].toUpperCase();
+    function row(p, i) {
+      const m = meta(p);
+      const tags = p.type === "weekly" ? m.tags : [p.type === "monthly" ? "Informe" : "Muestra"];
+      return `<div class="ed" role="button" tabindex="0" data-i="${i}">` +
+        `<span class="ed-k eyebrow">${KIND[p.type] || esc(p.type)}${m.num ? " · " + esc(m.num) : ""}</span>` +
+        `<span class="ed-d eyebrow">${esc(pubDate(p, { day: "numeric", month: "short", year: "numeric" }))}</span>` +
+        `<span class="ed-t">${esc(p.title)}</span>` +
+        `<span class="ed-m">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</span>` +
+        `<span class="ed-r num">${m.mins} min <span aria-hidden="true">→</span></span></div>`;
     }
 
-    // Override the original userEmailEl assignment to also set avatar
-    const origUserEmail = document.getElementById('user-email');
-    if (origUserEmail) {
-      const observer = new MutationObserver(() => {
-        setAvatar(origUserEmail.textContent);
-      });
-      observer.observe(origUserEmail, { childList: true, characterData: true, subtree: true });
+    function hero(p, i) {
+      const m = meta(p);
+      const kpis = p.type === "monthly" && m.stats.length
+        ? m.stats.map((s) => `<div><b>${esc(s.v)}</b><span>${esc(s.l)}</span></div>`).join("")
+        : (m.signals ? `<div><b>${m.signals}</b><span>Señales</span></div>` : "") + (m.ops ? `<div><b>${m.ops}</b><span>Operaciones</span></div>` : "");
+      return `<a class="hero-card" href="#" data-i="${i}"><div><span class="eyebrow">Lo último<span class="sep">/</span>${KIND[p.type] || esc(p.type)}${m.num ? " · " + esc(m.num) : ""} · ${esc(pubDate(p))}</span>` +
+        `<h2>${esc(p.title)}</h2>${m.lead ? `<p>${esc(m.lead.length > 260 ? m.lead.slice(0, 260).replace(/\s+\S*$/, "") + "…" : m.lead)}</p>` : ""}<span class="feature-cta">Leer →</span></div>` +
+        `<div class="hero-card-kpi num">${kpis}<div><b>${m.mins} min</b><span>Lectura</span></div></div></a>`;
     }
 
-    // Tabs filter
-    let currentFilter = 'all';
-
-    function renderArchive(filter) {
+    window.renderArchive = function () {
       const data = window._pubs || [];
-      const list = document.getElementById('publications-list');
+      const list = document.getElementById("publications-list");
+      const heroHost = document.getElementById("arch-hero");
       if (!list) return;
-
-      const groups = { weekly: [], monthly: [], sample: [] };
-      const filtered = filter === 'all' ? data : data.filter(p => p.type === filter);
-      filtered.forEach(p => { if (groups[p.type]) groups[p.type].push(p); });
-
-      let html = '';
-
-      if (filter === 'all' || filter === 'weekly') {
-        html += buildSection('Weekly Signals', 'Señales semanales de mercado', groups.weekly,
-          'La primera edición está en preparación.', 'Las señales semanales se publican cada lunes.');
-      }
-      if (filter === 'all' || filter === 'monthly') {
-        html += buildSection('Brief Mensual', 'Análisis mensual premium', groups.monthly,
-          'El primer brief mensual se publicará en junio.', 'Los briefs mensuales se publican el primer lunes de cada mes.');
-      }
-      if (filter === 'all' || filter === 'sample') {
-        html += buildSection('Muestras', 'Briefs generados bajo demanda', groups.sample,
-          'No hay muestras disponibles.', '');
-      }
-
-      list.innerHTML = html;
-      list.querySelectorAll('.pub-card-archive').forEach(card => {
-        card.addEventListener('click', () => openPubModal(card));
+      const latest = data.findIndex((p) => p.type !== "sample");
+      heroHost.innerHTML = latest > -1 && filter === "all" && !query ? hero(data[latest], latest) : "";
+      const rows = [];
+      data.forEach((p, i) => {
+        if (filter !== "all" && p.type !== filter) return;
+        if (query && (p.title || "").toLowerCase().indexOf(query) === -1) return;
+        rows.push(row(p, i));
       });
-    }
+      list.innerHTML = rows.length ? rows.join("") : `<p class="state">No hay publicaciones que coincidan.</p>`;
+    };
 
-    function buildSection(title, meta, pubs, emptyTitle, emptySub) {
-      let html = `<div style="margin-bottom:48px;">
-        <div class="archive-section-header">
-          <h2 class="archive-section-title">${title}</h2>
-          <span class="archive-section-meta">${meta}</span>
-        </div>`;
-      if (pubs.length === 0) {
-        html += `<div class="empty-state">
-          <p class="empty-state-label">Próximamente</p>
-          <p class="empty-state-title">${emptyTitle}</p>
-          ${emptySub ? `<p class="empty-state-sub">${emptySub}</p>` : ''}
-        </div>`;
-      } else {
-        html += '<div class="pub-grid">';
-        pubs.forEach(pub => {
-          const date = pub.period_start
-            ? new Date(pub.period_start + 'T12:00:00').toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'})
-            : new Date(pub.created_at).toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'});
-          const typeLabel = {weekly:'Weekly',monthly:'Brief Mensual',sample:'Muestra'}[pub.type] || pub.type;
-          const excerpt = (() => {
-            if (!pub.body_markdown) return '';
-            const div = document.createElement('div');
-            div.innerHTML = pub.body_markdown;
-            const text = (div.textContent || div.innerText || '').trim();
-            return text.length > 180 ? text.slice(0, 180) + '...' : text;
-          })();
-          const safeTitle = (pub.title||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-          const safeBody = (pub.body_markdown||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-          html += `<div class="pub-card-archive"
-            data-title="${safeTitle}"
-            data-type="${typeLabel}"
-            data-date="${date}"
-            data-body="${safeBody}">
-            <div class="pub-type-badge"><span class="pub-type-dot ${pub.type}"></span>${typeLabel}</div>
-            <p class="pub-card-date">${date}</p>
-            <h3 class="pub-card-title">${pub.title||''}</h3>
-            <p class="pub-card-excerpt">${excerpt}</p>
-            <span class="pub-read-link">Leer →</span>
-          </div>`;
-        });
-        html += '</div>';
+    function bind(el) {
+      const i = +el.dataset.i;
+      openPubModal(i);
+    }
+    document.addEventListener("click", (e) => {
+      const tab = e.target.closest(".arch-tools [role=tab]");
+      if (tab) {
+        document.querySelectorAll(".arch-tools [role=tab]").forEach((t) => t.setAttribute("aria-selected", t === tab ? "true" : "false"));
+        filter = tab.dataset.k || "all";
+        window.renderArchive();
+        return;
       }
-      html += '</div>';
-      return html;
-    }
-
-    // Tab switching
-    document.addEventListener('click', e => {
-      const tab = e.target.closest('.archive-tab');
-      if (!tab) return;
-      document.querySelectorAll('.archive-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentFilter = tab.dataset.filter || 'all';
-      renderArchive(currentFilter);
+      const it = e.target.closest("#publications-list .ed, #arch-hero .hero-card");
+      if (it) { e.preventDefault(); bind(it); }
     });
+    document.addEventListener("keydown", (e) => {
+      const it = e.target.closest && e.target.closest("#publications-list .ed");
+      if (it && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); bind(it); }
+      if (e.key === "Escape") closePubModal();
+    });
+    const q = document.getElementById("arch-q");
+    if (q) q.addEventListener("input", () => { query = q.value.trim().toLowerCase(); window.renderArchive(); });
 
-    // Modal
+    const modal = document.getElementById("pubModal");
+    const scroller = document.getElementById("pubModalScroll");
+    const bar = document.getElementById("pubProgress");
+    let lastFocus = null;
+    scroller.addEventListener("scroll", () => {
+      const max = scroller.scrollHeight - scroller.clientHeight;
+      bar.style.width = (max > 0 ? (scroller.scrollTop / max) * 100 : 0) + "%";
+    }, { passive: true });
+
+    function openPubModal(i) {
+      const p = (window._pubs || [])[i];
+      if (!p) return;
+      const m = meta(p);
+      const body = document.getElementById("modalBody");
+      document.getElementById("modalType").textContent = (KIND[p.type] || p.type) + (m.num ? " · " + m.num : "") + " · " + pubDate(p);
+      body.innerHTML = p.body_markdown || '<p class="state">Esta publicación no tiene contenido en este formato.</p>';
+      if (window.hydratePubWidgets) window.hydratePubWidgets(body);
+      lastFocus = document.activeElement;
+      modal.classList.add("open");
+      document.body.classList.add("rd-open");
+      document.body.style.overflow = "hidden";
+      scroller.scrollTop = 0; bar.style.width = "0%";
+      if (window.buildReaderToc) window.buildReaderToc(body, document.getElementById("pubToc"), scroller);
+      document.getElementById("modalClose").focus();
+    }
     function closePubModal() {
-      document.getElementById('pubModal').classList.remove('open');
-      document.body.style.overflow = '';
+      if (!modal.classList.contains("open")) return;
+      modal.classList.remove("open");
+      document.body.classList.remove("rd-open");
+      document.body.style.overflow = "";
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
     }
-
-    function openPubModal(card) {
-      const modal = document.getElementById('pubModal');
-      document.getElementById('modalType').textContent = card.dataset.type + ' · ' + card.dataset.date;
-      document.getElementById('modalTitle').textContent = card.dataset.title;
-      document.getElementById('modalDate').textContent = 'Publicado el ' + card.dataset.date;
-      document.getElementById('modalBody').innerHTML = card.dataset.body;
-      if (window.hydratePubWidgets) window.hydratePubWidgets(document.getElementById('modalBody'));
-      modal.classList.add('open');
-      document.getElementById('pubModalScroll').scrollTop = 0;
-      document.body.style.overflow = 'hidden';
-    }
-
-    document.getElementById('modalClose').addEventListener('click', closePubModal);
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closePubModal();
-    });
-  </script>
-  <div class="cursor-dot" id="cursorDot"></div>
-  <div class="cursor-ring" id="cursorRing"></div>
-  <div class="page-transition" id="pageTransition"></div>
+    document.getElementById("modalClose").addEventListener("click", closePubModal);
+    document.getElementById("modalPrint").addEventListener("click", () => window.print());
+  })();
+</script>
+<script src="criterial-shared.js?v=12"></script>
 </body>
 </html>

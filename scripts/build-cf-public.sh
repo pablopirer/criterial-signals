@@ -43,9 +43,11 @@ cp -t public/ \
   admin.html \
   admin-v2.html
 
-# --- Assets (2) ----------------------------------------------------------
+# --- Assets (3) ----------------------------------------------------------
 # When styles.vN is bumped (cache-bust dance, CLAUDE.md §7) update this line.
+# styles.v14.css stays while admin.html still loads it; the public pages use v15.
 cp -t public/ \
+  styles.v15.css \
   styles.v14.css \
   criterial-shared.js
 
