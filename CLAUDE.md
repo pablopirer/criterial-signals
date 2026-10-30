@@ -44,7 +44,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 - 2 publications published: Weekly Signals nº1 (`995ddce5-42f8-479f-87f3-717ca198ba97`, 2026-06-13) and "Weekly Signals — 28 de junio de 2026" (`f5bbbf6b-345e-4006-b939-6bc4d302098a`, published + sent to Pro 2026-06-28); 5 sample drafts (per-lead, addressable by token — their natural resting state)
 - 46 sample requests total: 7 `generation_failed` (users did not receive email; all predate the Day 22 fix), 0 queued — verified against live DB 2026-06-28
 - Deployed Edge Functions (verified 2026-10-30): **`generate-content` v14**, `sample-request` v27, `admin-publications` v7, `welcome-subscriber` v13, `advisory-request` v11, `stripe-webhook` v6, `get-publications` v7, `subscribe-signals` v3, `send-weekly` v2, `send-open-edition` v2, and v1 for `get-sample`, `get-public-editions`, `generate-linkedin`, `unsubscribe-signals`, `admin-leads`, `admin-advisory`, `admin-samples`, `admin-subscribers` — 18 active in total. The six email senders were redeployed on 2026-10-30 only for the Ledger email templates (branch `feat/emails-ledger`), each with a trimmed `_shared/resend.ts`; their own code is unchanged. `generate-content` v14 (2026-10-30) ships three repo commits that were never live: the server-imposed Monthly period (36ef1a3), the Monthly sector taxonomy and 12-word headline cap (f30a5b8), and Weekly escape parity plus the open edition's map without node `cuerpo` (963e3e8). Deployed with a trimmed `_shared/prompts.ts` (weekly + monthly only).
-- **Branch `feat/rediseno-ledger` (not merged, not deployed):** the 12 public pages load **`styles.v15.css`** ("Ledger" identity) and `criterial-shared.js?v=12`; `admin.html` stays on `styles.v14.css` with `?v=12`. On `main`, until that branch lands: `styles.v14.css` and `?v=11` across the 13 HTML pages that load it (`admin-v2.html` does not), verified 2026-09-29. (History: v12→v13 in Fase 2 CP1 for the publication identity; the shared JS moved ?v=10→?v=11 in the same checkpoint for the map-chip fix; v13→v14 in Fase 2 CP2 for the Brief Mensual identity, the mobile deal table and print styles.)
+- **Branch `feat/rediseno-ledger` (not merged, not deployed):** the 12 public pages load **`styles.v16.css`** ("Ledger" identity) and `criterial-shared.js?v=12`; `admin.html` stays on `styles.v14.css` with `?v=12`. On `main`, until that branch lands: `styles.v14.css` and `?v=11` across the 13 HTML pages that load it (`admin-v2.html` does not), verified 2026-09-29. (History: v12→v13 in Fase 2 CP1 for the publication identity; the shared JS moved ?v=10→?v=11 in the same checkpoint for the map-chip fix; v13→v14 in Fase 2 CP2 for the Brief Mensual identity, the mobile deal table and print styles.)
 
 > **Counts from `scripts/funnel-metrics.sh`. Verify against Supabase/Stripe before using in public copy or commercial claims.**
 
@@ -55,7 +55,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Frontend
 - Static HTML + CSS at the **repository root** (not `/web` — that location is obsolete).
 - Active HTML pages: `index.html`, `pricing.html`, `about.html`, `sample.html`, `muestra.html`, `signals.html`, `archive.html`, `encargos.html`, `advisory-received.html`, `request-received.html`, `success.html`, `cancel.html`. `admin.html` is the internal admin console (publication CRUD, content generation, Pro email send) — not linked from public nav. `muestra.html` renders the interactive web brief delivered to Sample requesters (since Day 22). `signals.html` is the **public** free-edition reader ("Signals · Edición abierta"), added Day 27 — no login; fetches `get-public-editions`. The public nav "Signals" points to `signals.html` (was `sample.html`).
-- Active CSS: **`styles.v15.css`** ("Ledger": Source Serif 4 + Inter + IBM Plex Mono, one blue accent, hairline rules, tabular figures; no custom cursor, no parallax) — loaded by the 12 public pages. `admin.html` still loads **`styles.v14.css`** (old identity), so v14 stays in the repo and in the Cloudflare allowlist until the admin is ported. `styles.css` remains in the repo but is not loaded by any page.
+- Active CSS: **`styles.v16.css`** ("Ledger": Source Serif 4 + Inter + IBM Plex Mono, one blue accent, hairline rules, tabular figures; no custom cursor, no parallax) — loaded by the 12 public pages. `admin.html` still loads **`styles.v14.css`** (old identity), so v14 stays in the repo and in the Cloudflare allowlist until the admin is ported. `styles.css` remains in the repo but is not loaded by any page.
 - Shared JS: **`criterial-shared.js`** — cursor, parallax, scroll reveal, page transition. Loaded via `<script src="criterial-shared.js?v=N">`. The `?v=N` parameter must be bumped in all HTML files whenever `criterial-shared.js` is updated. See §7 for the open item on current version state.
 - Design system: EB Garamond + Inter, hero parallax landscapes, custom cursor with `mix-blend-mode: difference`.
 
@@ -121,7 +121,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ├── CNAME
 ├── *.html                      ← index, about, pricing, sample, muestra, archive, encargos,
 │                                  advisory-received, request-received, success, cancel, admin
-├── styles.v15.css              ← active CSS, public pages (styles.v14.css: admin.html only; styles.css not loaded)
+├── styles.v16.css              ← active CSS, public pages (styles.v14.css: admin.html only; styles.css not loaded)
 ├── criterial-shared.js         ← shared visual effects module
 ├── /supabase
 │   ├── /functions
@@ -144,7 +144,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 ### Publication content system
 - El contenido generado es **HTML semántico** con clases CSS `pub-*`, no markdown.
 - El campo `body_markdown` en Supabase almacena HTML (el nombre es legacy — no renombrar sin migración).
-- Las clases `pub-*` están definidas en `styles.v15.css` bajo el bloque `Lector y contenido publicado (Ledger)` (y, con la identidad anterior, en `styles.v14.css`, que solo carga `admin.html`). El bloque viste tal cual el HTML ya publicado, incluidas las clases antiguas del Monthly previas a "El Informe". Las clases `pub-map-*` (mapa) y `pub-metrics-*` (barras) están ahí; las clases **`mb-*`** son la identidad de informe del Brief Mensual ("El Informe", v6) en el mismo archivo — layout break-out, panel enmarcado, pull-quote, capitular.
+- Las clases `pub-*` están definidas en `styles.v16.css` bajo el bloque `Lector y contenido publicado (Ledger)` (y, con la identidad anterior, en `styles.v14.css`, que solo carga `admin.html`). El bloque viste tal cual el HTML ya publicado, incluidas las clases antiguas del Monthly previas a "El Informe". Las clases `pub-map-*` (mapa) y `pub-metrics-*` (barras) están ahí; las clases **`mb-*`** son la identidad de informe del Brief Mensual ("El Informe", v6) en el mismo archivo — layout break-out, panel enmarcado, pull-quote, capitular.
 - El modelo genera HTML directamente siguiendo la estructura definida en los prompts (`prompts/weekly-digest.es.md`, `prompts/monthly-brief.es.md`).
 - `admin.html` renderiza el HTML directamente (sin marked.js) en el modal de previsualización.
 - `archive.html` renderiza el HTML directamente (sin marked.js) en el modal de lectura.
@@ -254,7 +254,7 @@ Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`
 12. **Explicit approval required for production actions.** The following require explicit approval before execution: deploying Supabase functions; running `scripts/generate-content.sh` or `scripts/publish-draft.sh`; publishing a draft publication; pushing directly to main; modifying Stripe, Resend, Supabase dashboard, DNS, GitHub Pages settings, or secrets.
 13. **Never rename `body_markdown` without a migration.** The field stores HTML since the 2026-05-29 refactor. The name is legacy. Renaming requires a SQL migration and updates to all Edge Functions and scripts that reference it.
 14. **Publication content is HTML, not markdown.** Do not pass `body_markdown` content through marked.js or any markdown parser. Render it directly as innerHTML.
-15. **`pub-*`/`mb-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v15.css` classes (and `styles.v14.css` while `admin.html` loads it).
+15. **`pub-*`/`mb-*` CSS classes are the design system for publication content.** Do not inline styles in generated HTML. All styling goes through `styles.v16.css` classes (and `styles.v14.css` while `admin.html` loads it).
 
 ---
 
@@ -327,7 +327,7 @@ scripts/publish-draft.sh <id>             # sets publication status=published; i
 GitHub Pages caches CSS aggressively. A `?v=X` query parameter on the `href` does **not** invalidate the cache. To force invalidation, rename the CSS file (the active file is now `styles.v8.css`; next bump it to `styles.v9.css`), update all HTML references, then commit and push. This was last done in Day 25 (`styles.v7.css` → `styles.v8.css`). Note: a plain `sed` over `*.html` normalizes CRLF→LF on the files that use CRLF (currently `admin.html`, `archive.html`, `sample.html`) — restore them with `sed -i 's/$/\r/'` after the bump to keep the diff clean.
 
 ### Active CSS file ambiguity
-The active CSS file is **`styles.v15.css`** on `feat/rediseno-ledger` (**`styles.v14.css`** on `main`, and for `admin.html` on both). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
+The active CSS file is **`styles.v16.css`** on `feat/rediseno-ledger` (**`styles.v14.css`** on `main`, and for `admin.html` on both). `styles.css` remains in the repo but is not loaded by any page. Do not edit `styles.css` expecting it to affect the live site.
 
 ### `criterial-shared.js` cache versioning
 When `criterial-shared.js` is updated, the `?v=N` query parameter in all HTML `<script>` tags must be bumped in the same commit. Current version: **`?v=13`** (2026-10-30: time tag without brackets, narrower map gutter; ?v=12 brought the Ledger header menu, reader index, map palette); **`?v=11`** on `main` — bumped in Fase 2 CP1 (map-chip separator), verified across the 13 HTML pages that load it on 2026-09-29. Note: when testing renderer changes locally, the browser also caches `criterial-shared.js?v=11` AND `styles.v14.css` — bump the query (or load with a unique param) to force a fresh copy; a stale CSS is why widget styles can appear unstyled locally.
