@@ -58,7 +58,7 @@
 
     /* ── Generate ─────────────────────────────────────────────────────────── */
     .gen-box { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 24px 28px; }
-    .gen-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .gen-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn-primary, .btn-outline, .btn-save {
       display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px;
       border-radius: var(--radius); font: 500 14px/1 var(--sans); cursor: pointer;
@@ -69,7 +69,8 @@
     .btn-outline:hover:not(:disabled) { border-color: var(--ink); background: var(--surface); }
     .btn-primary:disabled, .btn-outline:disabled { opacity: .45; cursor: default; }
     .btn-save { height: 34px; padding: 0 14px; font-size: 13px; }
-    .gen-status { font-size: 13.5px; color: var(--muted); min-height: 20px; margin: 0; }
+    .gen-status { font-size: 13.5px; color: var(--muted); margin: 12px 0 0; }
+    .gen-status:empty { display: none; }
 
     /* ── Variations ───────────────────────────────────────────────────────── */
     .variations-stack { display: flex; flex-direction: column; gap: 28px; margin-top: 4px; }
@@ -80,6 +81,9 @@
     }
     .variation-num { font: 500 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
     .variation-body { padding: 32px 36px; }
+    /* The card is the reading frame: let the publication use its full width
+       (prose keeps its own measure inside). */
+    .variation-body.pub-content, #preview-body.pub-content { max-width: none; }
 
     /* ── Publication filters ──────────────────────────────────────────────── */
     .filter-row { display: flex; align-items: center; gap: 32px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--ink); }
@@ -888,7 +892,7 @@
     });
   </script>
   <!-- cache-bust: 20260529 -->
-  <script src="criterial-shared.js?v=12"></script>
+  <script src="criterial-shared.js?v=13"></script>
 
 <!-- PREVIEW MODAL -->
 <div id="preview-modal" class="adm-modal">

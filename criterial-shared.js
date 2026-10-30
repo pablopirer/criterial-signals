@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Plot frame. Quadrant labels live OUTSIDE this frame (top/bottom gutters) and
     // every bubble's CENTRE is clamped so the whole circle stays INSIDE the frame,
     // so a corner label and a bubble can never collide.
-    const padL = mobile ? 46 : 72, padR = 24, padTop = 24, padBottom = 52;
+    const padL = mobile ? 46 : 56, padR = 24, padTop = 24, padBottom = 52;
     const left = padL, right = W - padR, top = padTop, bottom = H - padBottom;
     const midX = (left + right) / 2, midY = (top + bottom) / 2;
     const px = (x) => left + clamp(x, 0, 1) * (right - left);
@@ -516,6 +516,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.hydratePubWidgets = function (root) {
     if (!root || !root.querySelectorAll) return;
+    // The converters wrap the time tag in brackets ("[Esta semana]"); the
+    // reader shows it as a plain label.
+    root.querySelectorAll(".pub-time-tag").forEach(el => {
+      el.textContent = (el.textContent || "").replace(/^\s*\[\s*|\s*\]\s*$/g, "");
+    });
     const hideSectionOf = (el) => {
       const sec = el.closest(".pub-section-new") || el;
       sec.style.display = "none";
