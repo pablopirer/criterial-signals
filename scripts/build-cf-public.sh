@@ -46,7 +46,7 @@ cp -t public/ \
 # --- Assets (2) ----------------------------------------------------------
 # When styles.vN is bumped (cache-bust dance, CLAUDE.md §7) update this line.
 cp -t public/ \
-  styles.v13.css \
+  styles.v14.css \
   criterial-shared.js
 
 # --- Optional files, copied only once they exist (later phases) ----------
