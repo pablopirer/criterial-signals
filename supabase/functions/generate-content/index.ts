@@ -448,7 +448,12 @@ function asParagraphs(v: string[] | string | undefined): string[] {
   return [];
 }
 
-function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
+/** `periodLabel` is the period this server computed ("agosto de 2026"). It is
+ * imposed on the masthead exactly like `numero`: the model is asked to echo
+ * the period back, but nothing guaranteed it did, so a wrong echo used to be
+ * published verbatim. Falls back to the model's `period` only if omitted.
+ * Mirrors PERIOD_LABEL in scripts/generate-content.sh. */
+function monthlyJsonToHtml(d: MonthlyJson, numero: number, periodLabel?: string): string {
   const parts: string[] = [];
   let sec = 0;
   const num = () => String(++sec).padStart(2, "0");
@@ -465,7 +470,7 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number): string {
   parts.push('<div class="mb-masthead">');
   parts.push('<div class="mb-brand-row">');
   parts.push('<span class="mb-kicker">Criterial · Brief Mensual</span>');
-  parts.push(`<span class="mb-num">Nº ${numero} · ${esc(d.period)}</span>`);
+  parts.push(`<span class="mb-num">Nº ${numero} · ${esc(periodLabel || d.period)}</span>`);
   parts.push("</div>");
   parts.push(`<h1 class="mb-title">${esc(d.titulo)}</h1>`);
   if (d.dek) parts.push(`<p class="mb-dek">${esc(d.dek)}</p>`);
@@ -776,7 +781,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
           502,
         );
       }
-      html = monthlyJsonToHtml(parsed, editionNumber);
+      html = monthlyJsonToHtml(parsed, editionNumber, periodLabel);
     }
 
     return jsonResponse(

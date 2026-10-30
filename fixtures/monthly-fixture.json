@@ -1,0 +1,93 @@
+{
+  "titulo": "El mid-market encuentra precio y pierde prisa",
+  "dek": "Agosto confirma una banda de valoración más baja y estable: se firma menos, pero lo que se firma cierra antes y con menos condiciones.",
+  "period": "agosto de 2026",
+  "resumen": [
+    "[RESUMEN-1] Se cerraron <strong>12 operaciones</strong> en el mid-market español, dos menos que en julio, con un volumen divulgado de 612 M€.",
+    "[RESUMEN-2] La banda de múltiplos industriales se asienta entre 8x y 9x EBITDA por tercer mes consecutivo.",
+    "[RESUMEN-3] El direct lending financia ya más de la mitad de los buyouts por debajo de 100 M€.",
+    "[RESUMEN-4] Las salidas siguen atascadas: dos procesos suspendidos y ninguna OPV."
+  ],
+  "pullquote": "El mercado ya no negocia el precio: negocia el calendario.",
+  "tesis": [
+    "[TESIS-1] Agosto no fue un mes flojo; fue un mes <strong>ordenado</strong>. Tras un semestre de ajuste, compradores y vendedores comparten por fin una referencia de precio, y la negociación se ha desplazado del múltiplo al calendario.",
+    "[TESIS-2] La prueba está en los tiempos de cierre: los procesos firmados en agosto tardaron una media de <strong>94 días</strong> desde la carta de intenciones, frente a los 131 del primer trimestre, según el Registro de Capital Privado.",
+    "[TESIS-3] Ese acortamiento tiene un coste para el vendedor: aceptar la banda 8-9x sin la opción de esperar a un rebote que los datos no anticipan. Quien vende en septiembre lo hace porque el holding period ya no admite otra prórroga.",
+    "[TESIS-4] El capital, mientras tanto, no escasea. El fundraising doméstico sostiene los primeros cierres y la deuda privada cubre el hueco bancario en tickets medianos, con Moody's & Standard & Poor's señalando márgenes estables.",
+    "[TESIS-5] La consecuencia para el inversor es incómoda: hay dinero y hay precio, pero hay menos activos dispuestos a venderse a ese precio. El cuello de botella ya no es la financiación; es la oferta."
+  ],
+  "contexto": [
+    "[CONTEXTO-1] El BCE mantuvo los tipos en agosto y el mercado descuenta un recorte en diciembre. El Euríbor a 12 meses cerró el mes en <strong>2,31%</strong>, según Boletín Meridiano.",
+    "[CONTEXTO-2] El apetito cross-border se enfría: los fondos extranjeros firmaron 3 de las 12 operaciones, frente a 6 de 14 en julio."
+  ],
+  "operaciones": [
+    { "nombre": "Cerámicas Duero", "sector": "Industrial", "tipo": "Buyout", "importe": "84 M€", "n_importe": 84, "fuente": "[FUENTE-OP-1] Boletín Meridiano · 4 ago 2026" },
+    { "nombre": "NovaSalud Levante", "sector": "Sanidad", "tipo": "M&A", "importe": "120 M€", "n_importe": 120, "fuente": "[FUENTE-OP-2] Crónica Mercantil · 7 ago 2026" },
+    { "nombre": "Fintech Arrecife", "sector": "Tecnología", "tipo": "Growth", "importe": "22 M€", "n_importe": 22, "fuente": "[FUENTE-OP-3] Observatorio Mercantil · 11 ago 2026" },
+    { "nombre": "Talgo Nórdica SL", "sector": "Industrial", "tipo": "M&A", "importe": "n.d.", "fuente": "[FUENTE-OP-4] Gaceta Financiera del Levante · 12 ago 2026" },
+    { "nombre": "Grupo Aliseda Verde", "sector": "Agroalimentario", "tipo": "Salida", "importe": "n.d.", "fuente": "[FUENTE-OP-5] Crónica Mercantil · 14 ago 2026" },
+    { "nombre": "Meridiano IV", "sector": "Financiero", "tipo": "Fundraising", "importe": "180 M€", "n_importe": 180, "fuente": "[FUENTE-OP-6] Registro de Capital Privado · 18 ago 2026" },
+    { "nombre": "Arrecife Capital · NovaSalud", "sector": "Deuda privada", "tipo": "Deuda", "importe": "45 M€", "n_importe": 45, "fuente": "[FUENTE-OP-7] Gaceta Financiera del Levante · 19 ago 2026" },
+    { "nombre": "Solaria Minor d'Olèrdola", "sector": "Energía", "tipo": "Buyout", "importe": "61 M€", "n_importe": 61, "fuente": "[FUENTE-OP-8] Boletín Meridiano · 21 ago 2026" },
+    { "nombre": "Logística Ebro Sur", "sector": "Infraestructura", "tipo": "M&A", "importe": "n.d.", "fuente": "[FUENTE-OP-9] Observatorio Mercantil · 24 ago 2026" },
+    { "nombre": "Conservas Rías Baixas", "sector": "Consumo", "tipo": "Buyout", "importe": "38 M€", "n_importe": 38, "fuente": "[FUENTE-OP-10] Crónica Mercantil · 26 ago 2026" },
+    { "nombre": "Ingeniería Tajo \"Hidro\"", "sector": "Servicios", "tipo": "M&A", "importe": "n.d.", "fuente": "[FUENTE-OP-11] Boletín Meridiano · 28 ago 2026" },
+    { "nombre": "Plataforma <script>alert('op')</script> Datacenter Norte", "sector": "Tecnología", "tipo": "Growth", "importe": "62 M€", "n_importe": 62, "fuente": "[FUENTE-OP-12] Observatorio Mercantil · 30 ago 2026" }
+  ],
+  "macro": [
+    { "label": "Volumen M&A España, 2T 2026", "valor": "9.840 M€", "n": 9840, "fuente": "[FUENTE-MACRO-1] Registro de Capital Privado · jul 2026" },
+    { "label": "Fundraising doméstico acumulado 2026", "valor": "1.215 M€", "n": 1215, "fuente": "[FUENTE-MACRO-2] Boletín Meridiano · ago 2026" }
+  ],
+  "sectores": [
+    { "nombre": "Industrial", "cuerpo": [
+      "[SECTOR-IND-1] El industrial concentra la mayor parte del volumen con múltiplos estables en la banda 8-9x.",
+      "[SECTOR-IND-2] Los compradores son fondos de mid-market con tesis de consolidación regional, no estratégicos."
+    ]},
+    { "nombre": "Tecnología", "cuerpo": [
+      "[SECTOR-TEC-1] Dos rondas de growth por encima de 20 M€ confirman que el capital vuelve a la fase de escalado.",
+      "[SECTOR-TEC-2] Las valoraciones post-money bajan un 30% frente a 2022, pero los términos de gobierno se endurecen."
+    ]},
+    { "nombre": "Sanidad", "cuerpo": [
+      "[SECTOR-SAN-1] Las plataformas de clínicas mantienen múltiplos de doble dígito por la competencia entre compradores industriales."
+    ]}
+  ],
+  "mapa": {
+    "tipo": "posicionamiento",
+    "eje_x": "Actividad transaccional",
+    "eje_y": "Tensión de valoración",
+    "cuadrantes": { "tr": "Caro y activo", "br": "Activo con precio hecho", "tl": "Caro y parado", "bl": "Parado y descontado" },
+    "nodos": [
+      { "id": "ind", "label": "Industrial", "x": 0.80, "y": 0.34, "xprev": 0.74, "yprev": 0.41, "size": 3, "momentum": "creciente", "cuerpo": "[MAPA-1] Tres buyouts bajo 9x en el trimestre.", "chips": ["Fondo Meridiano III", "Cerámicas Duero"], "fuente": "Boletín Meridiano · 4 ago 2026" },
+      { "id": "san", "label": "Sanidad", "x": 0.62, "y": 0.72, "xprev": 0.60, "yprev": 0.70, "size": 2, "momentum": "estable", "cuerpo": "[MAPA-2] Múltiplos de doble dígito sostenidos.", "chips": ["NovaSalud Levante"], "fuente": "Crónica Mercantil · 7 ago 2026" },
+      { "id": "tec", "label": "Tecnología", "x": 0.58, "y": 0.60, "xprev": 0.44, "yprev": 0.66, "size": 2, "momentum": "creciente", "cuerpo": "[MAPA-3] Vuelven las rondas de escalado.", "chips": ["Fintech Arrecife"], "fuente": "Observatorio Mercantil · 11 ago 2026" },
+      { "id": "agr", "label": "Agroalimentario", "x": 0.22, "y": 0.57, "xprev": 0.30, "yprev": 0.60, "size": 2, "momentum": "enfriandose", "cuerpo": "[MAPA-4] Cuarta salida abortada del año.", "chips": ["Grupo Aliseda Verde"], "fuente": "Crónica Mercantil · 14 ago 2026" },
+      { "id": "deu", "label": "Deuda privada", "x": 0.72, "y": 0.45, "xprev": 0.66, "yprev": 0.44, "size": 3, "momentum": "creciente", "cuerpo": "[MAPA-5] El unitranche cubre el hueco bancario.", "chips": ["Arrecife Capital"], "fuente": "Gaceta Financiera del Levante · 19 ago 2026" }
+    ]
+  },
+  "operacion": {
+    "nombre": "Fondo Meridiano III · Cerámicas Duero",
+    "sector": "Industrial",
+    "datos": [
+      { "label": "EV", "valor": "118 M€" },
+      { "label": "Múltiplo", "valor": "8,2x EBITDA" },
+      { "label": "Participación", "valor": "71%" },
+      { "label": "Asesores", "valor": "Gabinete Arenal (venta)" }
+    ],
+    "analisis": [
+      "[OPERACION-1] Es la operación que mejor resume el mes: un vendedor familiar que acepta la banda 8-9x a cambio de certidumbre de cierre.",
+      "[OPERACION-2] La estructura combina un 60% de deuda unitranche y un earn-out ligado a márgenes, un precedente para el sector."
+    ]
+  },
+  "perspectiva": [
+    { "titulo": "El calendario de las salidas", "contexto": "[PERSPECTIVA-1] Si los procesos suspendidos no se reabren antes de diciembre, 2027 abrirá con un stock de activos envejecidos." },
+    { "titulo": "El margen del direct lending", "contexto": "[PERSPECTIVA-2] Un recorte del BCE en diciembre presionaría los márgenes del unitranche y abarataría los buyouts medianos." }
+  ],
+  "fuentes": [
+    { "medio": "Boletín Meridiano", "titulo": "[CITA-1] El mid-market industrial encuentra precio por debajo de 9x — 4 de agosto de 2026" },
+    { "medio": "Crónica Mercantil", "titulo": "[CITA-2] NovaSalud Levante cambia de manos — 7 de agosto de 2026" },
+    { "medio": "Observatorio Mercantil", "titulo": "[CITA-3] Las rondas de escalado vuelven al growth español — 11 de agosto de 2026" },
+    { "medio": "Registro de Capital Privado", "titulo": "[CITA-4] Tiempos de cierre del mid-market, 2T 2026 — 18 de agosto de 2026" },
+    { "medio": "Gaceta Financiera del Levante", "titulo": "[CITA-5] El unitranche gana cuota en tickets medianos — 19 de agosto de 2026" },
+    { "medio": "O'Donnell & Asociados", "titulo": "[CITA-6] Informe de márgenes de deuda privada — 29 de agosto de 2026" }
+  ]
+}

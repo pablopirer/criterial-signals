@@ -329,9 +329,13 @@ print(''.join(out))
 " 2>/dev/null || echo "$TEXT")
   else
   # ── Monthly JSON → HTML (mirrors monthlyJsonToHtml in generate-content) ─────────
-  TEXT=$(RAW_MODEL="$RAW_MODEL" EDITION_NUMBER="$EDITION_NUMBER" python3 <<'PYEOF'
-import os, json, html, re as _re, base64
+  TEXT=$(RAW_MODEL="$RAW_MODEL" EDITION_NUMBER="$EDITION_NUMBER" PERIOD_LABEL="$PERIOD" python3 <<'PYEOF'
+import os, json, html, re as _re, base64, math
 NUM = os.environ.get('EDITION_NUMBER', '').strip()
+# The period is imposed here, like the edition number: it is the label this
+# script computed (closed month included), not whatever the model echoed back
+# in "period". Falls back to the model's value only if the env var is empty.
+PERIOD_LABEL = os.environ.get('PERIOD_LABEL', '').strip()
 raw = os.environ.get('RAW_MODEL', '').strip()
 if raw.startswith('```'):
     raw = '\n'.join(l for l in raw.split('\n') if not l.strip().startswith('```')).strip()
@@ -350,7 +354,9 @@ def esc(s):
     return ''.join(html.escape(p) if not p.startswith('<') else p for p in parts)
 
 def b64(o):
-    return base64.b64encode(json.dumps(o, ensure_ascii=False).encode('utf-8')).decode('ascii')
+    # separators=(',', ':') matches JavaScript's JSON.stringify (no spaces), so
+    # the map and sector-bar placeholders are byte-identical to the EF's.
+    return base64.b64encode(json.dumps(o, ensure_ascii=False, separators=(',', ':')).encode('utf-8')).decode('ascii')
 
 def paras(v):
     if isinstance(v, list): return [p for p in v if isinstance(p, str) and p.strip()]
@@ -362,7 +368,11 @@ def isnum(x):
     except Exception: return False
 
 def fmt_meur(n):
-    return format(int(round(n)), ',').replace(',', '.') + ' M€'
+    # floor(n + 0.5) is exactly JavaScript's Math.round. Python's round() rounds
+    # halves to the even neighbour (round(76.5) == 76), so the same Brief showed
+    # a different "Ticket medio" depending on whether the EF or this script
+    # built it (77 vs 76 M€).
+    return format(int(math.floor(n + 0.5)), ',').replace(',', '.') + ' M€'
 
 _sec = [0]
 def num():
@@ -381,7 +391,7 @@ out = ['<div class="pub-content mb-report">']
 out.append('<div class="mb-masthead">')
 out.append('<div class="mb-brand-row">')
 out.append('<span class="mb-kicker">Criterial · Brief Mensual</span>')
-out.append(f'<span class="mb-num">Nº {esc(NUM)} · {esc(d.get("period",""))}</span>')
+out.append(f'<span class="mb-num">Nº {esc(NUM)} · {esc(PERIOD_LABEL or d.get("period",""))}</span>')
 out.append('</div>')
 out.append(f'<h1 class="mb-title">{esc(d.get("titulo",""))}</h1>')
 if d.get('dek'):
