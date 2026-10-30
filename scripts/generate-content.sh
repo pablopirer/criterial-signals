@@ -37,7 +37,9 @@ fi
 export PYTHONUTF8=1
 
 ANTHROPIC_API="https://api.anthropic.com/v1/messages"
-MODEL="claude-sonnet-4-6"
+# Same model, effort and web search tool as the generate-content Edge Function.
+MODEL="claude-sonnet-5-5"
+EFFORT="medium"
 BOLD='\033[1m'; CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
 # ── Spanish month names ────────────────────────────────────────────────────────
@@ -134,7 +136,7 @@ echo -e "${BOLD}=== Criterial Signals — Content Generator ===${NC}"
 echo -e "  Type:    ${CYAN}$TYPE${NC}"
 echo -e "  Period:  $PERIOD"
 echo -e "  Nº:      $EDITION_NUMBER"
-echo -e "  Model:   $MODEL (web_search, max_tokens=16000)"
+echo -e "  Model:   $MODEL (effort $EFFORT, web_search, max_tokens=16000)"
 echo ""
 
 # ── Generate 3 variations ─────────────────────────────────────────────────────
@@ -154,7 +156,9 @@ body = {
   'model': '$MODEL',
   'max_tokens': 16000,
   'system': system,
-  'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 5}],
+  'tools': [{'type': 'web_search_20260209', 'name': 'web_search', 'max_uses': 5}],
+  'output_config': {'effort': '$EFFORT'},
+  'fallbacks': 'default',
   'messages': [{'role': 'user', 'content': user}]
 }
 print(json.dumps(body))
@@ -164,6 +168,7 @@ print(json.dumps(body))
     -H "content-type: application/json" \
     -H "x-api-key: $ANTHROPIC_API_KEY" \
     -H "anthropic-version: 2023-06-01" \
+    -H "anthropic-beta: server-side-fallback-2026-07-01" \
     -d "$PAYLOAD")
 
   TEXT=$(echo "$RESPONSE" | python3 -c "

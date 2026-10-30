@@ -27,7 +27,15 @@ const ADMIN_EMAIL = "pablopirer@gmail.com";
 // waits), so it's exposed to the Edge Function wall-clock limit. Fewer web
 // searches keep generation under that ceiling (a 5-search run timed out at the
 // gateway → "Error desconocido"). 3 searches still cite real, verifiable sources.
-const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }];
+const WEB_SEARCH_TOOLS = [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }];
+// Weekly and Monthly run on Claude Sonnet 5.5 (2026-10-30). Passed explicitly so
+// sample-request and generate-linkedin keep the shared default until they are
+// moved on purpose; this also means the ANTHROPIC_MODEL secret no longer
+// overrides it here. Effort "medium" keeps the synchronous Weekly inside the
+// 150s Edge Function limit (thinking is always on and adds latency).
+// Mirrored in scripts/generate-content.sh.
+const CONTENT_MODEL = "claude-sonnet-5-5";
+const CONTENT_EFFORT = "medium" as const;
 
 const MONTHS_ES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -737,6 +745,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const result = await generateBrief({
       interestType: "",
       prompt: { system: systemWithMonth, user: userWithPeriod },
+      model: CONTENT_MODEL,
+      effort: CONTENT_EFFORT,
+      fallbacks: true,
       // 8000 was tuned for the pre-map Weekly, which already ran close to the
       // limit; adding the mapa block pushed output past 8000 and truncated the
       // JSON mid-object (→ "no parseable" 502). 12000 gives the map headroom.

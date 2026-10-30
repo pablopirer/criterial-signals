@@ -40,8 +40,13 @@ export interface GenerateBriefInput {
   model?: string;
   /** Optional max_tokens override. Defaults to 2048 (sample-request). Content generation uses 8000. */
   maxTokens?: number;
-  /** Optional tools to pass to the API (e.g. web_search_20250305). */
+  /** Optional tools to pass to the API (e.g. web_search_20260209). */
   tools?: AnthropicTool[];
+  /** Optional effort level (output_config.effort). Omitted -> the model's default. */
+  effort?: "low" | "medium" | "high" | "xhigh" | "max";
+  /** Opt into server-side refusal fallbacks (fallbacks: "default"). Only for
+   * models that accept it (Sonnet 5.5, Opus 5/5.5, Fable 5.1). */
+  fallbacks?: boolean;
 }
 
 export interface GenerateBriefOutput {
@@ -96,14 +101,25 @@ export async function generateBrief(
   if (input.tools && input.tools.length > 0) {
     body.tools = input.tools;
   }
+  if (input.effort) {
+    body.output_config = { effort: input.effort };
+  }
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    "x-api-key": apiKey,
+    "anthropic-version": ANTHROPIC_VERSION,
+  };
+  if (input.fallbacks) {
+    // A safety-classifier refusal is retried server-side on a model the API
+    // picks for that refusal category, instead of returning an empty answer.
+    body.fallbacks = "default";
+    headers["anthropic-beta"] = "server-side-fallback-2026-07-01";
+  }
 
   const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": ANTHROPIC_VERSION,
-    },
+    headers,
     body: JSON.stringify(body),
   });
 
@@ -117,8 +133,18 @@ export async function generateBrief(
   const json = await response.json() as {
     content: Array<{ type: string; text?: string }>;
     model: string;
+    stop_reason?: string;
     usage: { input_tokens: number; output_tokens: number };
   };
+
+  // Name the two stops that leave no usable text, instead of failing later on
+  // an empty or truncated JSON parse. Thinking tokens count against max_tokens.
+  if (json.stop_reason === "refusal") {
+    throw new Error("Anthropic API declined the request (stop_reason: refusal)");
+  }
+  if (json.stop_reason === "max_tokens") {
+    throw new Error("Anthropic API hit max_tokens before finishing the output");
+  }
 
   // The Messages API returns a content array of typed blocks. For a plain
   // text completion we expect one block of type "text". Concatenate any
