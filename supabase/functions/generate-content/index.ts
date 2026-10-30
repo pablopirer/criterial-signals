@@ -27,7 +27,10 @@ const ADMIN_EMAIL = "pablopirer@gmail.com";
 // limit. On Sonnet 5.5 a full Weekly took ~40s, and 3 searches were not enough
 // to find the week's deals (the model returned a "provisional" edition), so it
 // is back up to 6. Watch execution_time_ms if this changes again.
-const WEB_SEARCH_TOOLS = [{ type: "web_search_20260209", name: "web_search", max_uses: 6 }];
+// web_search_20250305 (basic), not the newer _20260209: on 2026-10-30 two
+// Sonnet 5.5 runs with _20260209 got no usable results from any of their
+// searches, while the basic tool had always found the week's deals.
+const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 6 }];
 // Weekly and Monthly run on Claude Sonnet 5.5 (2026-10-30). Passed explicitly so
 // sample-request and generate-linkedin keep the shared default until they are
 // moved on purpose; this also means the ANTHROPIC_MODEL secret no longer
@@ -659,12 +662,24 @@ function monthlyJsonToHtml(d: MonthlyJson, numero: number, periodLabel?: string)
   return parts.join("");
 }
 
+class ModelProseError extends Error {
+  constructor(public prose: string) {
+    super("Model returned prose instead of JSON");
+  }
+}
+
 // ── JSON parse with one repair pass ───────────────────────────────────────────
 
 /** Parse the model's JSON. If it is malformed (typically an unescaped quote
  * inside a text field), ask the model once, without tools, to return the same
  * content as valid JSON. Throws if the repaired text still does not parse. */
 async function parseWithRepair<T>(text: string, label: string): Promise<T> {
+  // No JSON at all means the model answered in prose (e.g. it could not verify
+  // any deal). Nothing to repair: surface its own words to the admin.
+  if (text.indexOf("{") === -1) {
+    console.error(`${label}: model returned prose, not JSON:`, text.slice(0, 800));
+    throw new ModelProseError(text);
+  }
   try {
     return JSON.parse(extractJsonObject(text)) as T;
   } catch (firstErr) {
@@ -791,6 +806,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
         parsed = await parseWithRepair<WeeklyJson>(result.text, "Weekly");
       } catch (parseErr) {
         console.error("Weekly JSON still invalid after repair:", parseErr);
+        if (parseErr instanceof ModelProseError) {
+          const said = parseErr.prose.replace(/\s+/g, " ").trim().slice(0, 300);
+          return jsonResponse({ error: `El modelo no generó el Weekly. Dijo: «${said}…»` }, 502);
+        }
         return jsonResponse(
           {
             error:
@@ -810,6 +829,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
         parsed = await parseWithRepair<MonthlyJson>(result.text, "Monthly");
       } catch (parseErr) {
         console.error("Monthly JSON still invalid after repair:", parseErr);
+        if (parseErr instanceof ModelProseError) {
+          const said = parseErr.prose.replace(/\s+/g, " ").trim().slice(0, 300);
+          return jsonResponse({ error: `El modelo no generó el Brief Mensual. Dijo: «${said}…»` }, 502);
+        }
         return jsonResponse(
           {
             error:

@@ -156,7 +156,7 @@ body = {
   'model': '$MODEL',
   'max_tokens': 16000,
   'system': system,
-  'tools': [{'type': 'web_search_20260209', 'name': 'web_search', 'max_uses': 6}],
+  'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 6}],
   'output_config': {'effort': '$EFFORT'},
   'fallbacks': 'default',
   'messages': [{'role': 'user', 'content': user}]
