@@ -7,6 +7,82 @@ const RESEND_API_URL = "https://api.resend.com/emails";
 const FROM_ADDRESS = "noreply@criterialsignals.com";
 const ARCHIVE_URL = "https://criterialsignals.com/archive.html";
 
+// ── Ledger email frame ─────────────────────────────────────────────────────
+// Same identity as the site (styles.v15.css): white card on a light grey
+// canvas, serif headline, one blue accent, hairline rules. Table layout and
+// inline styles only, 600px max, system font fallbacks (most clients ignore
+// web fonts). Every interpolated value goes through escHtml: names,
+// descriptions and titles come from forms or the database.
+const SITE_URL = "https://criterialsignals.com";
+const L_SERIF = "Georgia,'Times New Roman',serif";
+const L_SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+const L_MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+
+function escHtml(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function greetingFor(recipientName: string): string {
+  const firstName = recipientName ? recipientName.trim().split(/\s+/)[0] : "";
+  return firstName ? `Hola ${firstName},` : "Hola,";
+}
+
+interface LedgerEmailParts {
+  preheader: string;
+  eyebrow: string;
+  title: string;
+  /** Trusted HTML built by the caller from escaped values. */
+  bodyHtml: string;
+  cta?: { label: string; url: string };
+  /** Trusted HTML appended to the footer line (e.g. unsubscribe link). */
+  footExtra?: string;
+}
+
+function ledgerParagraph(html: string, last = false): string {
+  return `<p style="margin:0 0 ${last ? 0 : 16}px;font:400 15px/1.65 ${L_SANS};color:#2A2E35;">${html}</p>`;
+}
+
+function ledgerRows(rows: Array<[string, string]>): string {
+  const cells = rows.map(([a, b]) =>
+    `<tr><td style="padding:12px 14px 12px 0;border-bottom:1px solid #E7E7E3;vertical-align:top;width:96px;font:500 10.5px/1.6 ${L_MONO};letter-spacing:.06em;text-transform:uppercase;color:#646A73;">${a}</td>` +
+    `<td style="padding:12px 0;border-bottom:1px solid #E7E7E3;font:400 15px/1.5 ${L_SANS};color:#0B0D10;">${b}</td></tr>`
+  ).join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0;border-top:1px solid #0B0D10;">${cells}</table>`;
+}
+
+function ledgerQuote(html: string): string {
+  return `<div style="margin:8px 0 0;padding:16px 18px;background:#F6F6F3;border-radius:4px;font:400 14px/1.65 ${L_SANS};color:#2A2E35;">${html}</div>`;
+}
+
+function ledgerEmail(p: LedgerEmailParts): string {
+  const btn = p.cta
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 4px;"><tr><td style="background:#0B0D10;border-radius:4px;">` +
+      `<a href="${escHtml(p.cta.url)}" style="display:inline-block;padding:14px 24px;font:600 14px ${L_SANS};color:#ffffff;text-decoration:none;">${escHtml(p.cta.label)}</a></td></tr></table>`
+    : "";
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escHtml(p.title)}</title></head>
+<body style="margin:0;padding:0;background:#F6F6F3;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escHtml(p.preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F6F3;"><tr><td align="center" style="padding:32px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #E7E7E3;border-radius:6px;">
+<tr><td style="padding:22px 32px;border-bottom:1px solid #E7E7E3;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+<td style="font:400 22px ${L_SERIF};color:#0B0D10;">Criterial<span style="color:#2F5BA8;">.</span></td>
+<td align="right" style="font:500 10.5px ${L_MONO};letter-spacing:.08em;text-transform:uppercase;color:#646A73;">${escHtml(p.eyebrow)}</td>
+</tr></table></td></tr>
+<tr><td style="padding:32px 32px 8px;">
+<h1 style="margin:0 0 16px;font:400 26px/1.25 ${L_SERIF};color:#0B0D10;letter-spacing:-.01em;">${escHtml(p.title)}</h1>
+${p.bodyHtml}${btn}</td></tr>
+<tr><td style="padding:28px 32px 26px;"><p style="margin:0;padding-top:18px;border-top:1px solid #E7E7E3;font:400 12px/1.6 ${L_SANS};color:#989DA5;">
+Criterial. — Inteligencia de capital privado · España · <a href="${SITE_URL}" style="color:#646A73;">criterialsignals.com</a>${p.footExtra ?? ""}</p></td></tr>
+</table></td></tr></table>
+</body>
+</html>`;
+}
+
 export interface BriefData {
   titulo: string;
   subtitulo: string;
@@ -168,47 +244,17 @@ export interface SendSampleEnvelopeInput {
 }
 
 function buildSampleEnvelopeHtml(input: SendSampleEnvelopeInput): string {
-  const firstName = input.recipientName ? input.recipientName.split(" ")[0] : "";
-  const greeting = firstName ? `Hola ${firstName},` : "Hola,";
-  const sansFamily =
-    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-  const tag = (t: string) =>
-    `<span style="font-family:${sansFamily};font-size:11px;padding:3px 10px;background:#F4F0EA;color:#888;margin-right:6px;display:inline-block;">${t}</span>`;
-  const tagsHtml = [input.tematica, input.sector].filter(Boolean).map((t) =>
-    tag(t as string)
-  ).join("");
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Tu muestra interactiva de Criterial. ya está lista.</div>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:${sansFamily};font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">Criterial. · Signals</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">${input.titulo}</div>
-    <div style="font-family:${sansFamily};font-size:12px;color:#999;margin-bottom:16px;">${input.tesis}</div>
-    <div>${tagsHtml}</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <p style="font-family:${sansFamily};font-size:14px;color:#444;margin:0 0 20px;">${greeting}</p>
-    <p style="font-family:${sansFamily};font-size:14px;line-height:1.7;color:#444;margin:0 0 28px;">Hemos preparado tu muestra de Signals. Es una pieza interactiva: ábrela para explorar el análisis, las señales del periodo y el mapa de capital del mercado.</p>
-    <div style="text-align:center;margin:0 0 8px;">
-      <a href="${input.url}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:${sansFamily};font-size:12px;font-weight:500;letter-spacing:.04em;padding:13px 30px;text-decoration:none;">Abrir tu muestra →</a>
-    </div>
-  </td></tr>
-  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:${sansFamily};font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL.</td>
-      <td align="right"><a href="https://criterialsignals.com" style="font-family:${sansFamily};font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
-    </tr></table>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  const topic = [input.tematica, input.sector].filter(Boolean).map(escHtml).join(" · ");
+  return ledgerEmail({
+    preheader: "Tu muestra interactiva de Criterial. ya está lista.",
+    eyebrow: "Muestra",
+    title: input.titulo,
+    bodyHtml:
+      ledgerParagraph(escHtml(greetingFor(input.recipientName))) +
+      ledgerParagraph(`Hemos preparado tu muestra de Signals${topic ? ` sobre <strong style="color:#0B0D10;">${topic}</strong>` : ""}. Es una pieza interactiva: ábrela para explorar el análisis, las señales del periodo y el mapa de posicionamiento del mercado.`) +
+      (input.tesis ? ledgerQuote(escHtml(input.tesis)) : ""),
+    cta: { label: "Abrir tu muestra →", url: input.url },
+  });
 }
 
 export async function sendSampleEnvelope(
@@ -272,138 +318,50 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
 }
 
 function buildWelcomeHtml(input: SendWelcomeEmailInput): string {
-  const firstName = input.recipientName ? input.recipientName.split(" ")[0] : "";
-  const greeting = firstName ? `Hola ${firstName},` : "Hola,";
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">CRITERIAL SIGNALS</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">Bienvenido al plan Pro.</div>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;">Tu suscripción ya está activa.</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#444;margin:0 0 24px;">${greeting}</p>
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;margin:0 0 24px;">Tu suscripción al plan Pro de Criterial Signals ya está activa. A partir de ahora recibirás:</p>
-    <div style="margin:0 0 28px;">
-      <div style="padding:12px 0;border-bottom:0.5px solid #E2DED8;">
-        <span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#0D1F3C;">· Señales semanales de mercado sobre España</span>
-      </div>
-      <div style="padding:12px 0;border-bottom:0.5px solid #E2DED8;">
-        <span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#0D1F3C;">· Brief mensual premium</span>
-      </div>
-      <div style="padding:12px 0;">
-        <span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#0D1F3C;">· Acceso al archivo completo de publicaciones</span>
-      </div>
-    </div>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 12px;">Cómo acceder al archivo</div>
-    <div style="background:#F8F6F2;border:0.5px solid #E2DED8;padding:20px 22px;margin:0 0 32px;">
-      <div style="padding:4px 0;"><span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#555;">1. Ve a <a href="${ARCHIVE_URL}" style="color:#0D1F3C;">criterialsignals.com/archive.html</a></span></div>
-      <div style="padding:4px 0;"><span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#555;">2. Introduce este email y solicita un enlace de acceso</span></div>
-      <div style="padding:4px 0;"><span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#555;">3. Haz clic en el enlace que recibirás en tu bandeja</span></div>
-    </div>
-    <div style="text-align:center;">
-      <a href="${ARCHIVE_URL}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:500;letter-spacing:.04em;padding:12px 28px;text-decoration:none;">Ir al archivo</a>
-    </div>
-  </td></tr>
-  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL SIGNALS</td>
-      <td align="right"><a href="https://criterialsignals.com" style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
-    </tr></table>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  return ledgerEmail({
+    preheader: "Tu suscripción Pro está activa.",
+    eyebrow: "Pro",
+    title: "Tu suscripción Pro está activa.",
+    bodyHtml:
+      ledgerParagraph(escHtml(greetingFor(input.recipientName))) +
+      ledgerParagraph("Tu suscripción al plan Pro de Criterial Signals ya está activa. Desde hoy recibes el Weekly completo, el Brief Mensual y el acceso al archivo de todas las publicaciones.") +
+      ledgerRows([
+        ["Paso 1", `Entra en <a href="${ARCHIVE_URL}" style="color:#2F5BA8;">criterialsignals.com/archive.html</a>`],
+        ["Paso 2", "Escribe este email y solicita un enlace de acceso"],
+        ["Paso 3", "Abre el enlace que recibirás en tu bandeja"],
+      ]),
+    cta: { label: "Ir al archivo →", url: ARCHIVE_URL },
+  });
 }
 
 function buildAdvisoryConfirmationHtml(recipientName: string, tipoEncargo: string, descripcion: string): string {
-  const firstName = recipientName ? recipientName.split(" ")[0] : "";
-  const greeting = firstName ? `Hola ${firstName},` : "Hola,";
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">CRITERIAL</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">Hemos recibido tu consulta.</div>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;">Advisory — ${tipoEncargo}</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#444;margin:0 0 24px;">${greeting}</p>
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;margin:0 0 24px;">Hemos recibido tu consulta de <strong>${tipoEncargo}</strong>. Revisaremos los detalles y te responderemos con una propuesta de alcance y coste en menos de 24 horas.</p>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 12px;">Tu consulta</div>
-    <div style="background:#F8F6F2;border:0.5px solid #E2DED8;padding:20px 22px;margin:0 0 28px;">
-      <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.65;color:#555;margin:0;">${descripcion}</p>
-    </div>
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#666;margin:0;">Si tienes alguna pregunta adicional, puedes responder directamente a este email.</p>
-  </td></tr>
-  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL</td>
-      <td align="right"><a href="https://criterialsignals.com" style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
-    </tr></table>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  return ledgerEmail({
+    preheader: "Te responderemos en menos de 24 horas.",
+    eyebrow: "Advisory",
+    title: "Hemos recibido tu consulta.",
+    bodyHtml:
+      ledgerParagraph(escHtml(greetingFor(recipientName))) +
+      ledgerParagraph(`Hemos recibido tu consulta de <strong style="color:#0B0D10;">${escHtml(tipoEncargo)}</strong>. Revisaremos los detalles y te responderemos con una propuesta de alcance y coste en menos de 24 horas.`) +
+      ledgerRows([["Tipo", escHtml(tipoEncargo)]]) +
+      ledgerQuote(escHtml(descripcion).replace(/\n/g, "<br>")) +
+      `<div style="height:16px;"></div>` +
+      ledgerParagraph("Si tienes alguna pregunta adicional, puedes responder directamente a este email.", true),
+  });
 }
 
 function buildAdvisoryInternalHtml(recipientName: string, userEmail: string, tipoEncargo: string, descripcion: string): string {
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">CRITERIAL — INTERNO</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;">Nueva consulta Advisory</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 12px;">Datos del contacto</div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:0.5px solid #E2DED8;margin:0 0 28px;">
-      <tr>
-        <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;padding:10px 14px;width:100px;border-bottom:0.5px solid #E2DED8;">Nombre</td>
-        <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#0D1F3C;padding:10px 14px;border-bottom:0.5px solid #E2DED8;">${recipientName}</td>
-      </tr>
-      <tr>
-        <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;padding:10px 14px;border-bottom:0.5px solid #E2DED8;">Email</td>
-        <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#0D1F3C;padding:10px 14px;border-bottom:0.5px solid #E2DED8;"><a href="mailto:${userEmail}" style="color:#0D1F3C;">${userEmail}</a></td>
-      </tr>
-      <tr>
-        <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;padding:10px 14px;">Tipo</td>
-        <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#0D1F3C;padding:10px 14px;">${tipoEncargo}</td>
-      </tr>
-    </table>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin:0 0 12px;">Descripción</div>
-    <div style="background:#F8F6F2;border:0.5px solid #E2DED8;padding:20px 22px;">
-      <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.65;color:#555;margin:0;">${descripcion}</p>
-    </div>
-  </td></tr>
-  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL</td>
-      <td align="right"><a href="https://criterialsignals.com" style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
-    </tr></table>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  return ledgerEmail({
+    preheader: `Nueva consulta Advisory de ${recipientName}`,
+    eyebrow: "Interno",
+    title: "Nueva consulta Advisory",
+    bodyHtml:
+      ledgerRows([
+        ["Nombre", escHtml(recipientName)],
+        ["Email", `<a href="mailto:${escHtml(userEmail)}" style="color:#2F5BA8;">${escHtml(userEmail)}</a>`],
+        ["Tipo", escHtml(tipoEncargo)],
+      ]) +
+      ledgerQuote(escHtml(descripcion).replace(/\n/g, "<br>")),
+  });
 }
 
 export interface SendWelcomeEmailInput {
@@ -477,41 +435,19 @@ export interface SendPublicationNotificationInput {
 function buildPublicationNotificationHtml(
   input: SendPublicationNotificationInput,
 ): string {
-  const typeIntro = input.publicationType === "weekly"
-    ? "El Weekly Signals de esta semana ya está disponible en tu archivo Pro."
-    : "El Brief Mensual de este mes ya está disponible en tu archivo Pro.";
-
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">CRITERIAL SIGNALS · PRO</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">${input.publicationTitle}</div>
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;">${input.publicationPeriod}</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;margin:0 0 24px;">Hola,</p>
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;margin:0 0 32px;">${typeIntro}</p>
-    <div style="text-align:center;margin:0 0 32px;">
-      <a href="${ARCHIVE_URL}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:500;letter-spacing:.04em;padding:14px 32px;text-decoration:none;">Leer en el archivo →</a>
-    </div>
-    <p style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.65;color:#999;margin:0;">Si no puedes acceder, solicita el enlace de acceso en <a href="${ARCHIVE_URL}" style="color:#0D1F3C;">criterialsignals.com/archive.html</a> usando el email con el que te suscribiste.</p>
-  </td></tr>
-  <tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL SIGNALS</td>
-      <td align="right"><a href="https://criterialsignals.com" style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCC;text-decoration:none;">criterialsignals.com</a></td>
-    </tr></table>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  const weekly = input.publicationType === "weekly";
+  return ledgerEmail({
+    preheader: weekly ? "El Weekly Signals de esta semana ya está en tu archivo." : "El Brief Mensual ya está en tu archivo.",
+    eyebrow: weekly ? "Weekly · Pro" : "Brief Mensual · Pro",
+    title: input.publicationTitle,
+    bodyHtml:
+      `<p style="margin:0 0 18px;font:500 10.5px ${L_MONO};letter-spacing:.06em;text-transform:uppercase;color:#646A73;">${escHtml(input.publicationPeriod)}</p>` +
+      ledgerParagraph(weekly
+        ? "El Weekly Signals de esta semana ya está disponible en tu archivo Pro, con el patrón, la implicación y el read-through de cada señal."
+        : "El Brief Mensual de este mes ya está disponible en tu archivo Pro."),
+    cta: { label: "Leer en el archivo →", url: ARCHIVE_URL },
+    footExtra: `<br>¿No puedes entrar? Solicita el enlace de acceso en <a href="${ARCHIVE_URL}" style="color:#646A73;">criterialsignals.com/archive.html</a> con el email de tu suscripción.`,
+  });
 }
 
 export async function sendPublicationNotification(
@@ -567,14 +503,7 @@ export async function sendPublicationNotification(
 const SIGNALS_URL = "https://criterialsignals.com/signals.html";
 
 function buildSignalsFooter(unsubscribeUrl: string): string {
-  const sans =
-    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-  return `<tr><td style="padding:18px 44px;border-top:0.5px solid #E2DED8;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="font-family:${sans};font-size:10px;letter-spacing:.1em;color:#CCC;">CRITERIAL SIGNALS</td>
-      <td align="right"><a href="${unsubscribeUrl}" style="font-family:${sans};font-size:10px;color:#CCC;text-decoration:underline;">Darse de baja</a></td>
-    </tr></table>
-  </td></tr>`;
+  return ` · <a href="${escHtml(unsubscribeUrl)}" style="color:#646A73;">Darse de baja</a>`;
 }
 
 export interface SendSignalsConfirmationInput {
@@ -583,34 +512,16 @@ export interface SendSignalsConfirmationInput {
 }
 
 function buildSignalsConfirmationHtml(input: SendSignalsConfirmationInput): string {
-  const sans =
-    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Estás suscrito a la edición abierta de Criterial Signals.</div>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:${sans};font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">Criterial. · Signals</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">Estás dentro.</div>
-    <div style="font-family:${sans};font-size:12px;color:#999;">Edición abierta</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#444;margin:0 0 24px;">Gracias por suscribirte. Recibirás cada nueva edición abierta de Criterial Signals —las señales del mercado español de capital privado— directamente en tu correo.</p>
-    <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#444;margin:0 0 28px;">El análisis en profundidad de cada señal, el read-through de la semana y el Brief Mensual son parte de Pro.</p>
-    <div style="text-align:center;">
-      <a href="${SIGNALS_URL}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:${sans};font-size:12px;font-weight:500;letter-spacing:.04em;padding:13px 30px;text-decoration:none;">Ver las ediciones →</a>
-    </div>
-  </td></tr>
-  ${buildSignalsFooter(input.unsubscribeUrl)}
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  return ledgerEmail({
+    preheader: "Estás suscrito a la edición abierta de Criterial Signals.",
+    eyebrow: "Signals",
+    title: "Ya estás suscrito a Signals.",
+    bodyHtml:
+      ledgerParagraph("Gracias por suscribirte. Recibirás cada nueva edición abierta de Criterial Signals —las señales del mercado español de capital privado— directamente en tu correo.") +
+      ledgerParagraph("El análisis en profundidad de cada señal, el read-through de la semana y el Brief Mensual son parte de Pro.", true),
+    cta: { label: "Ver las ediciones →", url: SIGNALS_URL },
+    footExtra: buildSignalsFooter(input.unsubscribeUrl),
+  });
 }
 
 export async function sendSignalsConfirmation(
@@ -645,34 +556,17 @@ export interface SendOpenEditionInput {
 }
 
 function buildOpenEditionHtml(input: SendOpenEditionInput): string {
-  const sans =
-    "-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F4F0EA;font-family:Georgia,'Times New Roman',serif;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Nueva edición abierta de Criterial Signals.</div>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:40px 16px;">
-<tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border:0.5px solid #E2DED8;">
-  <tr><td style="padding:32px 44px 28px;border-bottom:0.5px solid #E2DED8;">
-    <div style="font-family:${sans};font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#BBB;margin-bottom:18px;">Criterial Signals · Edición abierta</div>
-    <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:400;color:#0D1F3C;line-height:1.25;margin:0 0 8px;">${input.title}</div>
-    <div style="font-family:${sans};font-size:12px;color:#999;">${input.period}</div>
-  </td></tr>
-  <tr><td style="padding:32px 44px;">
-    <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#444;margin:0 0 32px;">Ya está disponible la nueva edición abierta: las señales de la semana en el mercado español de capital privado, con el mapa de posicionamiento del periodo.</p>
-    <div style="text-align:center;margin:0 0 32px;">
-      <a href="${input.editionUrl}" style="display:inline-block;background:#0D1F3C;color:#ffffff;font-family:${sans};font-size:12px;font-weight:500;letter-spacing:.04em;padding:14px 32px;text-decoration:none;">Leer la edición →</a>
-    </div>
-    <p style="font-family:${sans};font-size:12px;line-height:1.65;color:#999;margin:0;">El análisis de cada señal (patrón e implicación), el read-through y el Brief Mensual son parte de <a href="https://criterialsignals.com/pricing.html" style="color:#0D1F3C;">Pro</a>.</p>
-  </td></tr>
-  ${buildSignalsFooter(input.unsubscribeUrl)}
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  return ledgerEmail({
+    preheader: "Nueva edición abierta de Criterial Signals.",
+    eyebrow: "Signals · Edición abierta",
+    title: input.title,
+    bodyHtml:
+      `<p style="margin:0 0 18px;font:500 10.5px ${L_MONO};letter-spacing:.06em;text-transform:uppercase;color:#646A73;">${escHtml(input.period)}</p>` +
+      ledgerParagraph("Ya está disponible la nueva edición abierta: las señales de la semana en el mercado español de capital privado, con el mapa de posicionamiento del periodo.") +
+      ledgerParagraph(`El análisis de cada señal (patrón e implicación), el read-through y el Brief Mensual son parte de <a href="${SITE_URL}/pricing.html" style="color:#2F5BA8;">Pro</a>.`, true),
+    cta: { label: "Leer la edición →", url: input.editionUrl },
+    footExtra: buildSignalsFooter(input.unsubscribeUrl),
+  });
 }
 
 export async function sendOpenEditionEmail(
