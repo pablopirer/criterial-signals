@@ -50,7 +50,7 @@ Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Si
     {
       "nombre": "string — 'Comprador – Objetivo', corto",
       "comprador": "string — fondo, grupo o inversor principal",
-      "objetivo": "string — empresa objeto de la operación",
+      "objetivo": "string — solo el nombre de la empresa objeto de la operación, sin aclaraciones ni paréntesis",
       "tipo": "string — una de: Buyout | Growth | M&A | Deuda | Salida | Fundraising | OPA",
       "sector": "string — una de: Sanidad | Tecnología | Industrial | Servicios | Consumo | Agroalimentario | Energía | Infraestructura | Financiero | Deuda privada",
       "importe": "string — importe de display (p.ej. '180 M€', '250 M$') o 'n.d.'",

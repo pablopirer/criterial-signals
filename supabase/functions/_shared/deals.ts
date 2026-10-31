@@ -25,9 +25,12 @@ const KEY_STOPWORDS = new Set([
   "the", "el", "la", "los", "las", "de", "del", "y",
 ]);
 
-/** "Señalizaciones Ortega, S.L." -> "senalizacionesortega" */
+/** "Señalizaciones Ortega, S.L." -> "senalizacionesortega".
+ * Text in brackets is dropped: the model sometimes annotates the name
+ * ("Seaya Nova (fondo growth)"), and the note must not split one deal in two. */
 export function normalizeKey(s: string): string {
   return s
+    .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/\./g, "") // "S.L." -> "sl", so the stopword list catches it
