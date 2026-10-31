@@ -9,9 +9,13 @@
  *             ?action=metrics  — returns aggregated counts across all tables
  *   POST   — create a draft. Body: { type, title, body_markdown, period_start, period_end }
  *   PATCH  — update status.  Body: { id, status: "published" | "draft" }
+ *             A published Weekly feeds the deal base (public.deals); back to
+ *             draft takes it out again. Response: { ok, deals: { synced } | { removed } }.
+ *   DELETE — delete a publication, then take it out of the deal base.
  */
 
 import { createServiceRoleClient } from "../_shared/supabase.ts";
+import { syncDeals, unsyncDeals } from "../_shared/deals.ts";
 
 const ADMIN_EMAIL = "pablopirer@gmail.com";
 
@@ -295,7 +299,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       else await p;
     }
 
-    return jsonResponse({ ok: true }, 200);
+    // Deal base: inline, so the admin learns how many deals entered or left.
+    // Both helpers log and return 0 on failure; the status change stands.
+    const deals = status === "published"
+      ? { synced: await syncDeals(supabase, id!) }
+      : { removed: await unsyncDeals(supabase, id!) };
+
+    return jsonResponse({ ok: true, deals }, 200);
   }
 
   // ── DELETE: delete publication ─────────────────────────────────────────────
@@ -321,6 +331,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       console.error("Failed to delete publication:", error);
       return jsonResponse({ error: "Failed to delete publication" }, 500);
     }
+
+    // After the delete succeeds: a failed delete must leave its deals in place.
+    await unsyncDeals(supabase, id);
 
     return jsonResponse({ ok: true }, 200);
   }
