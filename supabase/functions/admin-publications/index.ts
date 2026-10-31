@@ -212,6 +212,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       title?: string;
       body_markdown?: string;
       body_public?: string | null;
+      body_data?: unknown;
       period_start?: string;
       period_end?: string;
     };
@@ -221,12 +222,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return jsonResponse({ error: "Invalid JSON body" }, 400);
     }
 
-    const { type, title, body_markdown, body_public, period_start, period_end } = body;
+    const { type, title, body_markdown, body_public, body_data, period_start, period_end } = body;
     if (!type || !title || !body_markdown || !period_start || !period_end) {
       return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
     // body_public is the reduced free/public projection (weekly only); nullable.
+    // body_data is the model's parsed JSON (since 2026-10-31): the structured
+    // copy the deal base and the Brief Mensual read from. Nullable.
     const { data, error } = await supabase
       .from("publications")
       .insert({
@@ -234,6 +237,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         title,
         body_markdown,
         body_public: body_public ?? null,
+        body_data: body_data ?? null,
         status: "draft",
         period_start,
         period_end,

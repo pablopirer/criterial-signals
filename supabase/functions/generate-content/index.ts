@@ -106,17 +106,65 @@ interface WeeklySenal {
   implicacion: string;
 }
 
+/** One deal. Since 2026-10-31 the Weekly JSON is also stored in body_data and
+ * feeds the deal base, so beyond the display fields it carries comparable data:
+ * closed sector/type labels, amount in millions with its currency, date and a
+ * source URL. `ambito: "exterior"` = a Spanish investor buying abroad; it is
+ * shown apart and never counted as Spanish market. */
+interface WeeklyOp {
+  nombre: string;
+  comprador?: string;
+  objetivo?: string;
+  tipo: string;
+  sector: string;
+  importe?: string;
+  n_importe?: number;
+  moneda?: string;
+  fecha?: string;
+  ambito?: string;
+  tesis: string;
+  fuente?: { medio?: string; url?: string };
+}
+
 interface WeeklyJson {
   titulo: string;
   period: string;
   apertura: string;
   senales: WeeklySenal[];
-  operaciones: Array<{ nombre: string; tipo: string; sector: string; tesis: string }>;
+  operaciones: WeeklyOp[];
   vigilar: Array<{ titulo: string; contexto: string }>;
+  /** International context: what happened outside Spain and how it bears on it. */
+  fuera?: Array<{ titulo: string; texto: string; fuente?: string }>;
   readthrough: { origination: string; financiacion: string; salidas: string };
   dato: { cifra: string; texto: string };
   mapa?: Record<string, unknown>;
-  fuentes: Array<{ medio: string; titulo: string }>;
+  fuentes: Array<{ medio: string; titulo: string; fecha?: string; url?: string }>;
+}
+
+/** Only http(s) URLs become links; anything else renders as plain text. */
+function safeUrl(u: unknown): string | null {
+  return typeof u === "string" && /^https?:\/\//i.test(u.trim()) ? u.trim() : null;
+}
+
+/** "2026-10-28" -> "28 de octubre de 2026"; anything else -> "". */
+function fechaEs(f: unknown): string {
+  const m = typeof f === "string" ? f.match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
+  if (!m) return "";
+  const mes = MONTHS_ES[Number(m[2]) - 1];
+  return mes ? `${Number(m[3])} de ${mes} de ${m[1]}` : "";
+}
+
+/** Deal table rows: Operación | Tipo | Sector | Importe | Tesis. */
+function opsTable(ops: WeeklyOp[]): string {
+  const rows = ops.map((op) =>
+    `<tr><td>${esc(op.nombre)}</td><td>${esc(op.tipo)}</td><td>${esc(op.sector)}</td>` +
+    `<td>${esc(op.importe || "n.d.")}</td><td>${esc(op.tesis)}</td></tr>`
+  ).join("");
+  return (
+    '<table class="pub-ops-table pub-ops-table--v2">' +
+    "<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Importe</th><th>Tesis</th></tr></thead>" +
+    `<tbody>${rows}</tbody></table>`
+  );
 }
 
 /**
@@ -233,23 +281,15 @@ function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
   }
   parts.push("</div>");
 
-  // Tabla de operaciones
+  // Tabla de operaciones — Spanish market only; Spanish capital abroad goes
+  // under "Fuera de España".
+  const allOps = (d.operaciones ?? []).filter((op) => op && op.nombre);
+  const opsEs = allOps.filter((op) => op.ambito !== "exterior");
+  const opsExt = allOps.filter((op) => op.ambito === "exterior");
   parts.push('<div class="pub-section-new">');
   parts.push('<p class="pub-sec-label">Operaciones de la semana</p>');
-  parts.push(
-    '<table class="pub-ops-table"><colgroup>' +
-      '<col style="width:26%"><col style="width:18%"><col style="width:22%"><col style="width:34%">' +
-      "</colgroup>",
-  );
-  parts.push(
-    "<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Tesis</th></tr></thead><tbody>",
-  );
-  for (const op of (d.operaciones ?? [])) {
-    parts.push(
-      `<tr><td>${esc(op.nombre)}</td><td>${esc(op.tipo)}</td><td>${esc(op.sector)}</td><td>${esc(op.tesis)}</td></tr>`,
-    );
-  }
-  parts.push("</tbody></table></div>");
+  parts.push(opsTable(opsEs));
+  parts.push("</div>");
 
   // Qué vigilar
   parts.push('<div class="pub-section-new">');
@@ -263,6 +303,28 @@ function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
     parts.push("</div>");
   });
   parts.push("</div></div>");
+
+  // Fuera de España — international context, plus Spanish capital abroad
+  const fuera = (d.fuera ?? []).filter((f) => f && f.titulo);
+  if (fuera.length || opsExt.length) {
+    parts.push('<div class="pub-section-new">');
+    parts.push('<p class="pub-sec-label">Fuera de España</p>');
+    if (fuera.length) {
+      parts.push('<div class="pub-vigilar-grid">');
+      for (const f of fuera) {
+        parts.push('<div class="pub-vigilar-card">');
+        parts.push(`<p class="pub-vigilar-title-new">${esc(f.titulo)}</p>`);
+        parts.push(`<p class="pub-vigilar-sub-new">${esc(f.texto)}</p>`);
+        parts.push("</div>");
+      }
+      parts.push("</div>");
+    }
+    if (opsExt.length) {
+      parts.push('<p class="pub-sec-label">Capital español fuera</p>');
+      parts.push(opsTable(opsExt));
+    }
+    parts.push("</div>");
+  }
 
   // Investment read-through
   const rt = (d.readthrough ?? {}) as Record<string, string>;
@@ -310,9 +372,14 @@ function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
   parts.push('<div class="pub-sources-new">');
   parts.push('<p class="pub-sec-label">Fuentes</p>');
   for (const f of (d.fuentes ?? [])) {
+    const url = safeUrl(f.url);
+    const fecha = fechaEs(f.fecha);
+    const titulo = url
+      ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(f.titulo)}</a>`
+      : esc(f.titulo);
     parts.push('<div class="pub-source-row">');
     parts.push(`<span class="pub-source-medio">${esc(f.medio)}</span>`);
-    parts.push(`<span class="pub-source-titulo">${esc(f.titulo)}</span>`);
+    parts.push(`<span class="pub-source-titulo">${titulo}${fecha ? `, ${fecha}` : ""}</span>`);
     parts.push("</div>");
   }
   parts.push("</div>");
@@ -800,6 +867,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     let html: string;
     let publicHtml: string | null = null;
+    // The parsed JSON travels back too: admin.html saves it as body_data, the
+    // structured copy the deal base and the Brief Mensual read from.
+    let data: unknown = null;
     if (type === "weekly") {
       let parsed: WeeklyJson;
       try {
@@ -819,6 +889,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         );
       }
       // Two projections of the same generation: full (Pro) + reduced (Free).
+      data = parsed;
       html = weeklyJsonToHtml(parsed, editionNumber);
       publicHtml = weeklyJsonToPublicHtml(parsed, editionNumber);
     } else {
@@ -841,11 +912,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
           502,
         );
       }
+      data = parsed;
       html = monthlyJsonToHtml(parsed, editionNumber, periodLabel);
     }
 
     return jsonResponse(
-      { variations: [html], public_html: publicHtml, type, title, period_start, period_end },
+      { variations: [html], public_html: publicHtml, data, type, title, period_start, period_end },
       200,
     );
   } catch (err) {

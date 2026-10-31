@@ -532,6 +532,10 @@ strong{color:var(--ink);font-weight:600}
 .pub-ops-table td,.pub-mapa td{padding:13px 12px 13px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--text);line-height:1.5}
 .pub-ops-table td:first-child,.pub-mapa td:first-child{color:var(--ink);font-weight:500}
 .pub-ops-table tbody tr:hover td{background:#FAFAF8}
+/* Weekly deal table since 2026-10-31: Operación | Tipo | Sector | Importe | Tesis */
+.pub-ops-table--v2 td:nth-child(4){white-space:nowrap;font-variant-numeric:tabular-nums}
+/* A second label inside one section ("Capital español fuera" under "Fuera de España"); !important beats .pub-sec-label margin:0 0 20px!important */
+.pub-section-new>.pub-sec-label:not(:first-child){margin-top:40px!important}
 
 /* Qué vigilar */
 .pub-vigilar-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ink)}
@@ -755,6 +759,7 @@ strong{color:var(--ink);font-weight:600}
   .pub-ops-table td:first-child,.mb-ops td:first-child,.pub-mapa td:first-child{font-size:15.5px;padding-bottom:6px}
   .pub-ops-table td:not(:first-child)::before,.mb-ops td:not(:first-child)::before{color:var(--faint);font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
   .pub-ops-table td:nth-child(2)::before{content:"Tipo · "} .pub-ops-table td:nth-child(3)::before{content:"Sector · "} .pub-ops-table td:nth-child(4)::before{content:"Tesis · "}
+  .pub-ops-table--v2 td:nth-child(4)::before{content:"Importe · "} .pub-ops-table--v2 td:nth-child(5)::before{content:"Tesis · "}
   .mb-ops td:nth-child(2)::before{content:"Sector · "} .mb-ops td:nth-child(3)::before{content:"Tipo · "} .mb-ops td:nth-child(4)::before{content:"Importe · "} .mb-ops td:nth-child(5)::before{content:"Fuente · "}
 }
 @media print{

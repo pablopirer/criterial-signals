@@ -193,6 +193,9 @@ if raw.startswith('\`\`\`'):
     lines = raw.split('\n')
     lines = [l for l in lines if not l.strip().startswith('\`\`\`')]
     raw = '\n'.join(lines).strip()
+s2 = raw.find('{'); e2 = raw.rfind('}')
+if s2 != -1 and e2 != -1 and e2 > s2:
+    raw = raw[s2:e2+1]
 
 try:
     d = json.loads(raw)
@@ -212,6 +215,25 @@ badge_map = {
     'lmm': 'pub-badge-lmm', 'opa': 'pub-badge-opa',
     'deeptech': 'pub-badge-deeptech'
 }
+
+MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+
+def safe_url(u):
+    # Mirrors safeUrl in generate-content: only http(s) becomes a link.
+    return u.strip() if isinstance(u, str) and _re.match(r'(?i)^https?://', u.strip()) else None
+
+def fecha_es(f):
+    # Mirrors fechaEs: '2026-10-28' -> '28 de octubre de 2026'.
+    m = _re.fullmatch(r'([0-9]{4})-([0-9]{2})-([0-9]{2})', f) if isinstance(f, str) else None
+    if not m or not 1 <= int(m.group(2)) <= 12: return ''
+    return f'{int(m.group(3))} de {MESES[int(m.group(2))-1]} de {m.group(1)}'
+
+def ops_table(ops):
+    # Mirrors opsTable: Operación | Tipo | Sector | Importe | Tesis.
+    rows = ''.join(f'<tr><td>{esc(op.get(\"nombre\",\"\"))}</td><td>{esc(op.get(\"tipo\",\"\"))}</td><td>{esc(op.get(\"sector\",\"\"))}</td><td>{esc(op.get(\"importe\") or \"n.d.\")}</td><td>{esc(op.get(\"tesis\",\"\"))}</td></tr>' for op in ops)
+    return ('<table class=\"pub-ops-table pub-ops-table--v2\">'
+            '<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Importe</th><th>Tesis</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table>')
 
 out = []
 out.append('<div class=\"pub-content\">')
@@ -257,14 +279,14 @@ for s in d.get('senales', []):
     out.append('</div></div></div>')
 out.append('</div>')
 
-# Tabla operaciones
+# Tabla operaciones (mercado español; el capital español fuera va en Fuera de España)
+all_ops = [op for op in d.get('operaciones', []) if isinstance(op, dict) and op.get('nombre')]
+ops_es = [op for op in all_ops if op.get('ambito') != 'exterior']
+ops_ext = [op for op in all_ops if op.get('ambito') == 'exterior']
 out.append('<div class=\"pub-section-new\">')
 out.append('<p class=\"pub-sec-label\">Operaciones de la semana</p>')
-out.append('<table class=\"pub-ops-table\"><colgroup><col style=\"width:26%\"><col style=\"width:18%\"><col style=\"width:22%\"><col style=\"width:34%\"></colgroup>')
-out.append('<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Tesis</th></tr></thead><tbody>')
-for op in d.get('operaciones', []):
-    out.append(f'<tr><td>{esc(op.get(\"nombre\",\"\"))}</td><td>{esc(op.get(\"tipo\",\"\"))}</td><td>{esc(op.get(\"sector\",\"\"))}</td><td>{esc(op.get(\"tesis\",\"\"))}</td></tr>')
-out.append('</tbody></table></div>')
+out.append(ops_table(ops_es))
+out.append('</div>')
 
 # Qué vigilar
 out.append('<div class=\"pub-section-new\">')
@@ -277,6 +299,24 @@ for i, v in enumerate(d.get('vigilar', []), 1):
     out.append(f'<p class=\"pub-vigilar-sub-new\">{esc(v.get(\"contexto\",\"\"))}</p>')
     out.append('</div>')
 out.append('</div></div>')
+
+# Fuera de España
+fuera = [f for f in d.get('fuera', []) if isinstance(f, dict) and f.get('titulo')]
+if fuera or ops_ext:
+    out.append('<div class=\"pub-section-new\">')
+    out.append('<p class=\"pub-sec-label\">Fuera de España</p>')
+    if fuera:
+        out.append('<div class=\"pub-vigilar-grid\">')
+        for f in fuera:
+            out.append('<div class=\"pub-vigilar-card\">')
+            out.append(f'<p class=\"pub-vigilar-title-new\">{esc(f.get(\"titulo\",\"\"))}</p>')
+            out.append(f'<p class=\"pub-vigilar-sub-new\">{esc(f.get(\"texto\",\"\"))}</p>')
+            out.append('</div>')
+        out.append('</div>')
+    if ops_ext:
+        out.append('<p class=\"pub-sec-label\">Capital español fuera</p>')
+        out.append(ops_table(ops_ext))
+    out.append('</div>')
 
 # Read-through
 rt = d.get('readthrough', {})
@@ -317,9 +357,16 @@ if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.g
 out.append('<div class=\"pub-sources-new\">')
 out.append('<p class=\"pub-sec-label\">Fuentes</p>')
 for f in d.get('fuentes', []):
+    url = safe_url(f.get('url'))
+    fecha = fecha_es(f.get('fecha'))
+    tit = esc(f.get('titulo',''))
+    if url:
+        tit = f'<a href=\"{esc(url)}\" target=\"_blank\" rel=\"noopener\">{tit}</a>'
+    if fecha:
+        tit = tit + ', ' + fecha
     out.append('<div class=\"pub-source-row\">')
     out.append(f'<span class=\"pub-source-medio\">{esc(f.get(\"medio\",\"\"))}</span>')
-    out.append(f'<span class=\"pub-source-titulo\">{esc(f.get(\"titulo\",\"\"))}</span>')
+    out.append(f'<span class=\"pub-source-titulo\">{tit}</span>')
     out.append('</div>')
 out.append('</div>')
 
@@ -681,8 +728,8 @@ printf '%s' "$SELECTED_TEXT" > "$TMPBODY"
 TMPPUBLIC=$(mktemp)
 printf '%s' "$SELECTED_PUBLIC" > "$TMPPUBLIC"
 
-PUB_ID=$(python3 - "$TMPBODY" "$TMPPUBLIC" "$TYPE" "$TITLE" "$PERIOD_START" "$PERIOD_END" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
-import json, sys, urllib.request, urllib.error
+PUB_ID=$(RAW_MODEL="$RAW_MODEL" python3 - "$TMPBODY" "$TMPPUBLIC" "$TYPE" "$TITLE" "$PERIOD_START" "$PERIOD_END" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
+import json, os, sys, urllib.request, urllib.error
 
 body_file, public_file, pub_type, title, period_start, period_end, supabase_url, service_key = sys.argv[1:]
 
@@ -691,11 +738,23 @@ with open(body_file, encoding='utf-8') as f:
 with open(public_file, encoding='utf-8') as f:
     body_public = f.read()
 
+# The model's JSON is kept as body_data, like admin.html does with the Edge
+# Function's `data`: it is the structured copy the deal base reads from.
+body_data = None
+raw = os.environ.get('RAW_MODEL', '')
+s2 = raw.find('{'); e2 = raw.rfind('}')
+if s2 != -1 and e2 > s2:
+    try:
+        body_data = json.loads(raw[s2:e2+1])
+    except Exception:
+        body_data = None
+
 payload = json.dumps({
     'type': pub_type,
     'title': title,
     'body_markdown': body_markdown,
     'body_public': body_public if body_public.strip() else None,
+    'body_data': body_data,
     'status': 'draft',
     'period_start': period_start,
     'period_end': period_end
