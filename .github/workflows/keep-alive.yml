@@ -2,7 +2,7 @@ name: Keep Supabase alive
 
 on:
   schedule:
-    - cron: '0 9 */3 * *'  # cada 3 días a las 9:00 UTC (con */5 el salto de fin de mes llegaba a 6 días)
+    - cron: '0 9 * * *'  # a diario a las 9:00 UTC: con un ping cada 5 días el proyecto se pausó igual (oct. 2026)
   workflow_dispatch:        # permite ejecutarlo manualmente
 
 jobs:
