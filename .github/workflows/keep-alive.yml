@@ -2,7 +2,7 @@ name: Keep Supabase alive
 
 on:
   schedule:
-    - cron: '0 9 */5 * *'  # cada 5 días a las 9:00 UTC
+    - cron: '0 9 */3 * *'  # cada 3 días a las 9:00 UTC (con */5 el salto de fin de mes llegaba a 6 días)
   workflow_dispatch:        # permite ejecutarlo manualmente
 
 jobs:
@@ -18,3 +18,10 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             "https://epmltqhtxkmfboaxdois.supabase.co/rest/v1/publications?select=id&limit=1")
           echo "HTTP $STATUS — ping enviado"
+          # Fallar si no es 200: un 401 (clave caducada) o un proyecto ya
+          # pausado no registran actividad, y antes pasaban en verde.
+          # Un job fallido hace que GitHub avise por email.
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Supabase respondió HTTP $STATUS; el keep-alive no está registrando actividad"
+            exit 1
+          fi
