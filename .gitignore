@@ -89,3 +89,5 @@ AGENTS.md
 # --- Local planning docs (local only — never commit) ---
 # Working plans and strategy drafts kept on the developer's machine.
 planes-locales/
+# Python bytecode
+__pycache__/
