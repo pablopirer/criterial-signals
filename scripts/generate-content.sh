@@ -6,8 +6,14 @@
 #   source .env.local && bash scripts/generate-content.sh monthly
 #
 # Requires: curl, ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+#
+# AUTO_DRAFT=1 runs the Weekly without questions: it saves the draft and stops,
+# and it never publishes. Used by .github/workflows/weekly-draft.yml on Fridays.
+# It exits non-zero when the model output is not valid JSON, so nothing broken
+# is saved and the failed run makes GitHub send an alert.
 
 set -uo pipefail
+AUTO="${AUTO_DRAFT:-}"
 
 TYPE="${1:-}"
 # Optional YYYY-MM (monthly only): generate the brief for a CLOSED month instead of
@@ -492,21 +498,37 @@ PYEOF
 done
 
 # ── Display variations ─────────────────────────────────────────────────────────
-echo ""
-for i in "${!VARIATIONS[@]}"; do
-  echo -e "${BOLD}${CYAN}─────────────────── Variación $((i+1)) ───────────────────${NC}"
+if [[ -z "$AUTO" ]]; then
   echo ""
-  echo "${VARIATIONS[$i]}"
-  echo ""
-done
+  for i in "${!VARIATIONS[@]}"; do
+    echo -e "${BOLD}${CYAN}─────────────────── Variación $((i+1)) ───────────────────${NC}"
+    echo ""
+    echo "${VARIATIONS[$i]}"
+    echo ""
+  done
+fi
 
 # ── Selection ─────────────────────────────────────────────────────────────────
-echo -e "${YELLOW}¿Guardar como borrador? (y/N):${NC} "
-read -r SELECTION
+if [[ -n "$AUTO" ]]; then
+  # No one reviews before saving, so only a parseable Weekly is saved.
+  if ! RAW_MODEL="$RAW_MODEL" python3 -c "
+import json, os, sys
+raw = os.environ['RAW_MODEL']; s = raw.find('{'); e = raw.rfind('}')
+d = json.loads(raw[s:e+1]) if s != -1 and e > s else None
+sys.exit(0 if isinstance(d, dict) and d.get('operaciones') is not None else 1)
+" 2>/dev/null; then
+    echo "El modelo no devolvió un Weekly en JSON válido. No se ha guardado nada."
+    echo "${RAW_MODEL:0:600}"
+    exit 1
+  fi
+else
+  echo -e "${YELLOW}¿Guardar como borrador? (y/N):${NC} "
+  read -r SELECTION
 
-if [[ "$SELECTION" != "y" && "$SELECTION" != "Y" ]]; then
-  echo "Cancelado. No se ha guardado nada."
-  exit 0
+  if [[ "$SELECTION" != "y" && "$SELECTION" != "Y" ]]; then
+    echo "Cancelado. No se ha guardado nada."
+    exit 0
+  fi
 fi
 
 SELECTION="1"
@@ -586,6 +608,25 @@ fi
 echo "ok"
 echo -e "  Publication ID: ${CYAN}$PUB_ID${NC}"
 echo ""
+
+if [[ -n "$AUTO" ]]; then
+  N_OPS=$(RAW_MODEL="$RAW_MODEL" python3 -c "
+import json, os
+raw = os.environ['RAW_MODEL']; d = json.loads(raw[raw.find('{'):raw.rfind('}')+1])
+print(len(d.get('operaciones') or []))
+" 2>/dev/null || echo "?")
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    {
+      echo "### Borrador guardado: $TITLE"
+      echo ""
+      echo "- Nº $EDITION_NUMBER · $PERIOD"
+      echo "- $N_OPS operaciones"
+      echo "- ID \`$PUB_ID\`: revísalo y publícalo desde admin.html"
+    } >> "$GITHUB_STEP_SUMMARY"
+  fi
+  echo "Borrador guardado ($N_OPS operaciones). Publícalo desde admin.html."
+  exit 0
+fi
 
 # ── Publish now? ───────────────────────────────────────────────────────────────
 echo -e "${YELLOW}¿Publicar ahora? Los suscriptores Pro podrán verlo en el archivo. (y/N):${NC} "

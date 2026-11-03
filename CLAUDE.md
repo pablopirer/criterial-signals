@@ -36,7 +36,7 @@ Two active business lines:
 - No other tiers.
 
 ### Content engine status
-Manual. Scripts exist (`scripts/generate-content.sh`, `scripts/publish-draft.sh`) but execution is not scheduled or automated.
+The Weekly draft is scheduled: `.github/workflows/weekly-draft.yml` runs `scripts/generate-content.sh weekly` with `AUTO_DRAFT=1` every Friday at 06:00 UTC (also by hand with workflow_dispatch). It saves a draft and never publishes; publishing stays manual from `admin.html`, which emails subscribers and feeds the deal base. A run whose model output is not valid JSON fails without saving, so GitHub emails an alert. Needs the GitHub Actions secrets `ANTHROPIC_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. The Brief Mensual stays manual (terminal).
 
 ### Production snapshot (last documented: 2026-06-29)
 - 20 leads captured (all status `new`; none contacted or converted; no new lead since 2026-05-18) — verified against live DB 2026-06-28
