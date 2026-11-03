@@ -711,6 +711,39 @@ strong{color:var(--ink);font-weight:600}
 .mb-source-medio{font-weight:500;color:var(--ink)}
 .mb-source-titulo{color:var(--muted)}
 .mb-footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:20px;margin-top:40px;border-top:1px solid var(--line);font:400 12px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+/* ---------- Brief Mensual v7 (2026-11-03): una pregunta por mes ---------- */
+.mb-question-label{font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px!important}
+.mb-evid,.mb-profiles{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;border-top:1px solid var(--ink)}
+.mb-evid-label{font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:16px 0 4px!important}
+.mb-evid-col--favor .mb-evid-label{color:var(--pos)}
+.mb-evid-col--contra .mb-evid-label{color:var(--neg)}
+.mb-evid-list{list-style:none;margin:0;padding:0}
+.mb-evid-list li{padding:14px 0;border-bottom:1px solid var(--line);font-size:15.5px;line-height:1.6;color:var(--text)}
+.mb-evid-ops{display:block;margin-top:6px;font-size:12.5px;color:var(--faint)}
+.mb-data-lede{font:400 17px/1.6 var(--serif);color:var(--ink);max-width:740px;margin:18px 0 4px!important}
+.mb-vig{border-top:1px solid var(--ink)}
+.mb-vig-item{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.mb-vig-badge{grid-row:span 2;align-self:start;justify-self:start;font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border:1px solid currentColor;border-radius:3px}
+.mb-vig-badge--paso{color:var(--pos)}
+.mb-vig-badge--no_paso{color:var(--neg)}
+.mb-vig-badge--abierto{color:var(--flat)}
+.mb-vig-title{font:500 15.5px/1.4 var(--sans);color:var(--ink);margin:0}
+.mb-vig-text{font-size:15px;line-height:1.6;color:var(--muted);margin:0}
+.mb-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.mb-list li{position:relative;padding:14px 0 14px 24px;border-bottom:1px solid var(--line);font:400 17px/1.6 var(--serif);color:#22262C}
+.mb-list li::before{content:"?";position:absolute;left:0;top:14px;font:500 13px/1.9 var(--mono);color:var(--accent-2)}
+.mb-profiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:0 28px}
+.mb-profile{padding:18px 0}
+.mb-profile-label{font:500 14.5px/1.35 var(--sans);color:var(--ink);margin:0 0 8px!important}
+.mb-profile-text{font-size:15px;line-height:1.62;color:var(--muted);margin:0}
+.mb-annex .mb-data-caption{margin-top:20px!important}
+.mb-ops--annex td:nth-child(4),.mb-ops--annex th:nth-child(4){text-align:left;padding-right:12px;white-space:nowrap}
+.mb-ops--annex td:nth-child(5),.mb-ops--annex th:nth-child(5){text-align:right;white-space:nowrap;padding-right:28px;font-variant-numeric:tabular-nums;font-size:14px;color:var(--text)}
+.mb-ops--annex td:nth-child(6){white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums}
+.mb-ops-eur{display:block;font-size:12px;color:var(--faint)}
+.mb-ops--annex tr:target td{background:var(--accent-soft)}
+.mb-ops-code{font:400 11px var(--mono);color:var(--faint);margin-right:8px}
+.mb-ref{font:500 .78em var(--mono);color:var(--accent-2);text-decoration:none;border-bottom:1px solid #C9D4E6;white-space:nowrap}
 
 /* ---------- Listados y estados ---------- */
 .ed{cursor:pointer}
@@ -761,6 +794,9 @@ strong{color:var(--ink);font-weight:600}
   .pub-ops-table td:nth-child(2)::before{content:"Tipo · "} .pub-ops-table td:nth-child(3)::before{content:"Sector · "} .pub-ops-table td:nth-child(4)::before{content:"Tesis · "}
   .pub-ops-table--v2 td:nth-child(4)::before{content:"Importe · "} .pub-ops-table--v2 td:nth-child(5)::before{content:"Tesis · "}
   .mb-ops td:nth-child(2)::before{content:"Sector · "} .mb-ops td:nth-child(3)::before{content:"Tipo · "} .mb-ops td:nth-child(4)::before{content:"Importe · "} .mb-ops td:nth-child(5)::before{content:"Fuente · "}
+  .mb-evid,.mb-profiles{grid-template-columns:1fr}
+  .mb-vig-item{grid-template-columns:1fr} .mb-vig-badge{grid-row:auto}
+  .mb-ops--annex td:nth-child(4)::before{content:"Estado · "} .mb-ops--annex td:nth-child(5)::before{content:"Importe · "} .mb-ops--annex td:nth-child(6)::before{content:"Fecha · "}
 }
 @media print{
   .hdr,.ftr,.rd-top,.toc,.pub-map-toggle,.pub-map-note,.rd-after,.no-print{display:none!important}

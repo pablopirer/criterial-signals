@@ -1,0 +1,401 @@
+{
+ "deals": [
+  {
+   "id": "00000000-0000-0000-0000-000000000001",
+   "deal_key": "cerámicasduero|espana",
+   "nombre": "Fondo Meseta – Cerámicas Duero",
+   "comprador": "Fondo Meseta",
+   "objetivo": "Cerámicas Duero",
+   "tipo": "Buyout",
+   "sector": "Industrial",
+   "importe": "85 M€",
+   "n_importe": 85,
+   "moneda": "EUR",
+   "importe_eur": 85,
+   "estado": "cerrada",
+   "fecha": "2026-09-03",
+   "fecha_publicacion": "2026-09-03",
+   "ambito": "espana",
+   "tesis": "Consolidación de un fabricante regional",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-1",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000002",
+   "deal_key": "novasaludlevante|espana",
+   "nombre": "Grupo Ribera – NovaSalud Levante",
+   "comprador": "Grupo Ribera",
+   "objetivo": "NovaSalud Levante",
+   "tipo": "M&A",
+   "sector": "Sanidad",
+   "importe": "n.d.",
+   "n_importe": null,
+   "moneda": null,
+   "importe_eur": null,
+   "estado": "anunciada",
+   "fecha": "2026-09-05",
+   "fecha_publicacion": "2026-09-05",
+   "ambito": "espana",
+   "tesis": "Plataforma de clínicas mediterránea",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-2",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000003",
+   "deal_key": "talgonórdica|espana",
+   "nombre": "Alcor Deuda – Talgo Nórdica",
+   "comprador": "Alcor Deuda",
+   "objetivo": "Talgo Nórdica",
+   "tipo": "Deuda",
+   "sector": "Industrial",
+   "importe": "40 M€",
+   "n_importe": 40,
+   "moneda": "EUR",
+   "importe_eur": 40,
+   "estado": "cerrada",
+   "fecha": "2026-09-08",
+   "fecha_publicacion": "2026-09-08",
+   "ambito": "espana",
+   "tesis": "Unitranche para un bolt-on",
+   "fuente_medio": "Crónica Mercantil",
+   "fuente_url": "https://example.com/op-3",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000004",
+   "deal_key": "fintecharrecife|espana",
+   "nombre": "Atalaya Growth – Fintech Arrecife",
+   "comprador": "Atalaya Growth",
+   "objetivo": "Fintech Arrecife",
+   "tipo": "Growth",
+   "sector": "Tecnología",
+   "importe": "30 M$",
+   "n_importe": 30,
+   "moneda": "USD",
+   "importe_eur": 26.4,
+   "estado": "cerrada",
+   "fecha": "2026-09-10",
+   "fecha_publicacion": "2026-09-10",
+   "ambito": "espana",
+   "tesis": "Ronda serie B en pagos B2B",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-4",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000005",
+   "deal_key": "meridianoiv|espana",
+   "nombre": "Meridiano IV – primer cierre",
+   "comprador": "Meridiano Partners",
+   "objetivo": "Meridiano IV",
+   "tipo": "Fundraising",
+   "sector": "Financiero",
+   "importe": "180 M€",
+   "n_importe": 180,
+   "moneda": "EUR",
+   "importe_eur": 180,
+   "estado": "cerrada",
+   "fecha": "2026-09-12",
+   "fecha_publicacion": "2026-09-12",
+   "ambito": "espana",
+   "tesis": "Fondo de buyout con LP domésticos",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-5",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000006",
+   "deal_key": "alisedaverde|espana",
+   "nombre": "Brisa Capital – Aliseda Verde",
+   "comprador": "Brisa Capital",
+   "objetivo": "Aliseda Verde",
+   "tipo": "Salida",
+   "sector": "Agroalimentario",
+   "importe": "n.d.",
+   "n_importe": null,
+   "moneda": null,
+   "importe_eur": null,
+   "estado": "cancelada",
+   "fecha": "2026-09-15",
+   "fecha_publicacion": "2026-09-15",
+   "ambito": "espana",
+   "tesis": "Proceso de venta suspendido",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-6",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000007",
+   "deal_key": "higienenorte|espana",
+   "nombre": "Alcor Deuda – Higiene Norte",
+   "comprador": "Alcor Deuda",
+   "objetivo": "Higiene Norte",
+   "tipo": "Deuda",
+   "sector": "Servicios",
+   "importe": "n.d.",
+   "n_importe": null,
+   "moneda": null,
+   "importe_eur": null,
+   "estado": "anunciada",
+   "fecha": "2026-09-17",
+   "fecha_publicacion": "2026-09-17",
+   "ambito": "espana",
+   "tesis": "Refinanciación con deuda privada",
+   "fuente_medio": "Crónica Mercantil",
+   "fuente_url": "https://example.com/op-7",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000008",
+   "deal_key": "moldesebro|espana",
+   "nombre": "Fondo Meseta – Moldes Ebro",
+   "comprador": "Fondo Meseta",
+   "objetivo": "Moldes Ebro",
+   "tipo": "M&A",
+   "sector": "Industrial",
+   "importe": "n.d.",
+   "n_importe": null,
+   "moneda": null,
+   "importe_eur": null,
+   "estado": "en_proceso",
+   "fecha": "2026-09-19",
+   "fecha_publicacion": "2026-09-19",
+   "ambito": "espana",
+   "tesis": "Segunda adquisición de la plataforma",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-8",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000009",
+   "deal_key": "softwarealbor|espana",
+   "nombre": "Vértice PE – Software Albor",
+   "comprador": "Vértice PE",
+   "objetivo": "Software Albor",
+   "tipo": "Buyout",
+   "sector": "Tecnología",
+   "importe": "62 M€",
+   "n_importe": 62,
+   "moneda": "EUR",
+   "importe_eur": 62,
+   "estado": "anunciada",
+   "fecha": "2026-09-22",
+   "fecha_publicacion": "2026-09-22",
+   "ambito": "espana",
+   "tesis": "ERP vertical para despachos",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-9",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000010",
+   "deal_key": "logísticasierra|espana",
+   "nombre": "Alcor Deuda – Logística Sierra",
+   "comprador": "Alcor Deuda",
+   "objetivo": "Logística Sierra",
+   "tipo": "Deuda",
+   "sector": "Infraestructura",
+   "importe": "n.d.",
+   "n_importe": null,
+   "moneda": null,
+   "importe_eur": null,
+   "estado": "cerrada",
+   "fecha": "2026-09-24",
+   "fecha_publicacion": "2026-09-24",
+   "ambito": "espana",
+   "tesis": "Financiación de un buyout mediano",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-10",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000011",
+   "deal_key": "clínicapalma|espana",
+   "nombre": "Grupo Ribera – Clínica Palma",
+   "comprador": "Grupo Ribera",
+   "objetivo": "Clínica Palma",
+   "tipo": "M&A",
+   "sector": "Sanidad",
+   "importe": "n.d.",
+   "n_importe": null,
+   "moneda": null,
+   "importe_eur": null,
+   "estado": "anunciada",
+   "fecha": "2026-09-26",
+   "fecha_publicacion": "2026-09-26",
+   "ambito": "espana",
+   "tesis": "Segunda pieza del grupo hospitalario",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-11",
+   "is_test": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000012",
+   "deal_key": "nordlichtgmbh|exterior",
+   "nombre": "Atalaya Ventures – Nordlicht GmbH",
+   "comprador": "Atalaya Ventures",
+   "objetivo": "Nordlicht GmbH",
+   "tipo": "Growth",
+   "sector": "Energía",
+   "importe": "120 M$",
+   "n_importe": 120,
+   "moneda": "USD",
+   "importe_eur": 105.2,
+   "estado": "cerrada",
+   "fecha": "2026-09-25",
+   "fecha_publicacion": "2026-09-25",
+   "ambito": "exterior",
+   "tesis": "Fondo español lidera ronda alemana",
+   "fuente_medio": "Boletín Meridiano",
+   "fuente_url": "https://example.com/op-12",
+   "is_test": true
+  }
+ ],
+ "prev_deals": [
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  },
+  {
+   "ambito": "espana"
+  }
+ ],
+ "weeklies": [
+  {
+   "id": "10000000-0000-0000-0000-000000000001",
+   "title": "Weekly Signals — 2026-09-07",
+   "period_start": "2026-09-01",
+   "period_end": "2026-09-07",
+   "is_test": true,
+   "body_data": {
+    "titulo": "La deuda privada entra en el mid-market",
+    "apertura": "Semana marcada por un buyout industrial y una financiación unitranche.",
+    "senales": [
+     {
+      "titulo": "Fondo Meseta cierra Cerámicas Duero",
+      "hecho": "Compra del 70% por 85 M€."
+     },
+     {
+      "titulo": "Alcor financia a Talgo Nórdica",
+      "hecho": "Unitranche de 40 M€."
+     }
+    ],
+    "vigilar": [
+     {
+      "titulo": "El segundo cierre de Meridiano IV",
+      "contexto": "Depende de LP institucionales."
+     },
+     {
+      "titulo": "La venta de Aliseda Verde",
+      "contexto": "Proceso con dos ofertas indicativas."
+     }
+    ],
+    "fuera": [
+     {
+      "titulo": "Un gran gestor europeo supera su objetivo",
+      "texto": "Cierre de 18.000 M€."
+     }
+    ]
+   }
+  },
+  {
+   "id": "10000000-0000-0000-0000-000000000002",
+   "title": "Weekly Signals — 2026-09-14",
+   "period_start": "2026-09-08",
+   "period_end": "2026-09-14",
+   "is_test": true,
+   "body_data": {
+    "titulo": "Fundraising doméstico con pulso",
+    "apertura": "Primer cierre de Meridiano IV y ronda en pagos.",
+    "senales": [
+     {
+      "titulo": "Meridiano IV logra 180 M€",
+      "hecho": "Primer cierre con 60% de LP nacionales."
+     }
+    ],
+    "vigilar": [
+     {
+      "titulo": "Nuevas compras de Fondo Meseta",
+      "contexto": "La plataforma busca un segundo molde."
+     }
+    ],
+    "fuera": []
+   }
+  },
+  {
+   "id": "10000000-0000-0000-0000-000000000003",
+   "title": "Weekly Signals — 2026-09-21",
+   "period_start": "2026-09-15",
+   "period_end": "2026-09-21",
+   "is_test": true,
+   "body_data": {
+    "titulo": "Una salida que se cae",
+    "apertura": "Aliseda Verde suspende su venta; Alcor refinancia Higiene Norte.",
+    "senales": [
+     {
+      "titulo": "Aliseda Verde suspende la venta",
+      "hecho": "Sin ofertas vinculantes."
+     }
+    ],
+    "vigilar": [
+     {
+      "titulo": "Refinanciaciones con deuda privada",
+      "contexto": "Varias compañías tantean el mercado."
+     }
+    ],
+    "fuera": [
+     {
+      "titulo": "Los diferenciales del direct lending europeo bajan",
+      "texto": "Presión sobre los márgenes."
+     }
+    ]
+   }
+  },
+  {
+   "id": "10000000-0000-0000-0000-000000000004",
+   "title": "Weekly Signals — 2026-09-28",
+   "period_start": "2026-09-22",
+   "period_end": "2026-09-28",
+   "is_test": true,
+   "body_data": {
+    "titulo": "Software y sanidad cierran el mes",
+    "apertura": "Vértice PE compra Software Albor y Grupo Ribera suma otra clínica.",
+    "senales": [
+     {
+      "titulo": "Vértice PE anuncia Software Albor",
+      "hecho": "62 M€ por un ERP vertical."
+     }
+    ],
+    "vigilar": [
+     {
+      "titulo": "La integración de Clínica Palma",
+      "contexto": "Primera prueba del modelo de grupo."
+     }
+    ],
+    "fuera": []
+   }
+  }
+ ]
+}

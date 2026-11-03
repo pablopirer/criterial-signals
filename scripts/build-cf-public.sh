@@ -45,9 +45,9 @@ cp -t public/ \
 
 # --- Assets (3) ----------------------------------------------------------
 # When styles.vN is bumped (cache-bust dance, CLAUDE.md §7) update this line.
-# styles.v17.css is the active sheet; styles.v14.css is no longer loaded by any page.
+# styles.v18.css is the active sheet; styles.v14.css is no longer loaded by any page.
 cp -t public/ \
-  styles.v17.css \
+  styles.v18.css \
   styles.v14.css \
   criterial-shared.js
 

@@ -1,0 +1,111 @@
+{
+ "pregunta": "¿Está sustituyendo la deuda privada a la banca en la financiación del mid-market?",
+ "titulo": "La deuda privada ya financia el mid-market que la banca evita",
+ "resumen": [
+  "Sí, en el tramo de 20 a 80 M€: las tres financiaciones del mes las firmó un fondo de deuda.",
+  "La banca sigue presente en operaciones grandes y con garantías, pero cede los buyouts medianos y las refinanciaciones.",
+  "Para quien vende o compra en ese tramo, el coste y los plazos los marca ya el prestamista privado."
+ ],
+ "tesis": [
+  "El mes deja una señal clara en la financiación: <strong>Alcor Deuda aparece en tres operaciones</strong>, desde un unitranche para un bolt-on industrial hasta la refinanciación de una empresa de servicios.",
+  "La lectura no es que la banca haya desaparecido, sino que se ha retirado del tramo donde el riesgo es menos estandarizable.",
+  "El precio de esa sustitución es un coste de deuda más alto a cambio de rapidez y estructura flexible.",
+  "Con cinco operaciones con importe público de once, la muestra es pequeña: es una señal, no una tendencia confirmada."
+ ],
+ "pullquote": "El prestamista privado ya no completa la financiación: la decide.",
+ "lectura_datos": "Once operaciones en España, dos más que en agosto; cinco con importe público, así que el volumen describe solo una parte del mes.",
+ "evidencia_favor": [
+  {
+   "texto": "Tres financiaciones del mes las firma el mismo fondo de deuda.",
+   "ops": [
+    "D3",
+    "D7",
+    "D10"
+   ]
+  },
+  {
+   "texto": "El buyout de Logística Sierra se financió sin banca tradicional.",
+   "ops": [
+    "D10"
+   ]
+  }
+ ],
+ "evidencia_contra": [
+  {
+   "texto": "Las dos operaciones mayores del mes no informan de su financiación.",
+   "ops": [
+    "D1",
+    "D9"
+   ]
+  },
+  {
+   "texto": "Una sola gestora explica casi toda la actividad: puede ser un caso, no el mercado.",
+   "ops": [
+    "D3",
+    "D7"
+   ]
+  }
+ ],
+ "europa": [
+  "En Europa, el direct lending sigue captando capital y estrecha diferenciales, lo que empuja a los gestores a buscar mercados con menos competencia como el mid-market español.",
+  "El cierre de grandes fondos europeos por encima de su objetivo confirma que el capital existe; la pregunta es si llega al tramo español de menos de 100 M€."
+ ],
+ "europa_fuentes": [
+  {
+   "medio": "Gaceta Continental",
+   "titulo": "El direct lending europeo estrecha márgenes",
+   "fecha": "2026-09-18",
+   "url": "https://example.com/eu-1"
+  }
+ ],
+ "vigilabamos": [
+  {
+   "id": "V1",
+   "estado": "abierto",
+   "texto": "Meridiano IV no ha anunciado aún su segundo cierre."
+  },
+  {
+   "id": "V2",
+   "estado": "no_paso",
+   "texto": "La venta de Aliseda Verde se suspendió sin ofertas vinculantes."
+  },
+  {
+   "id": "V3",
+   "estado": "paso",
+   "texto": "Fondo Meseta anunció Moldes Ebro como segunda compra."
+  },
+  {
+   "id": "V4",
+   "estado": "paso",
+   "texto": "Alcor refinanció Higiene Norte."
+  },
+  {
+   "id": "V5",
+   "estado": "abierto",
+   "texto": "La integración acaba de empezar."
+  }
+ ],
+ "no_sabemos": [
+  "El coste real de la deuda privada en estas operaciones: ninguna lo ha publicado.",
+  "Si la banca volverá al tramo medio cuando bajen los tipos."
+ ],
+ "perfiles": {
+  "boutique": "Conviene incluir fondos de deuda en la lista de financiadores desde el primer día del proceso.",
+  "fondo": "La competencia de financiación se juega en plazos y flexibilidad, no solo en precio.",
+  "empresa": "Una refinanciación con deuda privada es más cara, pero permite operaciones que la banca no estructura."
+ },
+ "proximo_mes": [
+  {
+   "titulo": "El segundo cierre de Meridiano IV",
+   "contexto": "Mostrará si el LP doméstico sostiene el fundraising."
+  },
+  {
+   "titulo": "Más financiaciones de Alcor",
+   "contexto": "Una cuarta confirmaría el patrón."
+  },
+  {
+   "titulo": "La reapertura de Aliseda Verde",
+   "contexto": "Marcaría el suelo de precio del sector."
+  }
+ ]
+}

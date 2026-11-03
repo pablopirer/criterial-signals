@@ -1,7 +1,9 @@
 /**
  * Edge Function: generate-content
  *
- * Generates 1 content variation (weekly or monthly) via Anthropic with web search.
+ * Generates the Weekly via Anthropic with web search. The Brief Mensual is no
+ * longer generated here: since v7 (2026-11-03) it is built from the deal base by
+ * scripts/brief_mensual.py, and a monthly request gets a 400 saying so.
  * Restricted to the admin email. Returns the variation for selection in the
  * admin panel — does NOT write to the database (admin.html calls admin-publications
  * to save after the user selects).
@@ -9,17 +11,16 @@
  * Flow:
  *   1. Verify user JWT.
  *   2. Check email is the admin email.
- *   3. Parse type (weekly | monthly) from request body.
+ *   3. Parse type from request body (monthly -> 400, see above).
  *   4. Compute current period dates and label.
  *   5. Call Anthropic with web search and the matching prompt.
- *   6. For weekly: convert JSON output to pub-* HTML.
- *      For monthly: use HTML output directly.
+ *   6. Convert the JSON to pub-* HTML: full (Pro) and reduced (open edition).
  *   7. Return { variations: [html], type, title, period_start, period_end }.
  */
 
 import { generateBrief } from "../_shared/anthropic.ts";
 import { createServiceRoleClient } from "../_shared/supabase.ts";
-import { weeklyPrompt, monthlyPrompt } from "../_shared/prompts.ts";
+import { weeklyPrompt } from "../_shared/prompts.ts";
 import { extractJsonObject } from "../_shared/json.ts";
 
 const ADMIN_EMAIL = "pablopirer@gmail.com";
@@ -31,7 +32,7 @@ const ADMIN_EMAIL = "pablopirer@gmail.com";
 // Sonnet 5.5 runs with _20260209 got no usable results from any of their
 // searches, while the basic tool had always found the week's deals.
 const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 6 }];
-// Weekly and Monthly run on Claude Sonnet 5.5 (2026-10-30). Passed explicitly so
+// The Weekly runs on Claude Sonnet 5.5 (2026-10-30). Passed explicitly so
 // sample-request and generate-linkedin keep the shared default until they are
 // moved on purpose; this also means the ANTHROPIC_MODEL secret no longer
 // overrides it here. Effort "medium" keeps the synchronous Weekly inside the
@@ -476,259 +477,6 @@ function weeklyJsonToPublicHtml(d: WeeklyJson, numero: number): string {
   return parts.join("");
 }
 
-// ── Monthly JSON → HTML conversion (v5 — "El Informe": editorial report) ───────
-
-interface MonthlyOp {
-  nombre: string;
-  sector: string;
-  tipo?: string;
-  importe?: string;
-  n_importe?: number;
-  fuente?: string;
-}
-
-interface MonthlyJson {
-  titulo: string;
-  dek?: string;
-  period: string;
-  resumen?: string[] | string;
-  /** One punchy line for the design pull-quote. */
-  pullquote?: string;
-  /** Developed thesis as an array of paragraphs (string accepted as fallback). */
-  tesis: string[] | string;
-  /** Macro backdrop of the month, 1-2 paragraphs. */
-  contexto?: string[] | string;
-  /** Cited deal table — the spine the data panel is derived from. */
-  operaciones?: MonthlyOp[];
-  /** Optional, sourced macro aggregates (extra stat callouts). */
-  macro?: Array<{ label: string; valor: string; n?: number; fuente?: string }>;
-  sectores?: Array<{ nombre: string; cuerpo: string[] | string }>;
-  mapa?: Record<string, unknown>;
-  operacion?: {
-    nombre: string;
-    sector?: string;
-    datos?: Array<{ label: string; valor: string }>;
-    analisis: string[] | string;
-  };
-  perspectiva?: Array<{ titulo: string; contexto: string }>;
-  fuentes?: Array<{ medio: string; titulo: string }>;
-}
-
-/** Format an integer number of € millions with es-ES thousands separators. */
-function fmtMEur(n: number): string {
-  const s = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${s} M€`;
-}
-
-function asParagraphs(v: string[] | string | undefined): string[] {
-  if (Array.isArray(v)) return v.filter((p) => typeof p === "string" && p.trim());
-  if (typeof v === "string" && v.trim()) return [v];
-  return [];
-}
-
-/** `periodLabel` is the period this server computed ("agosto de 2026"). It is
- * imposed on the masthead exactly like `numero`: the model is asked to echo
- * the period back, but nothing guaranteed it did, so a wrong echo used to be
- * published verbatim. Falls back to the model's `period` only if omitted.
- * Mirrors PERIOD_LABEL in scripts/generate-content.sh. */
-function monthlyJsonToHtml(d: MonthlyJson, numero: number, periodLabel?: string): string {
-  const parts: string[] = [];
-  let sec = 0;
-  const num = () => String(++sec).padStart(2, "0");
-  const head = (t: string) =>
-    parts.push(
-      `<div class="mb-sec-head"><span class="mb-sec-num">${num()}</span><h2 class="mb-sec-title">${t}</h2></div>`,
-    );
-  const proseP = (v: string[] | string | undefined) =>
-    asParagraphs(v).map((p) => `<p>${esc(p)}</p>`).join("");
-
-  parts.push('<div class="pub-content mb-report">');
-
-  // Masthead
-  parts.push('<div class="mb-masthead">');
-  parts.push('<div class="mb-brand-row">');
-  parts.push('<span class="mb-kicker">Criterial · Brief Mensual</span>');
-  parts.push(`<span class="mb-num">Nº ${numero} · ${esc(periodLabel || d.period)}</span>`);
-  parts.push("</div>");
-  parts.push(`<h1 class="mb-title">${esc(d.titulo)}</h1>`);
-  if (d.dek) parts.push(`<p class="mb-dek">${esc(d.dek)}</p>`);
-  parts.push('<p class="mb-byline">Un informe de Criterial · Solo Pro</p>');
-  parts.push("</div>");
-
-  // Resumen ejecutivo
-  const resumen = asParagraphs(d.resumen);
-  if (resumen.length) {
-    parts.push('<div class="mb-summary">');
-    parts.push('<p class="mb-summary-label">Resumen ejecutivo</p>');
-    parts.push('<ul class="mb-summary-list">');
-    for (const r of resumen) parts.push(`<li>${esc(r)}</li>`);
-    parts.push("</ul></div>");
-  }
-
-  // 01 · Tesis del mes — lead prose (drop cap) + pull-quote after the first para
-  parts.push('<section class="mb-section">');
-  head("Tesis del mes");
-  parts.push('<div class="mb-col">');
-  const tp = asParagraphs(d.tesis);
-  if (tp.length) {
-    parts.push(`<div class="mb-prose mb-prose--lead"><p>${esc(tp[0])}</p></div>`);
-  }
-  if (d.pullquote) parts.push(`<div class="mb-quote">${esc(d.pullquote)}</div>`);
-  if (tp.length > 1) {
-    parts.push(`<div class="mb-prose">${tp.slice(1).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
-  }
-  parts.push("</div></section>");
-
-  // Contexto de mercado — macro backdrop (prose)
-  const ctx = asParagraphs(d.contexto);
-  if (ctx.length) {
-    parts.push('<section class="mb-section">');
-    head("Contexto de mercado");
-    parts.push(`<div class="mb-col"><div class="mb-prose">${proseP(ctx)}</div></div>`);
-    parts.push("</section>");
-  }
-
-  // El mes en datos — framed panel, DERIVED from the cited deal table
-  const ops = (d.operaciones ?? []).filter((o) => o && o.nombre && o.sector);
-  if (ops.length) {
-    const bySector = new Map<string, number>();
-    for (const o of ops) bySector.set(o.sector, (bySector.get(o.sector) ?? 0) + 1);
-    const sectorBars = [...bySector.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([sector, count]) => ({ label: sector, valor: String(count), n: count }));
-    const withAmt = ops.filter((o) => isFinite(Number(o.n_importe)) && Number(o.n_importe) > 0);
-    const volume = withAmt.reduce((s, o) => s + Number(o.n_importe), 0);
-    const avgTicket = withAmt.length ? volume / withAmt.length : null;
-    const macro = (d.macro ?? []).filter((m) => m && m.label && m.valor && m.fuente);
-
-    parts.push('<section class="mb-section">');
-    head("El mes en datos");
-    parts.push('<div class="mb-data">');
-
-    // Stat callouts (computed — always present)
-    parts.push('<div class="mb-stats">');
-    const stat = (val: string, label: string, src?: string) => {
-      parts.push('<div class="mb-stat">');
-      parts.push(`<span class="mb-stat-val">${esc(val)}</span>`);
-      parts.push(`<span class="mb-stat-label">${esc(label)}</span>`);
-      if (src) parts.push(`<span class="mb-stat-src">${esc(src)}</span>`);
-      parts.push("</div>");
-    };
-    stat(String(ops.length), "Operaciones seguidas");
-    if (volume > 0) stat(fmtMEur(volume), "Volumen divulgado");
-    if (avgTicket !== null) stat(fmtMEur(avgTicket), "Ticket medio");
-    if (sectorBars.length) stat(sectorBars[0].label, "Sector más activo");
-    for (const m of macro) stat(m.valor, m.label, m.fuente);
-    parts.push("</div>");
-
-    // Sector split bars (derived; hydrated by buildMetrics — collective provenance)
-    if (sectorBars.length >= 2) {
-      const encoded = toBase64Utf8(JSON.stringify(sectorBars));
-      parts.push('<p class="mb-data-caption">Operaciones por sector</p>');
-      parts.push(`<div class="pub-metrics" data-metrics="${encoded}"></div>`);
-    }
-    parts.push(`<p class="mb-data-note">Cálculo de Criterial sobre las ${ops.length} operaciones del mes recogidas abajo. Cada operación, con su fuente.</p>`);
-    parts.push("</div></section>");
-
-    // Operaciones del mes — the cited table (full-width exhibit)
-    parts.push('<section class="mb-section">');
-    head("Operaciones del mes");
-    parts.push('<table class="mb-ops"><thead><tr><th>Operación</th><th>Sector</th><th>Tipo</th><th>Importe</th><th>Fuente</th></tr></thead><tbody>');
-    for (const o of ops) {
-      parts.push(
-        `<tr><td>${esc(o.nombre)}</td><td>${esc(o.sector)}</td><td>${esc(o.tipo ?? "")}</td><td>${esc(o.importe ?? "n.d.")}</td><td>${esc(o.fuente ?? "")}</td></tr>`,
-      );
-    }
-    parts.push("</tbody></table></section>");
-  }
-
-  // Rotación de capital — sector prose (2-3 paragraphs each)
-  const sectores = (d.sectores ?? []).filter((s) => s && s.nombre && asParagraphs(s.cuerpo).length);
-  if (sectores.length) {
-    parts.push('<section class="mb-section">');
-    head("Rotación de capital");
-    parts.push('<div class="mb-col">');
-    for (const s of sectores) {
-      parts.push('<div class="mb-sector">');
-      parts.push(`<h3 class="mb-sector-name">${esc(s.nombre)}</h3>`);
-      parts.push(`<div class="mb-prose">${proseP(s.cuerpo)}</div>`);
-      parts.push("</div>");
-    }
-    parts.push("</div></section>");
-  }
-
-  // Mapa del mes — temporal tracker (full-width exhibit)
-  const mapaNodos = (d.mapa as { nodos?: unknown[] } | undefined)?.nodos;
-  if (d.mapa && Array.isArray(mapaNodos) && mapaNodos.length >= 3) {
-    const encoded = toBase64Utf8(JSON.stringify(d.mapa));
-    parts.push('<section class="mb-section mb-section-map">');
-    head("Mapa del mes");
-    parts.push('<p class="mb-sec-lede">Posición de cada sector y su movimiento respecto al mes anterior. Usa el interruptor para ver dónde estaba hace un mes.</p>');
-    parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
-    parts.push("</section>");
-  }
-
-  // Operación del mes — deep-dive (mini data-table + multi-paragraph analysis)
-  const op = d.operacion;
-  if (op && op.nombre) {
-    parts.push('<section class="mb-section">');
-    head("Operación del mes");
-    parts.push('<div class="mb-op">');
-    parts.push('<div class="mb-op-head">');
-    parts.push(`<span class="mb-op-name">${esc(op.nombre)}</span>`);
-    if (op.sector) parts.push(`<span class="mb-op-sector">${esc(op.sector)}</span>`);
-    parts.push("</div>");
-    const datos = (op.datos ?? []).filter((x) => x && x.label && x.valor);
-    if (datos.length) {
-      parts.push('<div class="mb-op-data">');
-      for (const x of datos) {
-        parts.push('<div class="mb-op-cell">');
-        parts.push(`<span class="mb-op-cell-label">${esc(x.label)}</span>`);
-        parts.push(`<span class="mb-op-cell-val">${esc(x.valor)}</span>`);
-        parts.push("</div>");
-      }
-      parts.push("</div>");
-    }
-    parts.push(`<div class="mb-prose">${proseP(op.analisis)}</div>`);
-    parts.push("</div></section>");
-  }
-
-  // Perspectiva — house view / forward
-  const persp = (d.perspectiva ?? []).filter((p) => p && p.titulo);
-  if (persp.length) {
-    parts.push('<section class="mb-section">');
-    head("Perspectiva");
-    parts.push('<div class="mb-col"><div class="mb-persp">');
-    for (const p of persp) {
-      parts.push('<div class="mb-persp-item">');
-      parts.push(`<p class="mb-persp-title">${esc(p.titulo)}</p>`);
-      parts.push(`<p class="mb-persp-text">${esc(p.contexto)}</p>`);
-      parts.push("</div>");
-    }
-    parts.push("</div></div></section>");
-  }
-
-  // Fuentes
-  parts.push('<div class="mb-sources">');
-  parts.push('<p class="mb-sources-label">Fuentes</p>');
-  for (const f of (d.fuentes ?? [])) {
-    parts.push('<div class="mb-source-row">');
-    parts.push(`<span class="mb-source-medio">${esc(f.medio)}</span>`);
-    parts.push(`<span class="mb-source-titulo">${esc(f.titulo)}</span>`);
-    parts.push("</div>");
-  }
-  parts.push("</div>");
-
-  // Footer
-  parts.push('<div class="mb-footer">');
-  parts.push('<span>Criterial Signals · Pro</span>');
-  parts.push('<span>criterialsignals.com</span>');
-  parts.push("</div>");
-
-  parts.push("</div>");
-  return parts.join("");
-}
-
 class ModelProseError extends Error {
   constructor(public prose: string) {
     super("Model returned prose instead of JSON");
@@ -818,12 +566,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const type = body.type;
-  if (type !== "weekly" && type !== "monthly") {
-    return jsonResponse({ error: "type must be 'weekly' or 'monthly'" }, 400);
+  if (type === "monthly") {
+    return jsonResponse({
+      error: "El Brief Mensual se genera desde la terminal: bash scripts/generate-content.sh monthly AAAA-MM",
+    }, 400);
+  }
+  if (type !== "weekly") {
+    return jsonResponse({ error: "type must be 'weekly'" }, 400);
   }
 
   const { periodLabel, title, period_start, period_end, mesActual } = computePeriod(type);
-  const prompt = type === "weekly" ? weeklyPrompt : monthlyPrompt;
+  const prompt = weeklyPrompt;
   const userWithPeriod = prompt.user.replace(/\{\{period\}\}/g, periodLabel);
   // The month/period examples in the schema used to be literal months baked into
   // the prompt, so they went stale the moment the calendar moved on — and a literal
@@ -865,59 +618,31 @@ Deno.serve(async (req: Request): Promise<Response> => {
       tools: WEB_SEARCH_TOOLS,
     });
 
-    let html: string;
-    let publicHtml: string | null = null;
+    let parsed: WeeklyJson;
+    try {
+      parsed = await parseWithRepair<WeeklyJson>(result.text, "Weekly");
+    } catch (parseErr) {
+      console.error("Weekly JSON still invalid after repair:", parseErr);
+      if (parseErr instanceof ModelProseError) {
+        const said = parseErr.prose.replace(/\s+/g, " ").trim().slice(0, 300);
+        return jsonResponse({ error: `El modelo no generó el Weekly. Dijo: «${said}…»` }, 502);
+      }
+      return jsonResponse(
+        {
+          error:
+            "El modelo devolvió contenido no parseable como JSON. Vuelve a generar el Weekly.",
+        },
+        502,
+      );
+    }
+    // Two projections of the same generation: full (Pro) + reduced (Free).
+    const html = weeklyJsonToHtml(parsed, editionNumber);
+    const publicHtml = weeklyJsonToPublicHtml(parsed, editionNumber);
+
     // The parsed JSON travels back too: admin.html saves it as body_data, the
     // structured copy the deal base and the Brief Mensual read from.
-    let data: unknown = null;
-    if (type === "weekly") {
-      let parsed: WeeklyJson;
-      try {
-        parsed = await parseWithRepair<WeeklyJson>(result.text, "Weekly");
-      } catch (parseErr) {
-        console.error("Weekly JSON still invalid after repair:", parseErr);
-        if (parseErr instanceof ModelProseError) {
-          const said = parseErr.prose.replace(/\s+/g, " ").trim().slice(0, 300);
-          return jsonResponse({ error: `El modelo no generó el Weekly. Dijo: «${said}…»` }, 502);
-        }
-        return jsonResponse(
-          {
-            error:
-              "El modelo devolvió contenido no parseable como JSON. Vuelve a generar el Weekly.",
-          },
-          502,
-        );
-      }
-      // Two projections of the same generation: full (Pro) + reduced (Free).
-      data = parsed;
-      html = weeklyJsonToHtml(parsed, editionNumber);
-      publicHtml = weeklyJsonToPublicHtml(parsed, editionNumber);
-    } else {
-      // Monthly is now JSON too (since v4) — parse safely like the Weekly and
-      // convert to pub-* HTML. publicHtml stays null: the Brief is Pro-only.
-      let parsed: MonthlyJson;
-      try {
-        parsed = await parseWithRepair<MonthlyJson>(result.text, "Monthly");
-      } catch (parseErr) {
-        console.error("Monthly JSON still invalid after repair:", parseErr);
-        if (parseErr instanceof ModelProseError) {
-          const said = parseErr.prose.replace(/\s+/g, " ").trim().slice(0, 300);
-          return jsonResponse({ error: `El modelo no generó el Brief Mensual. Dijo: «${said}…»` }, 502);
-        }
-        return jsonResponse(
-          {
-            error:
-              "El modelo devolvió contenido no parseable como JSON. Vuelve a generar el Brief Mensual.",
-          },
-          502,
-        );
-      }
-      data = parsed;
-      html = monthlyJsonToHtml(parsed, editionNumber, periodLabel);
-    }
-
     return jsonResponse(
-      { variations: [html], public_html: publicHtml, data, type, title, period_start, period_end },
+      { variations: [html], public_html: publicHtml, data: parsed, type, title, period_start, period_end },
       200,
     );
   } catch (err) {
