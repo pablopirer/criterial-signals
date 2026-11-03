@@ -27,11 +27,13 @@ const ADMIN_EMAIL = "pablopirer@gmail.com";
 // max_uses: 3 was set when a 5-search run on Sonnet 4.6 hit the 150s gateway
 // limit. On Sonnet 5.5 a full Weekly took ~40s, and 3 searches were not enough
 // to find the week's deals (the model returned a "provisional" edition), so it
-// is back up to 6. Watch execution_time_ms if this changes again.
+// is back up to 6. On 2026-11-03 the prompt gained a fixed search plan (weekly
+// deal round-ups first) and runs with 10 searches took 71-111s locally, so the
+// function uses 8 to stay clear of the 150s limit. Watch execution_time_ms.
 // web_search_20250305 (basic), not the newer _20260209: on 2026-10-30 two
 // Sonnet 5.5 runs with _20260209 got no usable results from any of their
 // searches, while the basic tool had always found the week's deals.
-const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 6 }];
+const WEB_SEARCH_TOOLS = [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }];
 // The Weekly runs on Claude Sonnet 5.5 (2026-10-30). Passed explicitly so
 // sample-request and generate-linkedin keep the shared default until they are
 // moved on purpose; this also means the ANTHROPIC_MODEL secret no longer
@@ -105,6 +107,7 @@ interface WeeklySenal {
   hecho: string;
   patron: string;
   implicacion: string;
+  fuente?: { medio?: string; url?: string };
 }
 
 /** One deal. Since 2026-10-31 the Weekly JSON is also stored in body_data and
@@ -121,10 +124,12 @@ interface WeeklyOp {
   importe?: string;
   n_importe?: number;
   moneda?: string;
+  nota_importe?: string;
   fecha?: string;
   ambito?: string;
   tesis: string;
   fuente?: { medio?: string; url?: string };
+  fuente_primaria?: string;
 }
 
 interface WeeklyJson {
@@ -155,18 +160,30 @@ function fechaEs(f: unknown): string {
   return mes ? `${Number(m[3])} de ${mes} de ${m[1]}` : "";
 }
 
-/** Deal table rows: Operación | Tipo | Sector | Importe | Tesis. */
+/** Deal table rows: Operación | Tipo | Sector | Importe | Tesis. The name links
+ * to the primary source (or the article), and the amount carries its
+ * perimeter note when the source gives one. */
 function opsTable(ops: WeeklyOp[]): string {
-  const rows = ops.map((op) =>
-    `<tr><td>${esc(op.nombre)}</td><td>${esc(op.tipo)}</td><td>${esc(op.sector)}</td>` +
-    `<td>${esc(op.importe || "n.d.")}</td><td>${esc(op.tesis)}</td></tr>`
-  ).join("");
+  const rows = ops.map((op) => {
+    const url = safeUrl(op.fuente_primaria) ?? safeUrl(op.fuente?.url);
+    const name = url
+      ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(op.nombre)}</a>`
+      : esc(op.nombre);
+    const note = op.nota_importe ? `<span class="pub-ops-note">${esc(op.nota_importe)}</span>` : "";
+    return `<tr><td>${name}</td><td>${esc(op.tipo)}</td><td>${esc(op.sector)}</td>` +
+      `<td>${esc(op.importe || "n.d.")}${note}</td><td>${esc(op.tesis)}</td></tr>`;
+  }).join("");
   return (
     '<table class="pub-ops-table pub-ops-table--v2">' +
     "<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Importe</th><th>Tesis</th></tr></thead>" +
     `<tbody>${rows}</tbody></table>`
   );
 }
+
+/** The map positions are an editorial reading, not a measurement: said under
+ * every map so it is not mistaken for a quantitative chart. Mirrored in the CLI. */
+const MAP_CAVEAT =
+  '<p class="pub-map-caveat">Posición cualitativa: lectura del equipo de Criterial a partir de las operaciones de la semana, no un cálculo.</p>';
 
 /**
  * UTF-8-safe base64 encode. The mapa JSON contains € and accented chars, which
@@ -269,6 +286,12 @@ function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
     parts.push("</div>");
     parts.push('<div class="pub-signal-body">');
     parts.push(`<p class="pub-signal-fact">${esc(s.hecho)}</p>`);
+    const srcUrl = safeUrl(s.fuente?.url);
+    if (srcUrl) {
+      parts.push(
+        `<p class="pub-signal-source">Fuente: <a href="${esc(srcUrl)}" target="_blank" rel="noopener">${esc(s.fuente?.medio || "nota original")}</a></p>`,
+      );
+    }
     parts.push('<div class="pub-signal-rows">');
     parts.push('<div class="pub-signal-row">');
     parts.push('<span class="pub-signal-row-label">Patrón</span>');
@@ -366,6 +389,7 @@ function weeklyJsonToHtml(d: WeeklyJson, numero: number): string {
     parts.push('<div class="pub-section-new">');
     parts.push('<p class="pub-sec-label">Mapa de posicionamiento</p>');
     parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
+    parts.push(MAP_CAVEAT);
     parts.push("</div>");
   }
 
@@ -464,6 +488,7 @@ function weeklyJsonToPublicHtml(d: WeeklyJson, numero: number): string {
     parts.push('<div class="pub-section-new">');
     parts.push('<p class="pub-sec-label">Mapa de posicionamiento</p>');
     parts.push(`<div class="pub-map" data-mapa="${encoded}"></div>`);
+    parts.push(MAP_CAVEAT);
     parts.push("</div>");
   }
 

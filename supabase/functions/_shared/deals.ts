@@ -16,7 +16,9 @@ const SECTORES = [
   "Sanidad", "Tecnología", "Industrial", "Servicios", "Consumo",
   "Agroalimentario", "Energía", "Infraestructura", "Financiero", "Deuda privada",
 ];
-const TIPOS = ["Buyout", "Growth", "M&A", "Deuda", "Salida", "Fundraising", "OPA"];
+const TIPOS = [
+  "Buyout", "Growth", "M&A", "Deuda", "Salida", "Fundraising", "OPA", "Ampliación de capital", "Otra",
+];
 const ESTADOS = ["anunciada", "en_proceso", "cerrada", "cancelada"];
 
 /** Legal-form and filler words dropped from the dedupe key. */
@@ -90,11 +92,14 @@ export interface DealRow {
   tesis: string | null;
   fuente_medio: string | null;
   fuente_url: string | null;
+  fuente_primaria: string | null;
+  nota_importe: string | null;
 }
 
 /** Weekly `operaciones` -> clean rows, amounts converted to euros.
- * `fallbackDate` (the publication's period_end) dates deals without one,
- * for the conversion only; the stored `fecha` stays null in that case. */
+ * `fallbackDate` (the publication's period_end) stands in for a missing source
+ * date: it fills `fecha_publicacion` and dates the currency conversion; the
+ * stored `fecha` (date of the fact) stays null in that case. */
 export async function dealsFromWeekly(body: unknown, fallbackDate: string | null): Promise<DealRow[]> {
   const ops = (body as { operaciones?: unknown })?.operaciones;
   if (!Array.isArray(ops)) return [];
@@ -112,8 +117,11 @@ export async function dealsFromWeekly(body: unknown, fallbackDate: string | null
     const base = normalizeKey(objetivo ?? nombre);
     if (!base) continue;
     const deal_key = `${base}|${ambito}`;
-    if (seen.has(deal_key)) continue; // the same deal twice in one Weekly
-    seen.add(deal_key);
+    // The same deal twice in one Weekly, whatever ambito each copy carries:
+    // deals_sync_publication matches by company alone, so two copies would
+    // hit the same row twice in one insert.
+    if (seen.has(base)) continue;
+    seen.add(base);
 
     const tipo = str(op.tipo);
     const sector = str(op.sector);
@@ -139,6 +147,7 @@ export async function dealsFromWeekly(body: unknown, fallbackDate: string | null
     const fuente = (op.fuente && typeof op.fuente === "object")
       ? op.fuente as Record<string, unknown> : {};
     const url = str(fuente.url);
+    const prim = str(op.fuente_primaria);
 
     rows.push({
       deal_key,
@@ -152,12 +161,17 @@ export async function dealsFromWeekly(body: unknown, fallbackDate: string | null
       moneda,
       importe_eur,
       fecha,
-      fecha_publicacion: validDate(op.fecha_publicacion),
+      // Never leave a deal with no date at all: it would fall in no month and
+      // vanish from every Brief. Without a source date, the Weekly that
+      // reported it is the earliest public mention we can vouch for.
+      fecha_publicacion: validDate(op.fecha_publicacion) ?? fallbackDate,
       estado: estado && ESTADOS.includes(estado) ? estado : null,
       ambito,
       tesis: str(op.tesis),
       fuente_medio: str(fuente.medio),
       fuente_url: url && /^https?:\/\//i.test(url) ? url : null,
+      fuente_primaria: prim && /^https?:\/\//i.test(prim) ? prim : null,
+      nota_importe: str(op.nota_importe),
     });
   }
   return rows;

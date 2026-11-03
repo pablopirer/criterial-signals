@@ -150,15 +150,55 @@ def fetch_inputs(year, month, include_test):
 
 # ── Figures (computed here, never by the model) ────────────────────────────────
 
+# Deal types that can be added together. Acquisitions, debt, growth rounds,
+# capital increases and fund closes are different kinds of money: each group is
+# summed on its own and never added to another (review of 2026-11-03).
+GRUPOS = [
+    ("adquisiciones", "Adquisiciones y salidas", {"Buyout", "M&A", "Salida", "OPA"}),
+    ("deuda", "Financiación con deuda", {"Deuda"}),
+    ("growth", "Rondas de crecimiento", {"Growth"}),
+    ("capital", "Ampliaciones de capital", {"Ampliación de capital"}),
+    ("fondos", "Captación de fondos", {"Fundraising"}),
+]
+TRANSACCIONES = {"adquisiciones", "deuda", "growth", "capital"}
+
+
+def assign_codes(deals):
+    for i, d in enumerate(deals, 1):
+        d["_code"] = f"D{i}"
+
+
+def grupo_de(d):
+    for key, _, tipos in GRUPOS:
+        if d.get("tipo") in tipos:
+            return key
+    return "otras"  # "Otra" or unclassified: counted, never summed
+
+
 def compute(deals, prev_deals):
     es = [d for d in deals if d.get("ambito", "espana") != "exterior"]
     ext = [d for d in deals if d.get("ambito") == "exterior"]
     prev_es = [d for d in prev_deals if d.get("ambito", "espana") != "exterior"]
-    # A fund close is capital raised, not a transaction: it counts as an operation
-    # but never adds to volume or median.
-    amounts = [float(d["importe_eur"]) for d in es
-               if d.get("importe_eur") not in (None, "") and d.get("tipo") != "Fundraising"]
-    tx = [d for d in es if d.get("tipo") != "Fundraising"]
+
+    grupos = []
+    for key, label, _ in GRUPOS + [("otras", "Otras o de naturaleza por aclarar", set())]:
+        rows = [d for d in es if grupo_de(d) == key]
+        if not rows:
+            continue
+        with_amt = [d for d in rows if d.get("importe_eur") not in (None, "")]
+        amts = [float(d["importe_eur"]) for d in with_amt]
+        sumable = key != "otras" and len(amts) >= MIN_IMPORTES
+        grupos.append({
+            "grupo": key, "nombre": label, "operaciones": len(rows),
+            "con_importe": len(amts),
+            "importe_divulgado_meur": round(sum(amts), 1) if sumable else None,
+            "importe_mediano_meur": round(statistics.median(amts), 1) if sumable else None,
+            "codigos": [d.get("_code") for d in rows],
+            "codigos_con_importe": [d.get("_code") for d in with_amt],
+        })
+
+    tx = [d for d in es if grupo_de(d) in TRANSACCIONES]
+    tx_amt = [d for d in tx if d.get("importe_eur") not in (None, "")]
 
     def count(key, rows):
         out = {}
@@ -167,24 +207,23 @@ def compute(deals, prev_deals):
             out[k] = out.get(k, 0) + 1
         return sorted(out.items(), key=lambda kv: (-kv[1], kv[0]))
 
-    enough = len(amounts) >= MIN_IMPORTES
     return {
         "operaciones_espana": len(es),
         "capital_espanol_fuera": len(ext),
         "transacciones": len(tx),
-        "con_importe_publico": len(amounts),
-        "pct_con_importe": round(100 * len(amounts) / len(tx)) if tx else 0,
-        "volumen_divulgado_meur": round(sum(amounts), 1) if enough else None,
-        "importe_mediano_meur": round(statistics.median(amounts), 1) if enough else None,
+        "transacciones_con_importe": len(tx_amt),
+        "grupos": grupos,
         "por_sector": count("sector", es),
         "por_tipo": count("tipo", es),
         "por_estado": count("estado", es),
         "operaciones_mes_anterior": len(prev_es),
-        "nota_cobertura": (
-            f"Operaciones registradas por Criterial en sus Weekly. {len(amounts)} de las {len(tx)} transacciones"
-            " tienen importe público; los cierres de fondos cuentan como operación pero no suman al volumen."
-            + ("" if enough else f" Con menos de {MIN_IMPORTES} importes no se calculan volumen ni mediana.")
-        ),
+        "reglas": [
+            f"Operaciones en España: {len(es)}. Transacciones (adquisiciones, salidas, deuda, rondas y ampliaciones): {len(tx)}. "
+            "Los cierres de fondos y las operaciones de naturaleza por aclarar cuentan como operación, no como transacción.",
+            "Cada grupo se suma por separado; ningún importe de un grupo se suma a otro y no existe un volumen total del mes.",
+            f"Un grupo solo tiene importe divulgado y mediana si al menos {MIN_IMPORTES} de sus operaciones tienen importe público.",
+            "Importes en millones de euros; los de otras monedas, al tipo de referencia del BCE de la fecha de cada operación.",
+        ],
     }
 
 
@@ -192,12 +231,12 @@ def build_model_data(inputs, cifras, pregunta):
     """What the model sees: figures, coded deals (D1..), coded watch items (V1..)."""
     deals = inputs["deals"]
     ops = []
-    for i, d in enumerate(deals, 1):
-        d["_code"] = f"D{i}"
+    for d in deals:
         ops.append({k: v for k, v in {
             "codigo": d["_code"], "nombre": d.get("nombre"), "comprador": d.get("comprador"),
             "objetivo": d.get("objetivo"), "tipo": d.get("tipo"), "sector": d.get("sector"),
             "importe": d.get("importe"), "importe_eur_m": d.get("importe_eur"),
+            "nota_importe": d.get("nota_importe"),
             "estado": d.get("estado"), "fecha": d.get("fecha"), "ambito": d.get("ambito"),
             "tesis": d.get("tesis"), "fuente": d.get("fuente_medio"),
         }.items() if v not in (None, "")})
@@ -217,7 +256,7 @@ def build_model_data(inputs, cifras, pregunta):
             "vigilar": items,
             "fuera": [{"titulo": f.get("titulo"), "texto": f.get("texto")} for f in bd.get("fuera") or []],
         })
-    data = {"cifras": {k: v for k, v in cifras.items() if k != "nota_cobertura"},
+    data = {"cifras": cifras,
             "operaciones": ops, "weeklies": weeklies}
     if pregunta:
         data["pregunta"] = pregunta
@@ -278,9 +317,12 @@ def deal_label(d):
 def importe_cell(d):
     imp = d.get("importe") or "n.d."
     eur, mon = d.get("importe_eur"), (d.get("moneda") or "EUR")
+    out = plain(imp)
     if eur not in (None, "") and mon != "EUR":
-        return f"{plain(imp)} <span class=\"mb-ops-eur\">≈ {fmt_meur(float(eur))}</span>"
-    return plain(imp)
+        out += f" <span class=\"mb-ops-eur\">≈ {fmt_meur(float(eur))}</span>"
+    if d.get("nota_importe"):
+        out += f"<span class=\"mb-ops-eur\">{plain(d['nota_importe'])}</span>"
+    return out
 
 
 def render(model, inputs, cifras, vig, numero, period_label, prev_label):
@@ -366,27 +408,37 @@ def render(model, inputs, cifras, vig, numero, period_label, prev_label):
                      f'<span class="mb-stat-label">{plain(label)}</span>'
                      + (f'<span class="mb-stat-src">{plain(src)}</span>' if src else "") + "</div>")
 
+    # 0 the previous month almost always means "no data yet" (the base starts
+    # with the first published Weekly), so no comparison is shown then.
     stat(str(cifras["operaciones_espana"]), "Operaciones en España",
-         f"{prev_label.capitalize()}: {cifras['operaciones_mes_anterior']}")
-    stat(f"{cifras['con_importe_publico']} de {cifras['transacciones']}", "Transacciones con importe público")
-    if cifras["volumen_divulgado_meur"] is not None:
-        stat(fmt_meur(cifras["volumen_divulgado_meur"]), "Volumen divulgado")
-        stat(fmt_meur(cifras["importe_mediano_meur"]), "Importe mediano")
+         f"{prev_label.capitalize()}: {cifras['operaciones_mes_anterior']}" if cifras["operaciones_mes_anterior"] else None)
+    stat(f"{cifras['transacciones_con_importe']} de {cifras['transacciones']}", "Transacciones con importe público")
     estados = dict(cifras["por_estado"])
     if any(k in estados for k in ESTADOS):
         stat(f"{estados.get('anunciada', 0) + estados.get('en_proceso', 0)} / {estados.get('cerrada', 0)}",
-             "Anunciadas o en proceso / cerradas")
+             f"Anunciadas o en proceso / cerradas, de {cifras['operaciones_espana']}")
     if cifras["capital_espanol_fuera"]:
         stat(str(cifras["capital_espanol_fuera"]), "Capital español fuera", "No cuentan en las cifras de España")
     parts.append("</div>")
+
+    # Amounts by group: each group summed on its own, with its denominator
+    parts.append('<p class="mb-data-caption">Importes por tipo de operación</p>')
+    parts.append('<table class="mb-sums"><thead><tr><th>Tipo</th><th>Operaciones</th><th>Con importe</th>'
+                 '<th>Importe divulgado</th><th>Mediana</th></tr></thead><tbody>')
+    for g in cifras["grupos"]:
+        if g["importe_divulgado_meur"] is not None:
+            suma, med = fmt_meur(g["importe_divulgado_meur"]), fmt_meur(g["importe_mediano_meur"])
+        else:
+            suma = med = "—"
+        parts.append(f'<tr><td>{plain(g["nombre"])}</td><td>{g["operaciones"]}</td>'
+                     f'<td>{g["con_importe"]} de {g["operaciones"]}</td><td>{suma}</td><td>{med}</td></tr>')
+    parts.append("</tbody></table>")
     sectores = [{"label": k, "valor": str(v), "n": v} for k, v in cifras["por_sector"]]
     if len(sectores) >= 2:
         parts.append('<p class="mb-data-caption">Operaciones por sector</p>')
         parts.append(f'<div class="pub-metrics" data-metrics="{b64(sectores)}"></div>')
-    if cifras["por_tipo"]:
-        tipos = " · ".join(f"{plain(k)} {v}" for k, v in cifras["por_tipo"])
-        parts.append(f'<p class="mb-data-note">Por tipo: {tipos}.</p>')
-    parts.append(f'<p class="mb-data-note">{plain(cifras["nota_cobertura"])} Detalle en el anexo.</p>')
+    parts.append('<p class="mb-data-note">' + " ".join(plain(r) for r in cifras["reglas"])
+                 + " Base: operaciones registradas por Criterial en sus Weekly; detalle y fuente de cada una en el anexo.</p>")
     parts.append("</div></section>")
 
     # España frente a Europa
@@ -399,14 +451,21 @@ def render(model, inputs, cifras, vig, numero, period_label, prev_label):
 
     # Lo que vigilábamos
     vig_titles = {v["codigo"]: v for v in vig}
-    revis = [v for v in model.get("vigilabamos") or [] if isinstance(v, dict) and v.get("id") in vig_titles]
+    revis = []
+    for v in model.get("vigilabamos") or []:
+        if not isinstance(v, dict):
+            continue
+        ids = [i for i in (v.get("ids") or [v.get("id")]) if i in vig_titles]
+        if ids:
+            revis.append({**v, "ids": ids})
+    revis = revis[:6]
     if revis:
         parts.append('<section class="mb-section">')
         head("Lo que vigilábamos")
         parts.append('<div class="mb-col"><div class="mb-vig">')
         for v in revis:
             st = v.get("estado") if v.get("estado") in VIG_ESTADOS else "abierto"
-            orig = vig_titles[v["id"]]
+            orig = vig_titles[v["ids"][0]]
             parts.append('<div class="mb-vig-item">'
                          f'<span class="mb-vig-badge mb-vig-badge--{st}">{VIG_ESTADOS[st]}</span>'
                          f'<p class="mb-vig-title">{plain(orig["titulo"])}</p>'
@@ -456,7 +515,7 @@ def render(model, inputs, cifras, vig, numero, period_label, prev_label):
             parts.append('<table class="mb-ops mb-ops--annex"><thead><tr><th>Operación</th><th>Sector</th>'
                          '<th>Tipo</th><th>Estado</th><th>Importe</th><th>Fecha</th></tr></thead><tbody>')
             for d in rows:
-                url = safe_url(d.get("fuente_url"))
+                url = safe_url(d.get("fuente_primaria")) or safe_url(d.get("fuente_url"))
                 name = plain(d.get("nombre"))
                 cell = f'<a href="{plain(url)}" target="_blank" rel="noopener">{name}</a>' if url else name
                 parts.append(f'<tr id="op-{d["_code"].lower()}"><td><span class="mb-ops-code">{d["_code"]}</span>{cell}</td><td>{plain(d.get("sector") or "—")}</td>'
@@ -531,12 +590,13 @@ def main():
         inputs = json.load(io.open(a.datos, encoding="utf-8"))
     else:
         inputs = fetch_inputs(year, month, a.incluir_prueba)
+    assign_codes(inputs["deals"])
     cifras = compute(inputs["deals"], inputs.get("prev_deals") or [])
     data, vig = build_model_data(inputs, cifras, a.pregunta)
 
     print(f"\nBrief Mensual · {period_label}")
     print(f"  Operaciones en España: {cifras['operaciones_espana']} "
-          f"({cifras['con_importe_publico']} con importe) · fuera: {cifras['capital_espanol_fuera']}")
+          f"({cifras['transacciones_con_importe']} de {cifras['transacciones']} transacciones con importe) · fuera: {cifras['capital_espanol_fuera']}")
     print(f"  Weeklies del mes: {len(inputs['weeklies'])} · avisos a revisar: {len(vig)}")
     if not inputs["deals"]:
         sys.exit("  No hay operaciones en la base para ese mes. No se genera el Brief."

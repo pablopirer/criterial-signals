@@ -165,7 +165,7 @@ body = {
   'model': '$MODEL',
   'max_tokens': 16000,
   'system': system,
-  'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 6}],
+  'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 8}],
   'output_config': {'effort': '$EFFORT'},
   'fallbacks': 'default',
   'messages': [{'role': 'user', 'content': user}]
@@ -237,9 +237,16 @@ def fecha_es(f):
     if not m or not 1 <= int(m.group(2)) <= 12: return ''
     return f'{int(m.group(3))} de {MESES[int(m.group(2))-1]} de {m.group(1)}'
 
+def ops_row(op):
+    fuente = op.get('fuente') if isinstance(op.get('fuente'), dict) else {}
+    url = safe_url(op.get('fuente_primaria')) or safe_url(fuente.get('url'))
+    name = f'<a href=\"{esc(url)}\" target=\"_blank\" rel=\"noopener\">{esc(op.get(\"nombre\",\"\"))}</a>' if url else esc(op.get('nombre',''))
+    note = f'<span class=\"pub-ops-note\">{esc(op.get(\"nota_importe\"))}</span>' if op.get('nota_importe') else ''
+    return f'<tr><td>{name}</td><td>{esc(op.get(\"tipo\",\"\"))}</td><td>{esc(op.get(\"sector\",\"\"))}</td><td>{esc(op.get(\"importe\") or \"n.d.\")}{note}</td><td>{esc(op.get(\"tesis\",\"\"))}</td></tr>'
+
 def ops_table(ops):
     # Mirrors opsTable: Operación | Tipo | Sector | Importe | Tesis.
-    rows = ''.join(f'<tr><td>{esc(op.get(\"nombre\",\"\"))}</td><td>{esc(op.get(\"tipo\",\"\"))}</td><td>{esc(op.get(\"sector\",\"\"))}</td><td>{esc(op.get(\"importe\") or \"n.d.\")}</td><td>{esc(op.get(\"tesis\",\"\"))}</td></tr>' for op in ops)
+    rows = ''.join(ops_row(op) for op in ops)
     return ('<table class=\"pub-ops-table pub-ops-table--v2\">'
             '<thead><tr><th>Operación</th><th>Tipo</th><th>Sector</th><th>Importe</th><th>Tesis</th></tr></thead>'
             f'<tbody>{rows}</tbody></table>')
@@ -276,6 +283,10 @@ for s in d.get('senales', []):
     out.append('</div>')
     out.append('<div class=\"pub-signal-body\">')
     out.append(f'<p class=\"pub-signal-fact\">{esc(s.get(\"hecho\",\"\"))}</p>')
+    src = s.get('fuente') if isinstance(s.get('fuente'), dict) else {}
+    src_url = safe_url(src.get('url'))
+    if src_url:
+        out.append(f'<p class=\"pub-signal-source\">Fuente: <a href=\"{esc(src_url)}\" target=\"_blank\" rel=\"noopener\">{esc(src.get(\"medio\") or \"nota original\")}</a></p>')
     out.append('<div class=\"pub-signal-rows\">')
     out.append('<div class=\"pub-signal-row\">')
     out.append('<span class=\"pub-signal-row-label\">Patrón</span>')
@@ -360,6 +371,8 @@ if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.g
     out.append('<div class=\"pub-section-new\">')
     out.append('<p class=\"pub-sec-label\">Mapa de posicionamiento</p>')
     out.append(f'<div class=\"pub-map\" data-mapa=\"{encoded}\"></div>')
+    # Mirrors MAP_CAVEAT in generate-content: the positions are an editorial reading.
+    out.append('<p class=\"pub-map-caveat\">Posición cualitativa: lectura del equipo de Criterial a partir de las operaciones de la semana, no un cálculo.</p>')
     out.append('</div>')
 
 # Fuentes
@@ -461,6 +474,7 @@ if isinstance(mapa, dict) and isinstance(mapa.get('nodos'), list) and len(mapa.g
     out.append('<div class="pub-section-new">')
     out.append('<p class="pub-sec-label">Mapa de posicionamiento</p>')
     out.append(f'<div class="pub-map" data-mapa="{encoded}"></div>')
+    out.append('<p class="pub-map-caveat">Posición cualitativa: lectura del equipo de Criterial a partir de las operaciones de la semana, no un cálculo.</p>')
     out.append('</div>')
 out.append('<div class="pub-footer-new">')
 out.append('<span class="pub-footer-text">Criterial Signals · Edición abierta</span>')

@@ -10,7 +10,11 @@
       "temporalidad": "Esta semana",
       "hecho": "[HECHO-1] Fondo Meridiano III adquiere el <strong>71% de Cerámicas Duero</strong> por 84 M€, valorando la compañía en 8,2x EBITDA. Asesora Gabinete Arenal en el lado vendedor.",
       "patron": "[PRO-PATRON-1] Es el tercer buyout industrial del trimestre que se cierra por debajo de 9x, cuando la banda de 2024 estaba en 11-12x.",
-      "implicacion": "[PRO-IMPL-1] Para un vendedor industrial sin urgencia, esperar seis meses ya no es una estrategia neutra: el suelo de valoración se está consolidando, no rebotando."
+      "implicacion": "[PRO-IMPL-1] Para un vendedor industrial sin urgencia, esperar seis meses ya no es una estrategia neutra: el suelo de valoración se está consolidando, no rebotando.",
+      "fuente": {
+        "medio": "Nota de Meridiano",
+        "url": "https://example.com/nota-1"
+      }
     },
     {
       "tipo": "Deuda Privada",
@@ -19,7 +23,10 @@
       "temporalidad": "Esta semana",
       "hecho": "[HECHO-2] Arrecife Capital financia con <strong>45 M€</strong> la compra de NovaSalud Levante. Según Moody's & Standard & Poor's, el margen se sitúa en E+625.",
       "patron": "[PRO-PATRON-2] El direct lending cubre ya el hueco que la banca dejó en tickets de 30-60 M€, y lo cobra: 150 pb por encima del bancario comparable.",
-      "implicacion": "[PRO-IMPL-2] El coste de la deuda deja de ser residual en el modelo: a estos márgenes, dos vueltas de tuerca en el precio de entrada se comen el retorno."
+      "implicacion": "[PRO-IMPL-2] El coste de la deuda deja de ser residual en el modelo: a estos márgenes, dos vueltas de tuerca en el precio de entrada se comen el retorno.",
+      "fuente": {
+        "url": "https://example.com/nota-2"
+      }
     },
     {
       "tipo": "Salida",
@@ -65,11 +72,13 @@
       "fuente": {
         "medio": "Boletín Meridiano",
         "url": "https://example.com/op-1"
-      }
+      },
+      "fuente_primaria": "https://example.com/primaria-1",
+      "nota_importe": "Solo el 70% adquirido; la compañía vale unos 120 M€"
     },
     {
       "nombre": "NovaSalud Levante",
-      "tipo": "M&A",
+      "tipo": "Ampliación de capital",
       "sector": "Sanidad",
       "tesis": "Plataforma de clínicas en el arco mediterráneo",
       "comprador": "Grupo Ribera",

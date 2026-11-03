@@ -744,6 +744,15 @@ strong{color:var(--ink);font-weight:600}
 .mb-ops--annex tr:target td{background:var(--accent-soft)}
 .mb-ops-code{font:400 11px var(--mono);color:var(--faint);margin-right:8px}
 .mb-ref{font:500 .78em var(--mono);color:var(--accent-2);text-decoration:none;border-bottom:1px solid #C9D4E6;white-space:nowrap}
+/* Revisión de la simulación (2026-11-03): fuente por señal, perímetro del importe,
+   naturaleza del mapa y cifras por grupo con denominador */
+.pub-signal-source{font-size:12.5px;color:var(--faint);margin:-4px 0 14px!important}
+.pub-ops-note{display:block;font-size:12px;line-height:1.4;color:var(--faint);white-space:normal;margin-top:2px}
+.pub-map-caveat{font-size:12.5px;color:var(--faint);margin:10px 0 0!important}
+.mb-sums{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 24px}
+.mb-sums th{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right;padding:0 0 10px 12px;border-bottom:1px solid var(--ink);white-space:nowrap}
+.mb-sums td{padding:11px 0 11px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
+.mb-sums th:first-child,.mb-sums td:first-child{text-align:left;padding-left:0;color:var(--ink);white-space:normal}
 
 /* ---------- Listados y estados ---------- */
 .ed{cursor:pointer}
@@ -797,6 +806,13 @@ strong{color:var(--ink);font-weight:600}
   .mb-evid,.mb-profiles{grid-template-columns:1fr}
   .mb-vig-item{grid-template-columns:1fr} .mb-vig-badge{grid-row:auto}
   .mb-ops--annex td:nth-child(4)::before{content:"Estado · "} .mb-ops--annex td:nth-child(5)::before{content:"Importe · "} .mb-ops--annex td:nth-child(6)::before{content:"Fecha · "}
+  .mb-sums thead{display:none}
+  .mb-sums,.mb-sums tbody,.mb-sums tr,.mb-sums td{display:block;width:100%}
+  .mb-sums tr{padding:12px 0;border-bottom:1px solid var(--line)}
+  .mb-sums td{border:0;padding:2px 0;text-align:left}
+  .mb-sums td:first-child{font-weight:500;padding-bottom:4px}
+  .mb-sums td:nth-child(2)::before{content:"Operaciones · "} .mb-sums td:nth-child(3)::before{content:"Con importe · "} .mb-sums td:nth-child(4)::before{content:"Importe divulgado · "} .mb-sums td:nth-child(5)::before{content:"Mediana · "}
+  .mb-sums td:not(:first-child)::before{color:var(--faint);font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
 }
 @media print{
   .hdr,.ftr,.rd-top,.toc,.pub-map-toggle,.pub-map-note,.rd-after,.no-print{display:none!important}
