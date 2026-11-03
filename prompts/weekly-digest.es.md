@@ -58,7 +58,9 @@ Responde ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Si
       "importe": "string — importe de display (p.ej. '180 M€', '250 M$') o 'n.d.'",
       "n_importe": 180,
       "moneda": "string — EUR | USD | GBP; omitir si no hay importe",
-      "fecha": "string — YYYY-MM-DD del anuncio o del cierre",
+      "fecha": "string — YYYY-MM-DD del hecho: el anuncio o el cierre",
+      "fecha_publicacion": "string — YYYY-MM-DD en que la fuente publicó la noticia",
+      "estado": "string — anunciada | en_proceso | cerrada | cancelada",
       "ambito": "string — espana | exterior",
       "tesis": "string — 5-8 palabras",
       "fuente": { "medio": "string", "url": "string — URL del artículo" }
@@ -111,7 +113,8 @@ Cada operación se guarda en la base de operaciones de Criterial y alimenta el B
 - 'tipo' y 'sector' usan SOLO las etiquetas de la lista, escritas exactamente igual. Elige la más cercana en vez de inventar una ('Salud digital' → Sanidad; 'Ciberseguridad' → Tecnología).
 - 'n_importe' es el importe en millones como NÚMERO, en la moneda de 'moneda', SOLO si es público. Si no se ha divulgado, omite 'n_importe' y 'moneda' y pon 'importe': "n.d.". NUNCA inventes ni estimes importes.
 - 'ambito' es "espana" si el objetivo es una empresa española o con sede en España, y "exterior" si es un fondo o grupo español que invierte en una empresa extranjera. Las de "exterior" no cuentan como mercado español, pero se recogen.
-- 'fecha' es la del anuncio o del cierre; si solo conoces el mes, usa el día 1.
+- 'fecha' es la del hecho (anuncio o cierre) y 'fecha_publicacion' la del artículo que lo cuenta; si solo conoces el mes, usa el día 1.
+- 'estado' es lo que dice la fuente, no lo que esperas: "anunciada" si se ha comunicado pero no consta el cierre, "en_proceso" para un proceso de venta o una negociación confirmados, "cerrada" solo si la fuente dice que se ha completado y "cancelada" si se ha roto. Ante la duda, "anunciada".
 - 'url' (en 'fuente' y en 'fuentes') es la URL real del artículo que encontraste. Si no la tienes, omite 'url'.
 
 ### Fuera de España

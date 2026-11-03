@@ -17,6 +17,7 @@ const SECTORES = [
   "Agroalimentario", "Energía", "Infraestructura", "Financiero", "Deuda privada",
 ];
 const TIPOS = ["Buyout", "Growth", "M&A", "Deuda", "Salida", "Fundraising", "OPA"];
+const ESTADOS = ["anunciada", "en_proceso", "cerrada", "cancelada"];
 
 /** Legal-form and filler words dropped from the dedupe key. */
 const KEY_STOPWORDS = new Set([
@@ -31,7 +32,7 @@ const KEY_STOPWORDS = new Set([
 export function normalizeKey(s: string): string {
   return s
     .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/\./g, "") // "S.L." -> "sl", so the stopword list catches it
     .split(/[^a-z0-9]+/)
@@ -83,6 +84,8 @@ export interface DealRow {
   moneda: string | null;
   importe_eur: number | null;
   fecha: string | null;
+  fecha_publicacion: string | null;
+  estado: string | null;
   ambito: "espana" | "exterior";
   tesis: string | null;
   fuente_medio: string | null;
@@ -115,6 +118,7 @@ export async function dealsFromWeekly(body: unknown, fallbackDate: string | null
     const tipo = str(op.tipo);
     const sector = str(op.sector);
     const fecha = validDate(op.fecha);
+    const estado = str(op.estado)?.toLowerCase().replace(/\s+/g, "_") ?? null;
     const n = typeof op.n_importe === "number" && isFinite(op.n_importe) && op.n_importe > 0
       ? op.n_importe : null;
     const moneda = n !== null ? (str(op.moneda)?.toUpperCase() ?? "EUR") : null;
@@ -148,6 +152,8 @@ export async function dealsFromWeekly(body: unknown, fallbackDate: string | null
       moneda,
       importe_eur,
       fecha,
+      fecha_publicacion: validDate(op.fecha_publicacion),
+      estado: estado && ESTADOS.includes(estado) ? estado : null,
       ambito,
       tesis: str(op.tesis),
       fuente_medio: str(fuente.medio),
