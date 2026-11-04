@@ -11,6 +11,9 @@
 # and it never publishes. Used by .github/workflows/weekly-draft.yml on Fridays.
 # It exits non-zero when the model output is not valid JSON, so nothing broken
 # is saved and the failed run makes GitHub send an alert.
+#
+# Backfill of a past week: WEEK_END=YYYY-MM-DD EDITION=N AUTO_DRAFT=1 \
+#   bash scripts/generate-content.sh weekly
 
 set -uo pipefail
 AUTO="${AUTO_DRAFT:-}"
@@ -70,7 +73,16 @@ mes_es() { echo "${MONTHS_ES[$((10#$1 - 1))]}"; }   # "07" -> "julio"
 if [[ "$TYPE" == "weekly" ]]; then
   # Run on a Monday (the scheduled run), the Weekly covers the week that just
   # closed, Monday to Sunday; any other day, this week's Monday to today.
-  if [[ "$(date '+%u')" == "1" ]]; then
+  # WEEK_END=YYYY-MM-DD writes a past week instead (backfill): the week that
+  # ends that day, with the model told not to use anything published later.
+  if [[ -n "${WEEK_END:-}" ]]; then
+    END=$(date -d "$WEEK_END" '+%Y-%m-%d') || { echo "Invalid WEEK_END '$WEEK_END'"; exit 1; }
+    # A week ends on Sunday: any other day would cut it short (a Monday gives
+    # a one-day "week").
+    if [[ "$(date -d "$END" '+%u')" != "7" ]]; then
+      echo "WEEK_END must be a Sunday ($END is not)."; exit 1
+    fi
+  elif [[ "$(date '+%u')" == "1" ]]; then
     END=$(date -d 'yesterday' '+%Y-%m-%d')
   else
     END=$(date '+%Y-%m-%d')
@@ -107,7 +119,11 @@ fi
 # Assigned here, not by the model — the model can't know the sequence (it used to
 # echo the "1" from the prompt schema, so every edition said "Nº 1"). = count of
 # already-published rows of THIS type + 1. Falls back to 1 if the query fails.
-# Kept in sync with the generate-content Edge Function.
+# Kept in sync with the generate-content Edge Function. EDITION=N fixes it by
+# hand, for a backfill whose editions are published after they are generated.
+if [[ -n "${EDITION:-}" ]]; then
+  EDITION_NUMBER="$EDITION"
+else
 EDITION_NUMBER=$(python3 - "$TYPE" "$SUPABASE_URL" "$SUPABASE_SERVICE_ROLE_KEY" <<'PYEOF'
 import sys, json, urllib.request
 pub_type, supabase_url, service_key = sys.argv[1:]
@@ -123,6 +139,7 @@ except Exception:
     print(1)
 PYEOF
 )
+fi
 
 # ── Load prompt ────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -151,6 +168,13 @@ if [[ -n "$TARGET_MONTH" ]]; then
   USER_PROMPT="$USER_PROMPT
 
 IMPORTANTE — el mes ya está CERRADO: cubre ${PERIOD} completo, del 1 al ${LAST_DAY}. Busca y recoge las operaciones de TODO el mes, no solo las de una parte. No incluyas operaciones de meses posteriores."
+fi
+
+# Past week (WEEK_END): the edition is written as if the week had just ended.
+if [[ "$TYPE" == "weekly" && -n "${WEEK_END:-}" ]]; then
+  USER_PROMPT="$USER_PROMPT
+
+EDICIÓN RETROSPECTIVA: escribe como si la semana acabara de terminar. Usa solo hechos publicados hasta el ${END_D} de $(mes_es "$END_M") de ${END_Y}; no menciones nada posterior."
 fi
 
 # ── Header ─────────────────────────────────────────────────────────────────────
@@ -200,6 +224,48 @@ data = json.load(sys.stdin)
 blocks = data.get('content', [])
 print(''.join(b.get('text','') for b in blocks if b.get('type')=='text').strip())
 " 2>/dev/null)
+
+  # One repair pass, as in the Edge Function (parseWithRepair): malformed JSON
+  # (typically an unescaped quote in a text field) goes back to the model once,
+  # without tools, to return the same content as valid JSON. Prose with no JSON
+  # at all is left as it is.
+  if [[ "$TYPE" == "weekly" ]]; then
+  TEXT=$(RAW="$TEXT" MODEL="$MODEL" python3 - <<'PYEOF'
+import json, os, sys, urllib.request
+raw = os.environ.get('RAW', '')
+s = raw.find('{'); e = raw.rfind('}')
+def ok(t):
+    try:
+        json.loads(t); return True
+    except Exception:
+        return False
+if s == -1 or e <= s or ok(raw[s:e+1]):
+    sys.stdout.write(raw); sys.exit(0)
+sys.stderr.write('JSON mal formado: un intento de reparacion... ')
+body = {
+  'model': os.environ['MODEL'], 'max_tokens': 16000, 'output_config': {'effort': 'low'},
+  'system': 'Recibes un objeto JSON mal formado. Devuélvelo como JSON válido con exactamente '
+            'el mismo contenido, las mismas claves y el mismo texto: corrige solo la sintaxis '
+            '(comillas sin escapar, comas, llaves). Responde únicamente con el JSON.',
+  'messages': [{'role': 'user', 'content': raw[s:e+1]}],
+}
+req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=json.dumps(body).encode(),
+    headers={'content-type': 'application/json', 'x-api-key': os.environ['ANTHROPIC_API_KEY'],
+             'anthropic-version': '2023-06-01'})
+try:
+    with urllib.request.urlopen(req, timeout=300) as r:
+        out = json.loads(r.read())
+    fixed = ''.join(b.get('text', '') for b in out.get('content', []) if b.get('type') == 'text')
+    fs = fixed.find('{'); fe = fixed.rfind('}')
+    if fs != -1 and fe > fs and ok(fixed[fs:fe+1]):
+        sys.stderr.write('reparado. ')
+        sys.stdout.write(fixed[fs:fe+1]); sys.exit(0)
+except Exception as ex:
+    sys.stderr.write(f'fallo ({ex}). ')
+sys.stdout.write(raw)
+PYEOF
+)
+  fi
 
   # Keep the raw model output (JSON): the full conversion below overwrites TEXT,
   # but the reduced public projection needs to re-read the same JSON.
