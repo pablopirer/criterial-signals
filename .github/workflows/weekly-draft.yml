@@ -1,6 +1,7 @@
 name: Weekly en borrador
 
-# Cada viernes genera el Weekly de la semana y lo guarda como BORRADOR. Nunca
+# Cada lunes a primera hora genera el Weekly de la semana que acaba de cerrar
+# (lunes a domingo) y lo guarda como BORRADOR. Nunca
 # publica: se revisa y se publica a mano desde admin.html, que es lo que avisa a
 # los suscriptores y alimenta la base de operaciones.
 # Si la generación falla (el modelo no devuelve JSON válido, la API da error),
@@ -9,7 +10,7 @@ name: Weekly en borrador
 
 on:
   schedule:
-    - cron: '0 6 * * 5'   # viernes 6:00 UTC: 7:00 en Madrid en invierno, 8:00 en verano
+    - cron: '0 5 * * 1'   # lunes 5:00 UTC: 6:00 en Madrid en invierno, 7:00 en verano
   workflow_dispatch:       # permite lanzarlo a mano
 
 concurrency:

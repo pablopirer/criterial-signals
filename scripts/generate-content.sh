@@ -68,16 +68,24 @@ mes_es() { echo "${MONTHS_ES[$((10#$1 - 1))]}"; }   # "07" -> "julio"
 
 # ── Period label ───────────────────────────────────────────────────────────────
 if [[ "$TYPE" == "weekly" ]]; then
-  MONDAY=$(date -d 'last monday' '+%Y-%m-%d' 2>/dev/null || date '+%Y-%m-%d')
-  MON_D=$(date -d "$MONDAY" '+%-d' 2>/dev/null || date '+%-d')
-  MON_M=$(date -d "$MONDAY" '+%m' 2>/dev/null || date '+%m')
-  PERIOD="semana del ${MON_D} de $(mes_es "$MON_M") al $(date '+%-d') de $(mes_es "$(date '+%m')") de $(date '+%Y')"
+  # Run on a Monday (the scheduled run), the Weekly covers the week that just
+  # closed, Monday to Sunday; any other day, this week's Monday to today.
+  if [[ "$(date '+%u')" == "1" ]]; then
+    END=$(date -d 'yesterday' '+%Y-%m-%d')
+  else
+    END=$(date '+%Y-%m-%d')
+  fi
+  MONDAY=$(date -d "$END -$(( $(date -d "$END" '+%u') - 1 )) days" '+%Y-%m-%d')
+  MON_D=$(date -d "$MONDAY" '+%-d')
+  MON_M=$(date -d "$MONDAY" '+%m')
+  END_D=$(date -d "$END" '+%-d'); END_M=$(date -d "$END" '+%m'); END_Y=$(date -d "$END" '+%Y')
+  PERIOD="semana del ${MON_D} de $(mes_es "$MON_M") al ${END_D} de $(mes_es "$END_M") de ${END_Y}"
   PERIOD_START="$MONDAY"
-  PERIOD_END=$(date '+%Y-%m-%d')
-  TITLE="Weekly Signals — $(date '+%-d') de $(mes_es "$(date '+%m')") de $(date '+%Y')"
+  PERIOD_END="$END"
+  TITLE="Weekly Signals — ${END_D} de $(mes_es "$END_M") de ${END_Y}"
   PROMPT_FILE="prompts/weekly-digest.es.md"
-  M_YEAR="$(date '+%Y')"
-  M_MONTH="$(date '+%m')"
+  M_YEAR="$END_Y"
+  M_MONTH="$END_M"
 else
   if [[ -n "$TARGET_MONTH" ]]; then
     M_YEAR="${TARGET_MONTH%%-*}"
