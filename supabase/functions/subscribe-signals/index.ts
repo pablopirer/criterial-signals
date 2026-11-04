@@ -125,6 +125,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: true }, 200);
   }
 
+  // Whether this is a new reader, read before the upsert: since 2026-11-04 a
+  // new subscription from the public form is real data (is_test = false),
+  // unless it came in qa_mode. Existing rows keep the flag they already had.
+  const { data: prev } = await supabase
+    .from("signals_subscribers")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+  const markReal = !prev && !qaMode;
+
   // 3. Upsert. On conflict (existing subscriber) reactivate: re-subscribing after
   // an unsubscribe flips status back to active. unsubscribe_token stays put (its
   // default only fires on insert), so old opt-out links keep working.
@@ -140,6 +150,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (error || !rows || rows.length === 0) {
     console.error("Failed to upsert signals subscriber", error);
     return jsonResponse({ ok: false, error: "No se pudo completar la suscripción" }, 500);
+  }
+
+  if (markReal) {
+    const { error: realErr } = await supabase
+      .from("signals_subscribers")
+      .update({ is_test: false })
+      .eq("email", email);
+    if (realErr) console.error("Failed to mark subscriber as real", realErr);
   }
 
   // Where the reader came from, kept from the FIRST subscribe only: a later
@@ -159,7 +177,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // of truth for the newsletter and already succeeded, so a failure here
   // must not turn a successful opt-in into a user-facing error.
   try {
-    await upsertLeadByEmail(supabase, { email, source: "signals_open" });
+    const lead = await upsertLeadByEmail(supabase, { email, source: "signals_open" });
+    // A lead created by a real subscription is real too; an existing lead
+    // keeps its flag.
+    if (markReal && lead.isNew) {
+      await supabase.from("leads").update({ is_test: false }).eq("id", lead.id);
+    }
   } catch (err) {
     console.error("Failed to upsert lead for signals subscriber", err);
   }
