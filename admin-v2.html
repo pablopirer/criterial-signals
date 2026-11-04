@@ -559,6 +559,26 @@ function vMuestras(){
  +'<p style="font-size:11.5px;color:var(--soft);margin:14px 0 0">Reintentar o reenviar una muestra gasta dinero real (Anthropic y Resend) en cada clic, así que esas acciones no están cableadas todavía.</p></div>';
 }
 
+/* LinkedIn campaign (Nov 2026): who subscribes to the open edition and from which link. */
+const PERFIL_LABEL={pe_vc:'Fondo de PE / VC',asesor:'Asesor de M&A',empresa:'Empresa / directivo',family_office:'Family office',banca_deuda:'Banca / deuda privada',inversor_internacional:'Inversor internacional',otro:'Otro'};
+function origenLabel(o){
+ if(!o) return '—';
+ const u=[o.utm_source,o.utm_campaign,o.utm_content].filter(Boolean).join(' · ');
+ if(u) return u;
+ if(o.referrer){ try{ return new URL(o.referrer).hostname }catch(e){ return o.referrer } }
+ return 'directo';
+}
+function campaignSummary(sig){
+ const act=sig.filter(s=>s.status==='active');
+ const count=f=>{const m={};act.forEach(s=>{const k=f(s);m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+ const list=(t,rows)=>'<div><div class="kpi-label">'+t+'</div>'+rows.map(([k,n])=>'<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:2px 0"><span>'+esc(k)+'</span><b>'+n+'</b></div>').join('')+'</div>';
+ return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;padding:10px 0 18px">'
+  +list('Por perfil ('+act.length+' activos)',count(s=>s.perfil?(PERFIL_LABEL[s.perfil]||s.perfil):'Sin responder'))
+  +list('Por origen',count(s=>origenLabel(s.origen)))
+  +list('Por idioma de la página',count(s=>(s.origen&&s.origen.lang)||'—'))
+  +'</div>';
+}
+
 function vSuscriptores(){
  const pro=DATA.pro.filter(inScope), sig=DATA.signals.filter(inScope);
  const proRows=pro.map(u=>'<tr><td class="t">'+esc(u.full_name||u.email)+' '+tBadge(u.is_test)
@@ -567,7 +587,8 @@ function vSuscriptores(){
   +'<td>'+chip(esc(u.status),u.status==='active'?'c-green':'c-copper')+'</td>'
   +'<td>'+fdate(u.subscription_start||u.created_at)+'</td></tr>').join('');
  const sigRows=sig.map(s=>'<tr><td class="t">'+esc(s.email)+' '+tBadge(s.is_test)+'</td>'
-  +'<td>'+chip(esc(s.source),'c-gray')+'</td>'
+  +'<td>'+(s.perfil?esc(PERFIL_LABEL[s.perfil]||s.perfil):'<span style="color:var(--soft)">—</span>')+'</td>'
+  +'<td>'+esc(origenLabel(s.origen))+'</td>'
   +'<td>'+chip(s.status==='active'?'Activo':'Baja',s.status==='active'?'c-green':'c-gray')+'</td>'
   +'<td>'+fdate(s.created_at)+'</td></tr>').join('');
  return '<div class="observe"><div class="eyebrow">M5 · Suscriptores</div><h1>Suscriptores</h1>'
@@ -576,7 +597,7 @@ function vSuscriptores(){
  +'<div class="card" style="padding:8px 22px"><div style="padding:14px 0 4px"><h2 style="display:inline">Pro</h2> '+chip('Stripe en modo prueba','c-amber')+'</div>'
  +(pro.length?'<table class="tbl"><tr><th>Suscriptor</th><th>Plan</th><th>Estado</th><th>Desde</th></tr>'+proRows+'</table>':'<div class="empty">Sin suscriptores Pro en este ámbito.</div>')+'</div>'
  +'<div class="block card" style="padding:8px 22px"><div style="padding:14px 0 4px"><h2 style="display:inline">Newsletter · edición abierta</h2></div>'
- +(sig.length?'<table class="tbl"><tr><th>Email</th><th>Fuente</th><th>Estado</th><th>Alta</th></tr>'+sigRows+'</table>':'<div class="empty">Sin suscriptores de newsletter en este ámbito.</div>')+'</div>'
+ +(sig.length?campaignSummary(sig)+'<table class="tbl"><tr><th>Email</th><th>Perfil</th><th>Origen</th><th>Estado</th><th>Alta</th></tr>'+sigRows+'</table>':'<div class="empty">Sin suscriptores de newsletter en este ámbito.</div>')+'</div>'
  +'<p style="font-size:11.5px;color:var(--soft);margin:14px 0 0">Activar o desactivar una suscripción Pro desde aquí desincronizaría la base de datos de Stripe, que es donde vive el estado real del cobro. La baja de la newsletter es acción del lector, por el enlace de cada email.</p></div>';
 }
 

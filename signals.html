@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.v19.css" />
+<style>.sg-perfil{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.sg-perfil .btn{height:32px;padding:0 12px;font-size:13px}.sg-perfil-q{flex-basis:100%;margin:0 0 2px;font-size:13.5px;color:var(--muted)}</style>
 </head>
 <body>
 <header class="hdr"><div class="wrap">
@@ -64,6 +65,52 @@
     const SIGNAL_SECRET = "596394206a475b401e93639148407dd7b4c8ce7fffd36ccaa204aca73b527dcb";
     let _editions = [];
 
+    // Where the reader came from (LinkedIn campaign, Nov 2026): the utm_* of the
+    // link that brought them, kept for the tab so a later subscribe still has it.
+    const ORIGEN = (() => {
+      let o = {};
+      try { o = JSON.parse(sessionStorage.getItem("sg-origen") || "{}"); } catch (e) {}
+      const q = new URLSearchParams(location.search);
+      const utm = {};
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach(k => { if (q.get(k)) utm[k] = q.get(k); });
+      if (Object.keys(utm).length || !o.landing) {
+        o = Object.assign({}, utm, { referrer: document.referrer || "", landing: location.href.split("#")[0], lang: document.documentElement.lang || "" });
+        try { sessionStorage.setItem("sg-origen", JSON.stringify(o)); } catch (e) {}
+      }
+      return o;
+    })();
+
+    const PERFILES = [
+      ["pe_vc", "Fondo de PE / VC"], ["asesor", "Asesor de M&A"], ["empresa", "Empresa / directivo"],
+      ["family_office", "Family office"], ["banca_deuda", "Banca / deuda privada"],
+      ["inversor_internacional", "Inversor internacional"], ["otro", "Otro"]
+    ];
+
+    // One optional question after subscribing: what the reader does. One click,
+    // no extra email; skipping it leaves the subscription as it is.
+    function askPerfil(note, email) {
+      const box = document.createElement("div");
+      box.className = "sg-perfil";
+      box.innerHTML = '<p class="sg-perfil-q">Una pregunta opcional, para saber a quién escribimos: ¿a qué te dedicas?</p>';
+      PERFILES.forEach(([val, label]) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "btn btn--ghost"; b.textContent = label;
+        b.addEventListener("click", async () => {
+          box.querySelectorAll("button").forEach(x => x.disabled = true);
+          try {
+            await fetch(SUBSCRIBE_SIGNALS_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-criterial-signal": SIGNAL_SECRET },
+              body: JSON.stringify({ email, action: "perfil", perfil: val })
+            });
+          } catch (e) {}
+          box.innerHTML = '<p class="sg-perfil-q">Gracias.</p>';
+        });
+        box.appendChild(b);
+      });
+      note.after(box);
+    }
+
     // Wire any newsletter capture form (dedicated band, empty state, reader
     // modal). Idempotent via data-wired so it can be called after re-renders.
     function wireCaptureForm(form) {
@@ -86,12 +133,13 @@
           const res = await fetch(SUBSCRIBE_SIGNALS_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-criterial-signal": SIGNAL_SECRET },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, origen: ORIGEN })
           });
           if (!res.ok) throw new Error("HTTP " + res.status);
           form.reset();
           form.style.display = "none";
           setNote("Listo. Te hemos enviado un correo de confirmación.", "is-ok");
+          if (note) askPerfil(note, email);
         } catch (e) {
           setNote("No se pudo completar. Inténtalo de nuevo.", "is-error");
         } finally {

@@ -15,6 +15,11 @@
  *   5. Send a branded confirmation email carrying the unsubscribe link
  *      (skipped under the qa_mode test guard — decision 2c).
  *
+ * Since 2026-11-04 (LinkedIn campaign) the request may also carry `origen`
+ * (utm_* parameters, referrer, landing URL, language), stored on the first
+ * subscribe only, and a second call `{ email, action: "perfil", perfil }`
+ * records the reader's profile without sending another email.
+ *
  * Security: signals_subscribers stays the source of truth for the newsletter
  * lifecycle (active/unsubscribed, unsubscribe_token); RLS is on and access is
  * service-role only. `leads` is a secondary, best-effort commercial record of
@@ -31,6 +36,27 @@ const CORS_HEADERS = {
   "access-control-allow-headers": "content-type, x-criterial-signal, authorization",
   "access-control-allow-methods": "POST, OPTIONS",
 };
+
+/** Same list as the check constraint in 20261104120000_signals_subscribers_perfil.sql. */
+const PERFILES = [
+  "pe_vc", "asesor", "empresa", "family_office", "banca_deuda",
+  "inversor_internacional", "otro",
+];
+const ORIGEN_KEYS = [
+  "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+  "referrer", "landing", "lang",
+];
+
+/** Keep only the known keys, as short strings: this comes from a public page. */
+function cleanOrigen(raw: unknown): Record<string, string> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const out: Record<string, string> = {};
+  for (const k of ORIGEN_KEYS) {
+    const v = (raw as Record<string, unknown>)[k];
+    if (typeof v === "string" && v.trim()) out[k] = v.trim().slice(0, 300);
+  }
+  return Object.keys(out).length ? out : null;
+}
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -80,6 +106,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabase = createServiceRoleClient();
 
+  // Profile answer, sent after a successful subscribe. Only an active
+  // subscriber's row changes, and no email goes out.
+  if ((payload as { action?: unknown })?.action === "perfil") {
+    const perfil = String((payload as { perfil?: unknown })?.perfil ?? "");
+    if (!PERFILES.includes(perfil)) {
+      return jsonResponse({ ok: false, error: "Perfil no válido" }, 400);
+    }
+    const { error: perfilErr } = await supabase
+      .from("signals_subscribers")
+      .update({ perfil })
+      .eq("email", email)
+      .eq("status", "active");
+    if (perfilErr) {
+      console.error("Failed to save perfil", perfilErr);
+      return jsonResponse({ ok: false, error: "No se pudo guardar el perfil" }, 500);
+    }
+    return jsonResponse({ ok: true }, 200);
+  }
+
   // 3. Upsert. On conflict (existing subscriber) reactivate: re-subscribing after
   // an unsubscribe flips status back to active. unsubscribe_token stays put (its
   // default only fires on insert), so old opt-out links keep working.
@@ -95,6 +140,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (error || !rows || rows.length === 0) {
     console.error("Failed to upsert signals subscriber", error);
     return jsonResponse({ ok: false, error: "No se pudo completar la suscripción" }, 500);
+  }
+
+  // Where the reader came from, kept from the FIRST subscribe only: a later
+  // re-subscribe from another link must not rewrite the original source.
+  const origen = cleanOrigen((payload as { origen?: unknown })?.origen);
+  if (origen) {
+    const { error: origenErr } = await supabase
+      .from("signals_subscribers")
+      .update({ origen })
+      .eq("email", email)
+      .is("origen", null);
+    if (origenErr) console.error("Failed to save origen", origenErr);
   }
 
   // 4. Create/update the matching commercial lead (source='signals_open' —

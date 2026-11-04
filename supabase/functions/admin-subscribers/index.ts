@@ -45,7 +45,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         .order("created_at", { ascending: false }),
       supabase
         .from("signals_subscribers")
-        .select("id, email, status, source, is_test, created_at")
+        .select("id, email, status, source, perfil, origen, is_test, created_at")
         .order("created_at", { ascending: false }),
     ]);
 
